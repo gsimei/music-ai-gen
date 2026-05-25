@@ -1,0 +1,6 @@
+es:
+  hello: "Hola"
+  site_name: "Music AI Gen"
+  errors:
+    not_found: "Página no encontrada"
+    server_error: "Error del servidor"

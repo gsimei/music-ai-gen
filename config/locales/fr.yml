@@ -1,0 +1,6 @@
+fr:
+  hello: "Bonjour"
+  site_name: "Music AI Gen"
+  errors:
+    not_found: "Page non trouvée"
+    server_error: "Erreur du serveur"

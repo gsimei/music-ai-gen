@@ -7,6 +7,7 @@ b2b:
   hosts:
     - "jinglepro.it"
     - "jinglepro.com"
+    - "b2b.lvh.me"   # dev-only: lvh.me resolve para 127.0.0.1 via DNS wildcard
   display_name: "JinglePro"
   default_locale: it
   supported_locales:
@@ -34,6 +35,7 @@ b2c:
   hosts:
     - "musicaregalo.it"
     - "musicaregalo.com"
+    - "b2c.lvh.me"   # dev-only: lvh.me resolve para 127.0.0.1 via DNS wildcard
   display_name: "MusicaRegalo"
   default_locale: it
   supported_locales:

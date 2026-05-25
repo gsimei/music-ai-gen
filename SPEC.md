@@ -827,11 +827,11 @@ b2c:
       max_duration_seconds: 180
 19. Ordem de implementação sugerida
 
-Setup base: Rails 8 novo, PostgreSQL, Sidekiq, Devise, Tailwind, Hotwire
-Schema: rodar todas as 11 migrations
-Models + associations + validations (sem state machine ainda)
-AASM na Order com todas transições
-Brand/Locale resolver + multi-host setup
+[x] Setup base: Rails 8 novo, PostgreSQL, Sidekiq, Devise, Tailwind, Hotwire
+[x] Schema: rodar todas as 11 migrations
+[x] Models + associations + validations (sem state machine ainda)
+[x] AASM na Order com todas transições
+[x] Brand/Locale resolver + multi-host setup
 Seed do catálogo de vozes (placeholder até integrar Mureka)
 Wizard de briefing (multi-step com Turbo Frames)
 Stripe Checkout + webhook handler
