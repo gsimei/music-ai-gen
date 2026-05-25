@@ -13,3 +13,6 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+# Ensure ActionMailer uses test delivery in all test cases
+ActionMailer::Base.delivery_method = :test

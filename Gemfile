@@ -48,6 +48,7 @@ gem "pundit", "~> 2.4"
 
 # State machine
 gem "aasm", "~> 5.5"
+gem "after_commit_everywhere", "~> 1.0"
 
 # Payments
 gem "stripe", "~> 13.0"

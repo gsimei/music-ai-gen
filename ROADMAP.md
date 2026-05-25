@@ -55,11 +55,11 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 4. State machine (AASM) na Order
 
-- [ ] Instalar gem + setup
-- [ ] Definir todos os 13 estados
-- [ ] Implementar todas as transições + guards
-- [ ] Callbacks `after` (jobs e mailers)
-- [ ] Testes de todas as transições válidas e inválidas
+- [x] Instalar gem + setup (after_commit_everywhere 1.6.0)
+- [x] Definir todos os 14 estados
+- [x] Implementar todas as transições + guards
+- [x] Callbacks `after` (jobs e mailers)
+- [x] Testes de todas as transições válidas e inválidas
 
 ## 5. Brand/Locale resolver
 

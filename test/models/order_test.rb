@@ -416,3 +416,349 @@ class OrderTest < ActiveSupport::TestCase
     assert reflection.options[:optional]
   end
 end
+
+# =============================================================================
+# ## AASM State Machine
+# =============================================================================
+class OrderAasmTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
+
+  fixtures :all
+
+  # ---------------------------------------------------------------------------
+  # Group A — Estados e configuração
+  # ---------------------------------------------------------------------------
+  test "aasm column é :status" do
+    assert_equal :status, Order.aasm.attribute_name
+  end
+
+  test "initial state é pending" do
+    order = Order.new
+    assert_equal "pending", order.status
+  end
+
+  test "Order tem 14 estados configurados" do
+    states = Order.aasm.states.map(&:name)
+    assert_equal 14, states.length
+    expected = %i[
+      pending payment_failed paid lyrics_drafting lyrics_ready lyrics_failed
+      lyrics_approved music_generating preview_ready music_failed
+      approved delivered cancelled refunded
+    ]
+    assert_equal expected.sort, states.sort
+  end
+
+  # ---------------------------------------------------------------------------
+  # Group B — Transições válidas
+  # ---------------------------------------------------------------------------
+  test "mark_paid transitions from pending to paid" do
+    order = orders(:b2c_pending)
+    perform_enqueued_jobs do
+      order.mark_paid!
+    end
+    assert_equal "paid", order.status
+  end
+
+  test "start_lyrics_generation transitions from paid to lyrics_drafting" do
+    order = orders(:b2c_paid)
+    order.start_lyrics_generation!
+    assert_equal "lyrics_drafting", order.status
+  end
+
+  test "lyrics_drafted transitions from lyrics_drafting to lyrics_ready" do
+    order = orders(:b2c_lyrics_drafting)
+    perform_enqueued_jobs do
+      order.lyrics_drafted!
+    end
+    assert_equal "lyrics_ready", order.status
+  end
+
+  test "approve_lyrics transitions from lyrics_ready to lyrics_approved with valid draft" do
+    order = orders(:b2c_lyrics_ready)
+    draft = lyrics_drafts(:draft_lyrics_ready_v1)
+    order.current_lyrics_draft_id = draft.id
+
+    # approve_lyrics calls lock_lyrics_and_start_music which calls start_music_generation!
+    # so final state will be music_generating
+    order.approve_lyrics!
+    assert_equal "music_generating", order.status
+    assert draft.reload.is_approved
+    assert draft.reload.is_locked
+    assert_not_nil order.approved_lyrics_draft_id
+  end
+
+  test "start_music_generation transitions from lyrics_approved to music_generating" do
+    order = orders(:b2c_lyrics_approved)
+    order.start_music_generation!
+    assert_equal "music_generating", order.status
+  end
+
+  test "music_ready transitions from music_generating to preview_ready" do
+    order = orders(:b2c_music_generating)
+    perform_enqueued_jobs do
+      order.music_ready!
+    end
+    assert_equal "preview_ready", order.status
+  end
+
+  test "approve_music transitions from preview_ready to approved" do
+    order = orders(:b2c_preview_ready)
+    perform_enqueued_jobs do
+      order.approve_music!
+    end
+    assert_equal "approved", order.status
+  end
+
+  test "mark_delivered transitions from approved to delivered" do
+    order = orders(:b2c_approved)
+    perform_enqueued_jobs do
+      order.mark_delivered!
+    end
+    assert_equal "delivered", order.status
+  end
+
+  test "fail_lyrics transitions from lyrics_drafting to lyrics_failed" do
+    order = orders(:b2c_lyrics_drafting)
+    order.fail_lyrics!
+    assert_equal "lyrics_failed", order.status
+  end
+
+  test "fail_music transitions from music_generating to music_failed" do
+    order = orders(:b2c_music_generating)
+    order.fail_music!
+    assert_equal "music_failed", order.status
+  end
+
+  test "cancel transitions from pending to cancelled" do
+    order = orders(:b2c_pending)
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from payment_failed to cancelled" do
+    order = orders(:b2c_pending)
+    order.update_columns(status: "payment_failed")
+    order.reload
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from paid to cancelled" do
+    order = orders(:b2c_paid)
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from lyrics_drafting to cancelled" do
+    order = orders(:b2c_lyrics_drafting)
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from lyrics_ready to cancelled" do
+    order = orders(:b2c_lyrics_ready)
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from lyrics_failed to cancelled" do
+    order = orders(:b2c_lyrics_drafting)
+    order.update_columns(status: "lyrics_failed")
+    order.reload
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "cancel transitions from music_failed to cancelled" do
+    order = orders(:b2c_music_generating)
+    order.update_columns(status: "music_failed")
+    order.reload
+    order.cancel!
+    assert_equal "cancelled", order.status
+  end
+
+  test "refund transitions from cancelled to refunded" do
+    order = orders(:b2c_cancelled)
+    order.refund!
+    assert_equal "refunded", order.status
+  end
+
+  # ---------------------------------------------------------------------------
+  # Group C — Transições inválidas
+  # ---------------------------------------------------------------------------
+  test "mark_paid from paid raises AASM::InvalidTransition" do
+    order = orders(:b2c_paid)
+    assert_raises(AASM::InvalidTransition) { order.mark_paid! }
+  end
+
+  test "approve_lyrics from pending raises AASM::InvalidTransition" do
+    order = orders(:b2c_pending)
+    assert_raises(AASM::InvalidTransition) { order.approve_lyrics! }
+  end
+
+  test "cancel from delivered raises AASM::InvalidTransition" do
+    order = orders(:b2c_delivered)
+    assert_raises(AASM::InvalidTransition) { order.cancel! }
+  end
+
+  test "refund from pending raises AASM::InvalidTransition" do
+    order = orders(:b2c_pending)
+    assert_raises(AASM::InvalidTransition) { order.refund! }
+  end
+
+  test "mark_delivered from pending raises AASM::InvalidTransition" do
+    order = orders(:b2c_pending)
+    assert_raises(AASM::InvalidTransition) { order.mark_delivered! }
+  end
+
+  test "start_lyrics_generation from pending raises AASM::InvalidTransition" do
+    order = orders(:b2c_pending)
+    assert_raises(AASM::InvalidTransition) { order.start_lyrics_generation! }
+  end
+
+  test "music_ready from lyrics_ready raises AASM::InvalidTransition" do
+    order = orders(:b2c_lyrics_ready)
+    assert_raises(AASM::InvalidTransition) { order.music_ready! }
+  end
+
+  test "cancel from approved raises AASM::InvalidTransition" do
+    order = orders(:b2c_approved)
+    assert_raises(AASM::InvalidTransition) { order.cancel! }
+  end
+
+  # ---------------------------------------------------------------------------
+  # Group D — Callbacks invocados
+  # ---------------------------------------------------------------------------
+  test "mark_paid! enfileira GenerateLyricsJob com order.id" do
+    order = orders(:b2c_pending)
+    assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
+      order.mark_paid!
+    end
+  end
+
+  test "lyrics_drafted! envia OrderMailer.lyrics_ready" do
+    order = orders(:b2c_lyrics_drafting)
+    assert_emails 1 do
+      order.lyrics_drafted!
+    end
+  end
+
+  test "music_ready! envia OrderMailer.preview_ready" do
+    order = orders(:b2c_music_generating)
+    assert_emails 1 do
+      order.music_ready!
+    end
+  end
+
+  test "approve_music! enfileira DeliverOrderJob com order.id" do
+    order = orders(:b2c_preview_ready)
+    assert_enqueued_with(job: DeliverOrderJob, args: [order.id]) do
+      order.approve_music!
+    end
+  end
+
+  test "mark_delivered! envia OrderMailer.delivered" do
+    order = orders(:b2c_approved)
+    assert_emails 1 do
+      order.mark_delivered!
+    end
+  end
+
+  test "fail_lyrics! transiciona para lyrics_failed (callback notify_admin via after_commit)" do
+    order = orders(:b2c_lyrics_drafting)
+    # notify_admin é after_commit — só loga; verificamos que a transição ocorre sem erros
+    order.fail_lyrics!
+    assert_equal "lyrics_failed", order.status
+  end
+
+  test "fail_music! transiciona para music_failed (callback notify_admin via after_commit)" do
+    order = orders(:b2c_music_generating)
+    order.fail_music!
+    assert_equal "music_failed", order.status
+  end
+
+  test "cancel! seta cancelled_at" do
+    order = orders(:b2c_pending)
+    assert_nil order.cancelled_at
+    order.cancel!
+    order.reload
+    assert_not_nil order.cancelled_at
+  end
+
+  # ---------------------------------------------------------------------------
+  # Group E — Guard has_unapproved_lyrics_draft?
+  # ---------------------------------------------------------------------------
+  test "approve_lyrics! sem current_lyrics_draft_id raises AASM::InvalidTransition" do
+    order = orders(:b2c_lyrics_ready)
+    order.current_lyrics_draft_id = nil
+    assert_raises(AASM::InvalidTransition) { order.approve_lyrics! }
+  end
+
+  test "approve_lyrics! com current_lyrics_draft_id de draft de outra order raises AASM::InvalidTransition" do
+    order = orders(:b2c_lyrics_ready)
+    other_draft = lyrics_drafts(:draft_v1)  # pertence a b2c_paid, não b2c_lyrics_ready
+    order.current_lyrics_draft_id = other_draft.id
+    assert_raises(AASM::InvalidTransition) { order.approve_lyrics! }
+  end
+
+  test "approve_lyrics! com draft já aprovado raises AASM::InvalidTransition" do
+    order = orders(:b2c_lyrics_ready)
+    # Forçar o draft_lyrics_ready_v1 para is_approved: true antes de testar
+    draft = lyrics_drafts(:draft_lyrics_ready_v1)
+    draft.update_columns(is_approved: true)
+    order.current_lyrics_draft_id = draft.id
+    assert_raises(AASM::InvalidTransition) { order.approve_lyrics! }
+  end
+
+  test "approve_lyrics! com draft válido approve e trava o draft" do
+    order = orders(:b2c_lyrics_ready)
+    draft = lyrics_drafts(:draft_lyrics_ready_v1)
+    order.current_lyrics_draft_id = draft.id
+
+    order.approve_lyrics!
+
+    draft.reload
+    assert draft.is_approved, "draft deve ter is_approved = true"
+    assert draft.is_locked, "draft deve ter is_locked = true"
+    assert_not_nil draft.approved_at
+    assert_not_nil order.approved_lyrics_draft_id
+    assert_equal draft.id, order.approved_lyrics_draft_id
+  end
+
+  # ---------------------------------------------------------------------------
+  # Group F — Integração com testes existentes
+  # ---------------------------------------------------------------------------
+  test "predicates de status continuam funcionando após AASM" do
+    order = orders(:b2c_pending)
+    assert order.pending?
+    assert_not order.paid?
+    assert_not order.delivered?
+
+    order.status = "paid"
+    assert order.paid?
+    assert_not order.pending?
+  end
+
+  test "predicates para todos os 14 estados respondem corretamente via AASM" do
+    %w[
+      pending payment_failed paid lyrics_drafting lyrics_ready lyrics_failed
+      lyrics_approved music_generating preview_ready music_failed
+      approved delivered cancelled refunded
+    ].each do |s|
+      order = orders(:b2c_pending)
+      order.status = s
+      assert order.public_send(:"#{s}?"), "#{s}? deveria retornar true"
+      other = Order::STATUSES.reject { |x| x == s }.first
+      order.status = other
+      assert_not order.public_send(:"#{s}?"), "#{s}? deveria retornar false para status=#{other}"
+    end
+  end
+
+  test "validação de status inválido continua bloqueando via inclusion" do
+    order = orders(:b2c_pending)
+    order.status = "flying"
+    assert_not order.valid?
+    assert order.errors[:status].any?
+  end
+end

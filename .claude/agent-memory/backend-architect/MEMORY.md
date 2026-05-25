@@ -1,2 +1,3 @@
 - [Setup decisions Secao 1](project_setup_decisions.md) — Gems instaladas, versoes reais, decisoes fechadas, particularidade do brands.yml com YAML.safe_load
 - [Models Secao 3](models_secao3.md) — 11 models + 2 concerns implementados, 348 testes passando, decisoes de design fechadas
+- [AASM Secao 4](aasm_secao4.md) — State machine Order: 14 estados, 12 events, guards, callbacks, 393 testes passando

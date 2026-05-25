@@ -84,3 +84,132 @@ guest_order:
   delivery_email: "guest@example.com"
   created_at: "2026-01-05 00:00:00"
   updated_at: "2026-01-05 00:00:00"
+
+b2c_lyrics_drafting:
+  user: customer_b2c
+  reference: "ORD-2026-L1M2N"
+  brand: "b2c"
+  locale: "it"
+  status: "lyrics_drafting"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 10:00:00"
+
+b2c_lyrics_ready:
+  user: customer_b2c
+  reference: "ORD-2026-L2M3N"
+  brand: "b2c"
+  locale: "it"
+  status: "lyrics_ready"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 11:00:00"
+
+b2c_lyrics_approved:
+  user: customer_b2c
+  reference: "ORD-2026-L3M4N"
+  brand: "b2c"
+  locale: "it"
+  status: "lyrics_approved"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  approved_at: "2026-01-10 12:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 12:00:00"
+
+b2c_music_generating:
+  user: customer_b2c
+  reference: "ORD-2026-M1N2O"
+  brand: "b2c"
+  locale: "it"
+  status: "music_generating"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 13:00:00"
+
+b2c_preview_ready:
+  user: customer_b2c
+  reference: "ORD-2026-P1Q2R"
+  brand: "b2c"
+  locale: "it"
+  status: "preview_ready"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 14:00:00"
+
+b2c_approved:
+  user: customer_b2c
+  reference: "ORD-2026-A1A2A"
+  brand: "b2c"
+  locale: "it"
+  status: "approved"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-10 10:00:00"
+  approved_at: "2026-01-10 15:00:00"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 15:00:00"
+
+b2c_cancelled:
+  user: customer_b2c
+  reference: "ORD-2026-C1C2C"
+  brand: "b2c"
+  locale: "it"
+  status: "cancelled"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  cancelled_at: "2026-01-11 00:00:00"
+  cancellation_reason: "Customer changed mind"
+  created_at: "2026-01-11 00:00:00"
+  updated_at: "2026-01-11 00:00:00"
