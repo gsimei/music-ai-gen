@@ -1,0 +1,1 @@
+- [Setup decisions Secao 1](project_setup_decisions.md) — Gems instaladas, versoes reais, decisoes fechadas, particularidade do brands.yml com YAML.safe_load

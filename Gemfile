@@ -42,9 +42,28 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# Auth + Authorization
+gem "devise", "~> 5.0"
+gem "pundit", "~> 2.4"
+
+# State machine
+gem "aasm", "~> 5.5"
+
+# Payments
+gem "stripe", "~> 13.0"
+
+# AI
+gem "anthropic"
+
+# Monitoring
+gem "sentry-rails", "~> 5.22"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+
+  # ENV vars (dev + test only; production uses credentials/secrets manager)
+  gem "dotenv-rails", "~> 3.1"
 
   # Audits gems for known security defects (use config/bundler-audit.yml to ignore issues)
   gem "bundler-audit", require: false
@@ -65,4 +84,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # HTTP stubbing for external API tests (Claude, Mureka, Stripe)
+  gem "webmock", "~> 3.23"
 end

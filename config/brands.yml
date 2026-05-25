@@ -1,0 +1,59 @@
+# config/brands.yml
+# Configuracao por brand. Acessar via BRANDS_CONFIG[:b2b] ou BRANDS_CONFIG[:b2c].
+# NUNCA hardcodar precos ou limites na aplicacao — usar sempre este arquivo.
+# Nomes de dominio sao placeholders; ajustar com nomes finais antes do launch.
+
+b2b:
+  hosts:
+    - "jinglepro.it"
+    - "jinglepro.com"
+  display_name: "JinglePro"
+  default_locale: it
+  supported_locales:
+    - it
+    - en
+    - es
+    - fr
+    - de
+  primary_color: "#1a3a5c"
+  tiers:
+    starter:
+      price_cents: 7900
+      lyrics_regen_limit: 2
+      music_regen_limit: 1
+      includes_stems: false
+      max_duration_seconds: 60
+    pro:
+      price_cents: 14900
+      lyrics_regen_limit: 3
+      music_regen_limit: 2
+      includes_stems: true
+      max_duration_seconds: 90
+
+b2c:
+  hosts:
+    - "musicaregalo.it"
+    - "musicaregalo.com"
+  display_name: "MusicaRegalo"
+  default_locale: it
+  supported_locales:
+    - it
+    - en
+    - es
+    - fr
+    - de
+    - pt
+  primary_color: "#e85d75"
+  tiers:
+    standard:
+      price_cents: 1900
+      lyrics_regen_limit: 2
+      music_regen_limit: 1
+      includes_stems: false
+      max_duration_seconds: 120
+    pro:
+      price_cents: 3900
+      lyrics_regen_limit: 3
+      music_regen_limit: 2
+      includes_stems: true
+      max_duration_seconds: 180

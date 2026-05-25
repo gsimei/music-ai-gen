@@ -1,0 +1,2 @@
+- [Project Context](project_context.md) — Multi-brand Rails 8.1 SaaS, B2B/B2C, European market, GDPR hard requirement
+- [Security Baseline](security_baseline.md) — Controls in place and gaps flagged in Section 1 Setup Base review (2026-05-25)

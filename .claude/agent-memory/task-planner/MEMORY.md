@@ -1,0 +1,1 @@
+- [Visão geral do projeto](project_overview.md) — Stack, marcas, mercados, Ruby/Rails versions confirmadas

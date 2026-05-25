@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cantabile · Serenata — Vanilla HTML</title>
+
+<!-- ─── Fonts ─────────────────────────────────────────────── -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!--
+ ┌─────────────────────────────────────────────────────────────┐
+ │ TAILWIND CONFIG — copia bloco abaixo para tailwind.config.js │
+ │ As mesmas classes (cant-*, ser-*, font-cant-display, etc.)   │
+ │ vão funcionar no seu projeto Rails sem mais nada.            │
+ └─────────────────────────────────────────────────────────────┘
+-->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // ─── copiar daqui ───────────────────────────────────────────
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cant: {
+            ink:    'oklch(0.22 0.04 155)',  // bosco / deep forest
+            paper:  'oklch(0.97 0.012 80)',  // avorio / warm bone
+            brass:  'oklch(0.72 0.13 75)',   // ottone
+            mute:   'oklch(0.58 0.02 145)',  // foglia
+            line:   'oklch(0.85 0.012 80)',
+          },
+          ser: {
+            cream:  'oklch(0.96 0.025 70)',
+            ink:    'oklch(0.32 0.13 25)',   // bordeaux
+            blush:  'oklch(0.82 0.07 40)',
+            shadow: 'oklch(0.50 0.14 25)',
+            mute:   'oklch(0.52 0.08 25)',
+            line:   'oklch(0.88 0.04 40)',
+          },
+        },
+        fontFamily: {
+          'cant-display': ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          'cant-body':    ['Manrope', 'system-ui', 'sans-serif'],
+          'ser-display':  ['"Instrument Serif"', '"Cormorant Garamond"', 'serif'],
+          'ser-body':     ['Geist', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  };
+  // ─── até aqui ───────────────────────────────────────────────
+</script>
+
+<style>
+  body {
+    background: #f0eee9;
+    font-family: 'Manrope', system-ui, sans-serif;
+    margin: 0;
+  }
+  /* Phone frame — uma única classe utilitária reutilizável.
+     No Rails, isso vira app/views/shared/_phone_frame.html.erb */
+  .phone {
+    position: relative;
+    width: 360px;
+    height: 780px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .phone .status-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    z-index: 50; pointer-events: none;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px 0;
+    font: 600 13px -apple-system, system-ui;
+  }
+  .phone .home-indicator {
+    position: absolute; bottom: 6px; left: 50%;
+    transform: translateX(-50%); z-index: 50; pointer-events: none;
+    width: 100px; height: 4px; border-radius: 2px;
+    background: currentColor; opacity: 0.25;
+  }
+
+  /* Animations used by loading states */
+  @keyframes pulse-soft  { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: .85; } }
+  @keyframes wave-rise   { 0% { transform: scaleY(.3); } 50% { transform: scaleY(1); } 100% { transform: scaleY(.3); } }
+  @keyframes spin-slow   { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  @keyframes float-y     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+  .anim-pulse     { animation: pulse-soft 3.4s ease-in-out infinite; }
+  .anim-spin-slow { animation: spin-slow 18s linear infinite; }
+  .anim-spin-rev  { animation: spin-slow 12s linear infinite reverse; }
+  .live-bar       { transform-origin: center; animation: wave-rise var(--d, 1s) ease-in-out var(--delay, 0s) infinite; }
+  .float-note     { animation: float-y var(--d, 1.2s) ease-in-out var(--delay, 0s) infinite; }
+
+  /* Section heading */
+  .section-head h2 { font-family: 'Cormorant Garamond', serif; }
+
+  /* Scrollable row of phones */
+  .phones-row {
+    display: flex; gap: 28px;
+    padding: 28px 48px 60px;
+    overflow-x: auto;
+    align-items: flex-start;
+    scroll-snap-type: x mandatory;
+  }
+  .phones-row > * { scroll-snap-align: start; }
+  .phone-wrap     { display: flex; flex-direction: column; gap: 10px; }
+  .phone-label    {
+    font: 500 13px Manrope;
+    color: rgba(60,50,40,.7);
+    padding-left: 4px;
+  }
+  .phone-card {
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+</style>
+</head>
+
+<body class="text-stone-900">
+
+<!-- ─────────────────────────────────────────────────────────────
+     PAGE HEADER (não vira partial — só pra documentação)
+───────────────────────────────────────────────────────────────── -->
+<header class="px-12 pt-14 pb-6">
+  <div class="text-xs tracking-[0.2em] uppercase text-stone-500 mb-3">Vanilla HTML · Rails-ready</div>
+  <h1 class="text-4xl font-medium tracking-tight" style="font-family:'Cormorant Garamond',serif;">
+    Cantabile <span class="italic text-stone-400">+</span> Serenata
+  </h1>
+  <p class="mt-3 max-w-2xl text-sm text-stone-600 leading-relaxed">
+    Cada tela é uma <code class="bg-stone-200 px-1.5 py-0.5 rounded text-xs">section</code> com
+    o caminho do partial Rails sugerido. Cores e fontes são tokens Tailwind (<code class="text-xs">cant-*</code>,
+    <code class="text-xs">ser-*</code>) — copie o bloco <code class="text-xs">tailwind.config</code>
+    do <code class="text-xs">&lt;head&gt;</code> pro seu projeto e a portabilidade é direta.
+    JS está embaixo, identificado por <code class="text-xs">data-controller</code> — formato Stimulus-friendly.
+  </p>
+</header>
+
+<!-- ═════════════════════════════════════════════════════════════
+     CANTABILE · B2B JINGLES
+     → app/views/cantabile/
+═════════════════════════════════════════════════════════════ -->
+<section class="section-head px-12 pt-8 pb-2">
+  <div class="text-[10px] tracking-[0.22em] uppercase text-stone-500">Marca · B2B</div>
+  <h2 class="text-3xl font-medium tracking-tight mt-1">Cantabile <span class="italic text-stone-400 text-2xl">— jingle per il tuo negozio</span></h2>
+</section>
+
+<div class="phones-row">
+
+  <!-- ─── SCREEN 1 · LANDING ──────────────────────────────────
+       → app/views/cantabile/landings/show.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">01 · Landing</div>
+    <div class="phone phone-card bg-cant-paper text-cant-ink font-cant-body">
+      <!-- status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="flex items-center gap-1.5 opacity-85">
+          <svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg>
+          <svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg>
+        </div>
+      </div>
+
+      <!-- top bar -->
+      <div class="pt-[52px] px-[22px] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <!-- monogram -->
+          <svg width="22" height="24" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+          <span class="font-cant-display text-[21px] font-medium tracking-tight">Cantabile</span>
+        </div>
+        <div class="border border-cant-line px-3 py-1.5 rounded-full text-[11px] tracking-wider text-cant-mute">IT · EN</div>
+      </div>
+
+      <!-- hero -->
+      <div class="px-[22px] pt-9">
+        <div class="text-[10px] tracking-[0.24em] uppercase text-cant-brass">
+          Jingle su misura · Italia
+        </div>
+        <h1 class="font-cant-display font-medium mt-3.5 text-[56px] leading-[0.92] tracking-[-0.04em]">
+          Una voce<br>
+          <span class="italic text-cant-brass">per la</span> tua<br>
+          bottega.
+        </h1>
+        <p class="mt-4 text-sm text-cant-mute leading-relaxed max-w-[290px]">
+          Jingle professionali generati con AI, scritti su di te. Pronti in 24 ore.
+          Da <strong class="text-cant-ink font-semibold">€79</strong>.
+        </p>
+
+        <div class="mt-5 flex gap-2.5">
+          <button class="bg-cant-ink text-cant-paper rounded-full px-5 py-3.5 text-sm font-semibold flex items-center gap-2 shadow-lg">
+            Crea il tuo jingle
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8m0 0L6 2m4 4L6 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <button class="border border-cant-line text-cant-ink rounded-full px-4 py-3.5 text-sm font-medium">
+            Ascolta esempi
+          </button>
+        </div>
+      </div>
+
+      <!-- sample preview card -->
+      <div class="mx-[22px] mt-8 bg-cant-ink text-cant-paper rounded-sm px-4.5 py-5"
+           style="padding:20px 18px;"
+           data-controller="audio-preview" data-audio-preview-seed-value="31">
+        <div class="flex justify-between text-[10px] tracking-wider opacity-50">
+          <span>ESEMPIO · PASTICCERIA</span>
+          <span>0:14 / 0:30</span>
+        </div>
+        <p class="font-cant-display italic mt-3 text-xl leading-snug">
+          "Da Marisa, ogni mattina,<br>il dolce profumo di casa…"
+        </p>
+        <div class="flex items-center gap-3 mt-3.5">
+          <button class="w-9 h-9 rounded-full bg-cant-brass flex items-center justify-center" data-action="click->audio-preview#toggle">
+            <svg width="11" height="13" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+          </button>
+          <svg class="waveform" data-waveform="" data-seed="31" data-progress="0.46" data-bars="48" width="228" height="32"></svg>
+        </div>
+      </div>
+
+      <!-- social proof -->
+      <div class="mx-[22px] mt-5 pt-4.5 border-t border-cant-line flex items-center justify-between" style="padding-top:18px;">
+        <div>
+          <div class="font-cant-display text-[26px] leading-none tracking-tight">1.240+</div>
+          <div class="text-[10px] text-cant-mute tracking-wider mt-0.5">JINGLE CONSEGNATI</div>
+        </div>
+        <div class="w-px h-9 bg-cant-line"></div>
+        <div>
+          <div class="font-cant-display text-[26px] leading-none tracking-tight">24<span class="italic text-cant-brass">h</span></div>
+          <div class="text-[10px] text-cant-mute tracking-wider mt-0.5">CONSEGNA MEDIA</div>
+        </div>
+        <div class="w-px h-9 bg-cant-line"></div>
+        <div>
+          <div class="font-cant-display text-[26px] leading-none tracking-tight">4.9</div>
+          <div class="text-[10px] text-cant-mute tracking-wider mt-0.5">★★★★★ TRUSTPILOT</div>
+        </div>
+      </div>
+
+      <div class="home-indicator text-cant-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 2 · VOICE CATALOG ────────────────────────────
+       → app/views/cantabile/voices/index.html.erb
+       Render collection: voices/_voice_card.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">02 · Briefing · scelta voce</div>
+    <div class="phone phone-card bg-cant-paper text-cant-ink font-cant-body flex flex-col">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <!-- header strip with stepper -->
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+          <span class="font-cant-display text-[19px] font-medium">Cantabile</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex gap-[3px]">
+            <div class="w-3.5 h-0.5 bg-cant-brass"></div>
+            <div class="w-3.5 h-0.5 bg-cant-brass"></div>
+            <div class="w-3.5 h-0.5 bg-cant-brass"></div>
+            <div class="w-3.5 h-0.5 bg-cant-brass"></div>
+            <div class="w-3.5 h-0.5 bg-cant-line"></div>
+          </div>
+          <span class="text-[10px] tracking-wider text-cant-mute">04 / 05</span>
+        </div>
+      </div>
+
+      <div class="px-[22px]">
+        <div class="text-[10px] tracking-[0.22em] uppercase text-cant-mute">Passo 4 · Voce</div>
+        <h2 class="font-cant-display text-4xl font-medium mt-2 tracking-tight leading-none">
+          Chi <span class="italic text-cant-brass">canterà</span> per voi?
+        </h2>
+        <p class="text-[12.5px] text-cant-mute mt-1.5 leading-relaxed">
+          Ascolta un breve provino. Puoi cambiare idea anche dopo.
+        </p>
+
+        <!-- filter chips -->
+        <div class="flex gap-2 flex-wrap mt-4.5" style="margin-top:18px;">
+          <span class="px-3 py-1.5 rounded-full text-[11.5px] bg-cant-ink text-cant-paper">Tutti</span>
+          <span class="px-3 py-1.5 rounded-full text-[11.5px] border border-cant-line">Maschili</span>
+          <span class="px-3 py-1.5 rounded-full text-[11.5px] border border-cant-line">Femminili</span>
+          <span class="px-3 py-1.5 rounded-full text-[11.5px] border border-cant-line">Italiano</span>
+        </div>
+      </div>
+
+      <!-- voice cards grid -->
+      <div class="px-[22px] mt-3.5 flex-1 overflow-hidden">
+        <div class="grid grid-cols-2 gap-3">
+          <!-- ⌬ voice card · render in collection -->
+          <div class="bg-cant-paper border border-cant-line p-3.5 rounded-sm relative">
+            <div class="h-24 rounded-sm relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.55 0.07 28), oklch(0.32 0.05 28));">
+              <div class="absolute left-2.5 top-2.5 font-cant-display italic text-[13px] text-white">Tenore · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-cant-display text-xl font-medium tracking-tight">Alessandro</div>
+              <div class="text-[10px] tracking-wider text-cant-mute">0:24</div>
+            </div>
+            <div class="text-[11px] text-cant-mute mt-0.5">caldo, classico</div>
+          </div>
+
+          <div class="bg-cant-paper border border-cant-ink p-3.5 rounded-sm relative" style="box-shadow:0 0 0 1px oklch(0.22 0.04 155)">
+            <span class="absolute -top-2 right-3 bg-cant-brass text-cant-ink text-[9px] tracking-wider px-2 py-1 font-semibold">SELEZIONATA</span>
+            <div class="h-24 rounded-sm relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.55 0.07 12), oklch(0.32 0.05 12));">
+              <div class="absolute left-2.5 top-2.5 font-cant-display italic text-[13px] text-white">Mezzo · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-cant-display text-xl font-medium tracking-tight">Giulia</div>
+              <div class="text-[10px] tracking-wider text-cant-mute">0:22</div>
+            </div>
+            <div class="text-[11px] text-cant-mute mt-0.5">elegante, sicura</div>
+          </div>
+
+          <div class="bg-cant-paper border border-cant-line p-3.5 rounded-sm relative">
+            <div class="h-24 rounded-sm relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.55 0.07 50), oklch(0.32 0.05 50));">
+              <div class="absolute left-2.5 top-2.5 font-cant-display italic text-[13px] text-white">Baritono · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-cant-display text-xl font-medium tracking-tight">Renato</div>
+              <div class="text-[10px] tracking-wider text-cant-mute">0:28</div>
+            </div>
+            <div class="text-[11px] text-cant-mute mt-0.5">narrativo, autorevole</div>
+          </div>
+
+          <div class="bg-cant-paper border border-cant-line p-3.5 rounded-sm relative">
+            <div class="h-24 rounded-sm relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.55 0.07 80), oklch(0.32 0.05 80));">
+              <div class="absolute left-2.5 top-2.5 font-cant-display italic text-[13px] text-white">Soprano · IT/EN</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-cant-display text-xl font-medium tracking-tight">Stella</div>
+              <div class="text-[10px] tracking-wider text-cant-mute">0:26</div>
+            </div>
+            <div class="text-[11px] text-cant-mute mt-0.5">brillante, gioiosa</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- sticky CTA -->
+      <div class="px-[22px] pt-3.5 pb-7 border-t border-cant-line bg-cant-paper">
+        <button class="w-full bg-cant-ink text-cant-paper rounded-full py-3.5 px-4.5 text-sm font-semibold flex items-center justify-between">
+          <span>Conferma · Giulia</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="home-indicator text-cant-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 3 · LYRIC REVIEW ─────────────────────────────
+       → app/views/orders/lyrics/edit.html.erb
+       Render collection: lyrics/_block.html.erb (turbo-frame, regen via Stimulus)
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">03 · Revisione letra</div>
+    <div class="phone phone-card bg-cant-paper text-cant-ink font-cant-body flex flex-col">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+          <span class="font-cant-display text-[19px] font-medium">Cantabile</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex gap-[3px]">
+            <div class="w-3.5 h-0.5 bg-cant-brass"></div><div class="w-3.5 h-0.5 bg-cant-brass"></div><div class="w-3.5 h-0.5 bg-cant-brass"></div><div class="w-3.5 h-0.5 bg-cant-brass"></div><div class="w-3.5 h-0.5 bg-cant-brass"></div>
+          </div>
+          <span class="text-[10px] tracking-wider text-cant-mute">05 / 05</span>
+        </div>
+      </div>
+
+      <div class="px-[22px]">
+        <div class="text-[10px] tracking-[0.22em] uppercase text-cant-mute">Passo 5 · La tua letra</div>
+        <h2 class="font-cant-display text-[32px] font-medium mt-2 tracking-tight leading-none">
+          Pasticceria <span class="italic text-cant-brass">Marisa</span>
+        </h2>
+        <div class="flex gap-2 mt-2 text-[11px] text-cant-mute">
+          <span>🇮🇹 IT</span><span>·</span><span>Stile: pop italiano</span><span>·</span><span>0:30</span>
+        </div>
+      </div>
+
+      <!-- regen counter banner -->
+      <div class="mx-[22px] mt-4.5 mb-3 px-3.5 py-2.5 text-[11.5px] flex items-center justify-between"
+           style="background:color-mix(in oklch, oklch(0.72 0.13 75) 10%, transparent); border:1px solid color-mix(in oklch, oklch(0.72 0.13 75) 30%, transparent); margin-top:18px;">
+        <span><strong>2 rigenerazioni</strong> rimaste sulla letra</span>
+        <span class="font-cant-display italic text-cant-brass text-sm">Standard</span>
+      </div>
+
+      <!-- ⌬ lyric block · render in collection -->
+      <div class="px-[22px] flex-1 overflow-hidden">
+        <div class="bg-cant-paper border border-cant-line rounded-sm p-3.5 mb-2.5" data-controller="lyric-block" data-lyric-block-id-value="verse-1">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] tracking-wider font-bold uppercase text-cant-brass px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.72 0.13 75) 12%, transparent);">Verso 1</span>
+            </div>
+            <button class="text-cant-mute text-[11px] flex items-center gap-1" data-action="click->lyric-block#regenerate">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+              rigenera
+            </button>
+          </div>
+          <div class="font-cant-display text-base leading-snug">
+            <div>Quando il giorno si sveglia in città,</div>
+            <div>c'è un profumo che chiama da là —</div>
+            <div>Pasticceria Marisa, vieni a vedere,</div>
+            <div>la dolcezza si fa da bere.</div>
+          </div>
+        </div>
+
+        <div class="bg-cant-paper border border-cant-line rounded-sm p-3.5 mb-2.5" data-controller="lyric-block" data-lyric-block-id-value="chorus">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] tracking-wider font-bold uppercase text-cant-ink px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.22 0.04 155) 12%, transparent);">Ritornello</span>
+            </div>
+            <button class="text-cant-mute text-[11px] flex items-center gap-1" data-action="click->lyric-block#regenerate">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+              rigenera
+            </button>
+          </div>
+          <div class="font-cant-display text-base leading-snug">
+            <div>Da Marisa, da Marisa,</div>
+            <div>ogni mattina è una sorpresa.</div>
+            <div>Cornetti caldi, caffè e cantar —</div>
+            <div>la giornata può cominciar.</div>
+          </div>
+        </div>
+
+        <div class="bg-cant-paper border border-cant-line rounded-sm p-3.5 mb-2.5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[9px] tracking-wider font-bold uppercase text-cant-brass px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.72 0.13 75) 12%, transparent);">Verso 2</span>
+          </div>
+          <div class="font-cant-display text-base leading-snug">Tra Largo Augusto e via Padova…</div>
+        </div>
+      </div>
+
+      <div class="px-[22px] pt-3.5 pb-7 border-t border-cant-line">
+        <div class="text-[10.5px] text-cant-mute mb-2.5 flex items-center gap-1.5">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="5.5" fill="none" stroke="currentColor"/><path d="M6 3v3.5l2 1.5" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+          Una volta approvata, la letra non potrà più essere modificata.
+        </div>
+        <button class="w-full bg-cant-ink text-cant-paper rounded-full py-3.5 px-4.5 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg">
+          Approva e genera musica <span class="font-cant-display italic opacity-70">♪</span>
+        </button>
+      </div>
+
+      <div class="home-indicator text-cant-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 4 · A/B PREVIEW ──────────────────────────────
+       → app/views/orders/previews/show.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">04 · Anteprima A/B</div>
+    <div class="phone phone-card bg-cant-paper text-cant-ink font-cant-body flex flex-col">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+          <span class="font-cant-display text-[19px] font-medium">Cantabile</span>
+        </div>
+      </div>
+
+      <div class="px-[22px]">
+        <div class="text-[10px] tracking-[0.22em] uppercase text-cant-mute">Quasi pronto · scegli l'arrangiamento</div>
+        <h2 class="font-cant-display text-[32px] font-medium mt-2 tracking-tight leading-none">
+          Abbiamo scritto<br><span class="italic text-cant-brass">due</span> versioni.
+        </h2>
+        <p class="text-[12.5px] text-cant-mute mt-2 leading-relaxed">
+          30 secondi ciascuna. Scegli quella che sente di più la tua bottega.
+        </p>
+      </div>
+
+      <div class="px-[22px] mt-5 flex-1 overflow-hidden">
+        <!-- variante A -->
+        <div class="bg-cant-ink text-cant-paper rounded-sm p-4 mb-3" data-controller="audio-preview" data-audio-preview-seed-value="17">
+          <div class="flex justify-between items-center">
+            <div class="font-cant-display italic text-[26px] tracking-tight">
+              variante <span class="not-italic text-cant-brass">A</span>
+            </div>
+            <div class="text-[10px] tracking-wider opacity-55">0:30</div>
+          </div>
+          <div class="mt-1 text-[11px] opacity-70">Giulia · pop italiano · medio</div>
+          <div class="flex items-center gap-3 mt-3.5">
+            <button class="w-10 h-10 rounded-full bg-cant-brass flex items-center justify-center" data-action="click->audio-preview#toggle">
+              <svg width="12" height="12" viewBox="0 0 10 10"><rect x="1" y="1" width="3" height="8" rx=".5" class="fill-cant-ink"/><rect x="6" y="1" width="3" height="8" rx=".5" class="fill-cant-ink"/></svg>
+            </button>
+            <svg class="waveform" data-waveform="" data-seed="17" data-progress="0.55" data-bars="48" data-played="brass" width="228" height="36"></svg>
+          </div>
+          <button class="mt-3.5 w-full bg-cant-brass text-cant-ink rounded-full py-3 text-[13px] font-semibold flex items-center justify-between px-4">
+            <span>Scegli questa versione</span>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <!-- variante B -->
+        <div class="bg-cant-ink text-cant-paper rounded-sm p-4 mb-3" data-controller="audio-preview" data-audio-preview-seed-value="53">
+          <div class="flex justify-between items-center">
+            <div class="font-cant-display italic text-[26px] tracking-tight">
+              variante <span class="not-italic text-cant-paper">B</span>
+            </div>
+            <div class="text-[10px] tracking-wider opacity-55">0:30</div>
+          </div>
+          <div class="mt-1 text-[11px] opacity-70">Giulia · acustico · lento</div>
+          <div class="flex items-center gap-3 mt-3.5">
+            <button class="w-10 h-10 rounded-full bg-cant-paper flex items-center justify-center" data-action="click->audio-preview#toggle">
+              <svg width="11" height="13" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-cant-ink"/></svg>
+            </button>
+            <svg class="waveform" data-waveform="" data-seed="53" data-progress="0" data-bars="48" data-played="paper" width="228" height="36"></svg>
+          </div>
+          <button class="mt-3.5 w-full bg-cant-paper text-cant-ink rounded-full py-3 text-[13px] font-semibold flex items-center justify-between px-4">
+            <span>Scegli questa versione</span>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="px-[22px] pt-1.5 pb-7">
+        <button class="w-full bg-transparent text-cant-ink border border-cant-line rounded-full py-3 text-[13px] font-medium flex items-center justify-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+          Chiedi una modifica · 1 rigenerazione rimasta
+        </button>
+      </div>
+
+      <div class="home-indicator text-cant-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 5 · GENERATING ───────────────────────────────
+       → app/views/orders/generating.html.erb
+       Aggiorna via Turbo Streams ogni 2s, polling o ActionCable.
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">05 · Generazione</div>
+    <div class="phone phone-card bg-cant-ink text-cant-paper font-cant-body flex flex-col relative overflow-hidden">
+      <div class="status-bar text-cant-paper"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <!-- warm glow -->
+      <div class="absolute w-[420px] h-[420px] rounded-full anim-pulse pointer-events-none"
+           style="top:80px; left:50%; transform:translateX(-50%); opacity:0.18;
+                  background:radial-gradient(circle, oklch(0.72 0.13 75) 0%, transparent 65%);"></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between relative">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+          <span class="font-cant-display text-[19px] font-medium">Cantabile</span>
+        </div>
+      </div>
+
+      <div class="flex-1 flex flex-col items-center justify-center px-8 relative">
+        <!-- centerpiece: rings + bars -->
+        <div class="relative w-[200px] h-[200px] flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full anim-spin-slow"
+               style="border:1px solid color-mix(in oklch, oklch(0.72 0.13 75) 50%, transparent);">
+            <div class="absolute -top-[3px] left-1/2 w-1.5 h-1.5 bg-cant-brass rounded-full" style="transform:translateX(-50%)"></div>
+          </div>
+          <div class="absolute inset-[22px] rounded-full anim-spin-rev"
+               style="border:1px dashed color-mix(in oklch, oklch(0.72 0.13 75) 35%, transparent);"></div>
+          <div class="relative z-10 flex items-center gap-0.5" style="width:120px; height:70px;">
+            <!-- live bars · 9 -->
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.02s; --delay:0s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.14s; --delay:.05s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.26s; --delay:.1s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.38s; --delay:.15s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.50s; --delay:.2s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.02s; --delay:.25s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.14s; --delay:.3s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.26s; --delay:.35s;"></div>
+            <div class="live-bar flex-1 h-full rounded-full bg-cant-brass" style="--d:1.38s; --delay:.4s;"></div>
+          </div>
+        </div>
+
+        <div class="mt-9 text-center">
+          <div class="text-[10px] tracking-[0.24em] uppercase text-cant-brass">In ascolto · 00:42</div>
+          <h2 class="font-cant-display font-medium text-4xl leading-tight tracking-tight mt-3">
+            Stiamo dando<br><span class="italic text-cant-brass">voce</span> al tuo jingle.
+          </h2>
+          <p class="mt-3.5 text-[13px] leading-relaxed max-w-[280px]" style="color:rgba(245,241,231,0.6);">
+            Circa un minuto. Compongo, mixo e mastero — ti avviso non appena pronto.
+          </p>
+        </div>
+
+        <!-- progress steps -->
+        <div class="mt-8 w-full flex flex-col gap-2.5 text-[13px]">
+          <div class="flex items-center gap-3">
+            <div class="w-3.5 h-3.5 rounded-full bg-cant-brass flex items-center justify-center"><svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" class="stroke-cant-ink" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <span>Arrangiamento</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-3.5 h-3.5 rounded-full flex items-center justify-center" style="border:1px solid oklch(0.72 0.13 75);">
+              <div class="w-1.5 h-1.5 rounded-full bg-cant-brass anim-pulse" style="animation-duration:1.2s"></div>
+            </div>
+            <span class="font-cant-display italic text-[15px]">Voce di Giulia</span>
+          </div>
+          <div class="flex items-center gap-3" style="color:rgba(245,241,231,0.4);">
+            <div class="w-3.5 h-3.5 rounded-full" style="border:1px solid rgba(245,241,231,0.25);"></div>
+            <span>Mix &amp; master</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-[22px] pb-9 text-center text-[11px]" style="color:rgba(245,241,231,0.45);">
+        Puoi chiudere — ti scriviamo via email quando è pronto.
+      </div>
+
+      <div class="home-indicator text-cant-paper"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════════════════════
+     SERENATA · B2C MUSICA PRESENTE
+     → app/views/serenata/
+═════════════════════════════════════════════════════════════ -->
+<section class="section-head px-12 pt-8 pb-2">
+  <div class="text-[10px] tracking-[0.22em] uppercase text-stone-500">Marca · B2C</div>
+  <h2 class="text-3xl font-medium tracking-tight mt-1" style="font-family:'Instrument Serif',serif;">Serenata <span class="italic text-stone-400 text-2xl">— una canzone, scritta per chi ami</span></h2>
+</section>
+
+<div class="phones-row">
+
+  <!-- ─── SCREEN 1 · LANDING ──────────────────────────────────
+       → app/views/serenata/landings/show.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">01 · Landing</div>
+    <div class="phone phone-card bg-ser-cream text-ser-ink font-ser-body relative">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <!-- blush blob -->
+      <div class="absolute pointer-events-none" style="width:480px; height:480px; border-radius:50%; top:-160px; right:-160px; opacity:.7; background:radial-gradient(circle, oklch(0.82 0.07 40) 0%, transparent 65%);"></div>
+
+      <div class="pt-[52px] px-[22px] flex items-center justify-between relative">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/></svg>
+          <span class="font-ser-display text-2xl tracking-tight">Sere<em>n</em>ata</span>
+        </div>
+        <button class="border border-ser-line text-ser-ink rounded-full px-3.5 py-2 text-xs">Accedi</button>
+      </div>
+
+      <div class="px-6 pt-9 relative">
+        <div class="font-ser-display italic text-[15px] text-ser-shadow">✻  Una canzone per te</div>
+        <h1 class="mt-3.5 font-ser-display text-[64px] leading-[0.88] tracking-[-0.04em]">
+          La sua<br><em>canzone,</em><br>mai sentita<br>prima.
+        </h1>
+        <p class="mt-4 text-sm text-ser-mute leading-relaxed max-w-[280px]">
+          Tu racconti chi è, noi ne facciamo una canzone vera. Compleanno, anniversario,
+          scuse fatte male — da <strong class="text-ser-ink font-semibold">€29</strong>.
+        </p>
+        <button class="mt-5 inline-flex items-center gap-2.5 bg-ser-ink text-ser-cream rounded-full px-6 py-3.5 text-sm font-medium"
+                style="box-shadow:0 10px 30px color-mix(in oklch, oklch(0.32 0.13 25) 35%, transparent);">
+          <span>Inizia una canzone</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- sample card -->
+      <div class="mx-[22px] mt-8 bg-white rounded-[18px] p-4.5 relative" style="padding:18px; border:1px solid oklch(0.88 0.04 40); box-shadow:0 14px 40px rgba(122,42,46,.12);"
+           data-controller="audio-preview" data-audio-preview-seed-value="91">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="font-ser-display italic text-[13px] text-ser-shadow">per la mamma · da Marta</div>
+            <div class="font-ser-display text-2xl mt-1 tracking-tight">"Sessant'anni di te"</div>
+          </div>
+          <span class="text-[9px] tracking-wider px-2 py-1 rounded-full bg-ser-blush text-ser-ink font-semibold">STORIA VERA</span>
+        </div>
+        <div class="flex items-center gap-3 mt-3.5">
+          <button class="w-[38px] h-[38px] rounded-full bg-ser-ink flex items-center justify-center" data-action="click->audio-preview#toggle">
+            <svg width="11" height="13" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-cream"/></svg>
+          </button>
+          <svg class="waveform" data-waveform="" data-seed="91" data-progress="0.36" data-bars="48" data-played="ser-ink" data-unplayed="ser-ink" width="220" height="32"></svg>
+        </div>
+      </div>
+
+      <!-- social proof -->
+      <div class="px-[22px] pt-5.5 flex items-center gap-3.5 relative" style="padding-top:22px;">
+        <div class="flex">
+          <div class="w-[26px] h-[26px] rounded-full bg-ser-shadow" style="border:2px solid oklch(0.96 0.025 70);"></div>
+          <div class="w-[26px] h-[26px] rounded-full bg-ser-blush -ml-2" style="border:2px solid oklch(0.96 0.025 70);"></div>
+          <div class="w-[26px] h-[26px] rounded-full bg-ser-mute -ml-2" style="border:2px solid oklch(0.96 0.025 70);"></div>
+        </div>
+        <div class="text-xs text-ser-mute leading-snug">
+          <strong class="text-ser-ink font-semibold">3.482</strong> canzoni regalate.<br>La prossima è la tua.
+        </div>
+      </div>
+
+      <div class="home-indicator text-ser-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 2 · VOICES ───────────────────────────────────
+       → app/views/serenata/voices/index.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">02 · Briefing · scelta voce</div>
+    <div class="phone phone-card bg-ser-cream text-ser-ink font-ser-body flex flex-col">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/></svg>
+          <span class="font-ser-display text-[22px] tracking-tight">Sere<em>n</em>ata</span>
+        </div>
+        <span class="font-ser-display italic text-sm text-ser-mute">passo 4 di 5</span>
+      </div>
+
+      <div class="px-6">
+        <div class="font-ser-display italic text-sm text-ser-shadow">✻  scegli una voce</div>
+        <h2 class="font-ser-display text-[42px] mt-2 tracking-tight leading-[0.95]">
+          Chi <em>canterà</em><br>per lei?
+        </h2>
+        <p class="text-sm text-ser-mute mt-2">Ascolta un provino e scegli con il cuore.</p>
+
+        <div class="flex gap-2 flex-wrap mt-4.5" style="margin-top:18px;">
+          <span class="px-3.5 py-1.5 rounded-full text-xs bg-ser-ink text-ser-cream">Tutte</span>
+          <span class="px-3.5 py-1.5 rounded-full text-xs border border-ser-line">Femminili</span>
+          <span class="px-3.5 py-1.5 rounded-full text-xs border border-ser-line">Maschili</span>
+          <span class="px-3.5 py-1.5 rounded-full text-xs border border-ser-line">♪ pop</span>
+        </div>
+      </div>
+
+      <div class="px-[22px] mt-3.5 flex-1 overflow-hidden">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-ser-cream border border-ser-line rounded-[18px] p-3.5 relative">
+            <div class="h-24 rounded-[14px] relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.78 0.08 25), oklch(0.52 0.12 25));">
+              <div class="absolute left-2.5 top-2.5 font-ser-display italic text-[13px] text-white">Cantautore · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-ser-display text-xl">Vittorio</div>
+              <div class="text-[10px] tracking-wider text-ser-mute">0:22</div>
+            </div>
+            <div class="text-[11px] text-ser-mute mt-0.5">caldo, intimo</div>
+          </div>
+
+          <div class="bg-ser-cream border border-ser-ink rounded-[18px] p-3.5 relative" style="box-shadow:0 0 0 1px oklch(0.32 0.13 25)">
+            <span class="absolute -top-2 right-3 bg-ser-shadow text-ser-cream text-[9px] tracking-wider px-2 py-1 rounded-full font-semibold">SCELTA</span>
+            <div class="h-24 rounded-[14px] relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.78 0.08 35), oklch(0.52 0.12 35));">
+              <div class="absolute left-2.5 top-2.5 font-ser-display italic text-[13px] text-white">Pop · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-ser-display text-xl">Caterina</div>
+              <div class="text-[10px] tracking-wider text-ser-mute">0:24</div>
+            </div>
+            <div class="text-[11px] text-ser-mute mt-0.5">luminosa, sincera</div>
+          </div>
+
+          <div class="bg-ser-cream border border-ser-line rounded-[18px] p-3.5 relative">
+            <div class="h-24 rounded-[14px] relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.78 0.08 50), oklch(0.52 0.12 50));">
+              <div class="absolute left-2.5 top-2.5 font-ser-display italic text-[13px] text-white">Folk · IT</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-ser-display text-xl">Nino</div>
+              <div class="text-[10px] tracking-wider text-ser-mute">0:26</div>
+            </div>
+            <div class="text-[11px] text-ser-mute mt-0.5">racconta storie</div>
+          </div>
+
+          <div class="bg-ser-cream border border-ser-line rounded-[18px] p-3.5 relative">
+            <div class="h-24 rounded-[14px] relative overflow-hidden" style="background:linear-gradient(135deg, oklch(0.78 0.08 12), oklch(0.52 0.12 12));">
+              <div class="absolute left-2.5 top-2.5 font-ser-display italic text-[13px] text-white">Jazz · IT/EN</div>
+              <button class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-ink"/></svg>
+              </button>
+            </div>
+            <div class="mt-2.5 flex items-baseline justify-between">
+              <div class="font-ser-display text-xl">Bianca</div>
+              <div class="text-[10px] tracking-wider text-ser-mute">0:28</div>
+            </div>
+            <div class="text-[11px] text-ser-mute mt-0.5">velluto, malinconia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-[22px] pt-3.5 pb-7 border-t border-ser-line bg-ser-cream">
+        <button class="w-full bg-ser-ink text-ser-cream rounded-full py-4 px-4.5 text-sm font-medium flex items-center justify-between">
+          <span>Procedi con <em class="font-ser-display">Caterina</em></span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="home-indicator text-ser-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 3 · LYRICS ───────────────────────────────────
+       → app/views/serenata/lyrics/edit.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">03 · Revisione letra</div>
+    <div class="phone phone-card bg-ser-cream text-ser-ink font-ser-body flex flex-col">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/></svg>
+          <span class="font-ser-display text-[22px] tracking-tight">Sere<em>n</em>ata</span>
+        </div>
+        <span class="font-ser-display italic text-sm text-ser-mute">passo 5 di 5</span>
+      </div>
+
+      <div class="px-6">
+        <div class="font-ser-display italic text-sm text-ser-shadow">✻  ecco la tua letra</div>
+        <h2 class="font-ser-display text-[38px] mt-2 tracking-tight leading-none">
+          Per la <em>mamma</em>
+        </h2>
+        <div class="flex gap-2 mt-2 text-[11.5px] text-ser-mute flex-wrap items-center">
+          <span>60° compleanno</span><span class="opacity-50">·</span>
+          <span>voce di Caterina</span><span class="opacity-50">·</span>
+          <span class="font-ser-display italic">pop italiano</span>
+        </div>
+      </div>
+
+      <div class="mx-[22px] mt-4.5 mb-3 px-3.5 py-3 text-[11.5px] rounded-xl bg-white flex items-center justify-between"
+           style="border:1px solid oklch(0.88 0.04 40); margin-top:18px;">
+        <span>Ti restano <strong class="text-ser-shadow">2 cambi</strong> di letra</span>
+        <span class="font-ser-display italic text-ser-shadow text-sm">piano Standard</span>
+      </div>
+
+      <div class="px-[22px] flex-1 overflow-hidden">
+        <div class="bg-white border border-ser-line rounded-2xl p-3.5 mb-2.5" data-controller="lyric-block">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[9px] tracking-wider font-bold uppercase text-ser-shadow px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.50 0.14 25) 12%, transparent);">Strofa 1</span>
+            <button class="text-ser-mute text-[11px] flex items-center gap-1" data-action="click->lyric-block#regenerate">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+              rigenera
+            </button>
+          </div>
+          <div class="font-ser-display text-base leading-snug">
+            <div>Sessant'anni di luce, di mani sapienti,</div>
+            <div>di pranzi infiniti e di lacrime spente,</div>
+            <div>tu sei la canzone che non finisce mai —</div>
+            <div>la mia mamma, la voce che riconosci sai.</div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-ser-line rounded-2xl p-3.5 mb-2.5" data-controller="lyric-block">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[9px] tracking-wider font-bold uppercase text-ser-ink px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.32 0.13 25) 12%, transparent);">Ritornello</span>
+            <button class="text-ser-mute text-[11px] flex items-center gap-1" data-action="click->lyric-block#regenerate">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+              rigenera
+            </button>
+          </div>
+          <div class="font-ser-display text-base leading-snug">
+            <div>Mamma, grazie per ogni domani,</div>
+            <div>per ogni 'mangia' detto piano,</div>
+            <div>per averci sempre tenuti per mano…</div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-ser-line rounded-2xl p-3.5 mb-2.5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[9px] tracking-wider font-bold uppercase text-ser-shadow px-1.5 py-0.5 rounded-sm" style="background:color-mix(in oklch, oklch(0.50 0.14 25) 12%, transparent);">Strofa 2</span>
+          </div>
+          <div class="font-ser-display text-base leading-snug">Adesso tocca a noi cantare per te…</div>
+        </div>
+      </div>
+
+      <div class="px-[22px] pt-3.5 pb-7 border-t border-ser-line">
+        <div class="text-[10.5px] text-ser-mute mb-2.5 flex items-center gap-1.5">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="5.5" fill="none" stroke="currentColor"/><path d="M6 3v3.5l2 1.5" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+          Dopo l'approvazione, la letra resterà così — per sempre.
+        </div>
+        <button class="w-full bg-ser-ink text-ser-cream rounded-full py-4 text-sm font-medium flex items-center justify-center gap-2"
+                style="box-shadow:0 12px 30px color-mix(in oklch, oklch(0.32 0.13 25) 30%, transparent);">
+          <span>Approva e <em class="font-ser-display">fai partire la musica</em></span>
+        </button>
+      </div>
+
+      <div class="home-indicator text-ser-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 4 · A/B PREVIEW ──────────────────────────────
+       → app/views/serenata/previews/show.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">04 · Anteprima A/B</div>
+    <div class="phone phone-card bg-ser-cream text-ser-ink font-ser-body flex flex-col relative">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <div class="absolute pointer-events-none" style="width:360px;height:360px;border-radius:50%;top:-100px;left:-120px;opacity:.45;background:radial-gradient(circle, oklch(0.82 0.07 40) 0%, transparent 70%);"></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between relative">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/></svg>
+          <span class="font-ser-display text-[22px] tracking-tight">Sere<em>n</em>ata</span>
+        </div>
+      </div>
+
+      <div class="px-6 relative">
+        <div class="font-ser-display italic text-sm text-ser-shadow">✻  due versioni, una scelta</div>
+        <h2 class="font-ser-display text-[40px] mt-2 tracking-tight leading-[0.95]">
+          Quale<br><em>la commuove</em> di più?
+        </h2>
+        <p class="text-sm text-ser-mute mt-2">30 secondi a testa. Ascolta entrambe — senza fretta.</p>
+      </div>
+
+      <div class="px-[22px] mt-4.5 flex-1 overflow-hidden relative" style="margin-top:18px;">
+        <!-- variante A -->
+        <div class="bg-white rounded-[18px] p-4.5 mb-3" style="padding:18px; border:1px solid oklch(0.88 0.04 40); box-shadow:0 14px 40px rgba(122,42,46,.08);"
+             data-controller="audio-preview" data-audio-preview-seed-value="17">
+          <div class="flex justify-between items-center">
+            <div class="font-ser-display text-[32px] tracking-tight leading-tight"><em>versione</em> A</div>
+            <div class="text-[10.5px] tracking-wider text-ser-mute">0:30</div>
+          </div>
+          <div class="text-[11.5px] text-ser-mute mt-0.5">Caterina · pop morbido</div>
+          <div class="flex items-center gap-3 mt-3.5">
+            <button class="w-10 h-10 rounded-full bg-ser-ink flex items-center justify-center" data-action="click->audio-preview#toggle">
+              <svg width="12" height="12" viewBox="0 0 10 10"><rect x="1" y="1" width="3" height="8" rx=".5" class="fill-ser-cream"/><rect x="6" y="1" width="3" height="8" rx=".5" class="fill-ser-cream"/></svg>
+            </button>
+            <svg class="waveform" data-waveform="" data-seed="17" data-progress="0.6" data-bars="48" data-played="ser-ink" data-unplayed="ser-ink" width="216" height="36"></svg>
+          </div>
+          <button class="mt-3.5 w-full bg-ser-ink text-ser-cream rounded-full py-3 text-[13px] font-medium flex items-center justify-between px-4">
+            <span><em class="font-ser-display">Scelgo</em> questa</span>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <!-- variante B -->
+        <div class="bg-ser-blush rounded-[18px] p-4.5 mb-3 overflow-hidden" style="padding:18px;"
+             data-controller="audio-preview" data-audio-preview-seed-value="53">
+          <div class="flex justify-between items-center">
+            <div class="font-ser-display text-[32px] tracking-tight leading-tight text-ser-ink"><em>versione</em> B</div>
+            <div class="text-[10.5px] tracking-wider text-ser-ink opacity-60">0:30</div>
+          </div>
+          <div class="text-[11.5px] text-ser-ink opacity-70 mt-0.5">Caterina · piano e voce</div>
+          <div class="flex items-center gap-3 mt-3.5">
+            <button class="w-10 h-10 rounded-full bg-ser-ink flex items-center justify-center" data-action="click->audio-preview#toggle">
+              <svg width="11" height="13" viewBox="0 0 8 10" style="margin-left:1px"><path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="fill-ser-cream"/></svg>
+            </button>
+            <svg class="waveform" data-waveform="" data-seed="53" data-progress="0" data-bars="48" data-played="ser-ink" data-unplayed="ser-ink" data-unplayed-opacity="0.35" width="216" height="36"></svg>
+          </div>
+          <button class="mt-3.5 w-full bg-ser-ink text-ser-cream rounded-full py-3 text-[13px] font-medium flex items-center justify-between px-4">
+            <span><em class="font-ser-display">Scelgo</em> questa</span>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="px-[22px] pt-1.5 pb-7 relative">
+        <button class="w-full bg-transparent text-ser-ink border border-ser-line rounded-full py-3 text-[13px] flex items-center justify-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+          <span><em class="font-ser-display">Rifacciamola</em> · 1 rimasta</span>
+        </button>
+      </div>
+
+      <div class="home-indicator text-ser-ink"></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 5 · GENERATING ───────────────────────────────
+       → app/views/serenata/orders/generating.html.erb
+  ────────────────────────────────────────────────────────────── -->
+  <div class="phone-wrap">
+    <div class="phone-label">05 · Generazione</div>
+    <div class="phone phone-card bg-ser-cream text-ser-ink font-ser-body flex flex-col relative overflow-hidden">
+      <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5 opacity-85"><svg width="16" height="10" viewBox="0 0 16 10"><rect x="0" y="6" width="3" height="4" rx=".6" fill="currentColor"/><rect x="4" y="4" width="3" height="6" rx=".6" fill="currentColor"/><rect x="8" y="2" width="3" height="8" rx=".6" fill="currentColor"/><rect x="12" y="0" width="3" height="10" rx=".6" fill="currentColor"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="16" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+
+      <!-- warm glow -->
+      <div class="absolute pointer-events-none anim-pulse"
+           style="width:540px;height:540px;border-radius:50%;top:120px;left:50%;transform:translateX(-50%);opacity:.7;background:radial-gradient(circle, oklch(0.82 0.07 40) 0%, transparent 65%);"></div>
+
+      <div class="pt-[52px] px-[22px] pb-3.5 flex items-center justify-between relative">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/></svg>
+          <span class="font-ser-display text-[22px] tracking-tight">Sere<em>n</em>ata</span>
+        </div>
+      </div>
+
+      <div class="flex-1 flex flex-col items-center justify-center px-8 relative">
+        <!-- floating notes -->
+        <div class="relative w-[240px] h-[200px] flex items-center justify-center">
+          <div class="absolute -inset-5 rounded-full" style="border:1px solid color-mix(in oklch, oklch(0.32 0.13 25) 20%, transparent);"></div>
+          <div class="absolute inset-[30px] rounded-full anim-spin-slow" style="border:1px dashed color-mix(in oklch, oklch(0.32 0.13 25) 30%, transparent); animation-duration:30s;">
+            <div class="absolute -top-[3px] left-1/2 w-1.5 h-1.5 bg-ser-ink rounded-full" style="transform:translateX(-50%)"></div>
+          </div>
+          <div class="relative flex gap-3.5 items-end">
+            <span class="font-ser-display text-3xl text-ser-ink float-note" style="--d:1.20s;--delay:0s;">♪</span>
+            <span class="font-ser-display italic text-[42px] text-ser-ink float-note" style="--d:1.38s;--delay:.12s;">♫</span>
+            <span class="font-ser-display text-3xl text-ser-ink float-note" style="--d:1.56s;--delay:.24s;">♪</span>
+            <span class="font-ser-display italic text-[42px] text-ser-ink float-note" style="--d:1.20s;--delay:.36s;">♬</span>
+            <span class="font-ser-display text-3xl text-ser-ink float-note" style="--d:1.38s;--delay:.48s;">♪</span>
+          </div>
+        </div>
+
+        <div class="mt-9 text-center relative">
+          <div class="font-ser-display italic text-sm text-ser-shadow">✻  un minuto e poi…</div>
+          <h2 class="mt-3 font-ser-display text-[42px] leading-[0.95] tracking-tight">
+            Stiamo<br><em>scrivendo</em><br>la sua canzone.
+          </h2>
+          <p class="mt-4 text-[13.5px] text-ser-mute leading-relaxed max-w-[280px]">
+            Caterina sta provando le note. Stiamo accordando le chitarre, accendendo le candeline.
+          </p>
+        </div>
+
+        <div class="mt-7 w-full">
+          <div class="flex justify-between text-[11px] text-ser-mute mb-1.5">
+            <span class="font-ser-display italic text-[13px]">arrangiamento</span>
+            <span>62%</span>
+          </div>
+          <div class="h-1 rounded-full overflow-hidden" style="background:color-mix(in oklch, oklch(0.32 0.13 25) 8%, transparent);">
+            <div class="h-full rounded-full bg-ser-ink" style="width:62%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-[22px] pb-9 text-center font-ser-display italic text-sm text-ser-mute relative">
+        puoi chiudere — ti chiamiamo via email
+      </div>
+
+      <div class="home-indicator text-ser-ink"></div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═════════════════════════════════════════════════════════════
+     VANILLA JS
+     Cada bloco vira um Stimulus controller no Rails.
+     Identifiquei com 'data-controller' nos elementos relevantes.
+═════════════════════════════════════════════════════════════ -->
+<script>
+(() => {
+  // ─── Token resolution ───────────────────────────────────────
+  // Use o mesmo CSS variable strategy do Tailwind. Aqui é só pra
+  // o SVG do waveform pegar a cor correta sem hardcode.
+  const TOKEN_HEX = {
+    'cant-ink':   'oklch(0.22 0.04 155)',
+    'cant-paper': 'oklch(0.97 0.012 80)',
+    'cant-brass': 'oklch(0.72 0.13 75)',
+    'ser-cream':  'oklch(0.96 0.025 70)',
+    'ser-ink':    'oklch(0.32 0.13 25)',
+    'ser-blush':  'oklch(0.82 0.07 40)',
+    brass:        'oklch(0.72 0.13 75)',
+    paper:        'oklch(0.97 0.012 80)',
+  };
+
+  // ─── Pseudo-random bar heights, deterministic by seed ───────
+  function wfBars(n, seed) {
+    const out = [];
+    let s = seed * 9301 + 49297;
+    for (let i = 0; i < n; i++) {
+      s = (s * 9301 + 49297) % 233280;
+      const base = 0.25 + (s / 233280) * 0.75;
+      const env = Math.sin((i / n) * Math.PI) * 0.35 + 0.65;
+      out.push(Math.max(0.1, Math.min(1, base * env)));
+    }
+    return out;
+  }
+
+  // ─── Render waveform into a <svg data-waveform> ─────────────
+  // No Rails, isso vira `app/javascript/controllers/waveform_controller.js`:
+  //   connect()  → render()
+  //   data-waveform-seed-value, data-waveform-progress-value, etc.
+  function renderWaveform(svg) {
+    const seed     = +svg.dataset.seed || 1;
+    const progress = +svg.dataset.progress || 0;
+    const barsN    = +svg.dataset.bars || 48;
+    const width    = +svg.getAttribute('width') || 220;
+    const height   = +svg.getAttribute('height') || 32;
+    const gap      = 2;
+    const playedToken   = svg.dataset.played   || 'currentColor';
+    const unplayedToken = svg.dataset.unplayed || 'currentColor';
+    const unplayedOpa   = +svg.dataset.unplayedOpacity || 0.22;
+    const played   = TOKEN_HEX[playedToken]   || playedToken;
+    const unplayed = TOKEN_HEX[unplayedToken] || unplayedToken;
+
+    const arr = wfBars(barsN, seed);
+    const barW = (width - gap * (barsN - 1)) / barsN;
+    const playedCount = Math.round(progress * barsN);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.innerHTML = arr.map((a, i) => {
+      const h = a * height * 0.92;
+      const x = i * (barW + gap);
+      const y = (height - h) / 2;
+      const isPlayed = i < playedCount;
+      return `<rect x="${x}" y="${y}" width="${barW}" height="${h}"
+        rx="${Math.min(barW, 2) / 2}"
+        fill="${isPlayed ? played : unplayed}"
+        opacity="${isPlayed ? 1 : unplayedOpa}" />`;
+    }).join('');
+  }
+
+  document.querySelectorAll('svg[data-waveform]').forEach(renderWaveform);
+
+  // ─── Audio preview controller (vanilla) ─────────────────────
+  // Stimulus equivalent: audio_preview_controller.js
+  //   targets: ['audio', 'playIcon']
+  //   actions: { toggle }
+  //   No DOM real, toca <audio src=...> e troca o ícone.
+  document.querySelectorAll('[data-controller~="audio-preview"]').forEach((card) => {
+    const btn = card.querySelector('[data-action*="audio-preview#toggle"]');
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      card.dataset.playing = card.dataset.playing === '1' ? '0' : '1';
+      // (No Rails: aqui chama audio.play() / audio.pause() e troca o ícone)
+    });
+  });
+
+  // ─── Lyric block — regenerate stub ──────────────────────────
+  // Stimulus equivalent: lyric_block_controller.js
+  //   action: regenerate(event) → POST /lyrics/:id/regenerations,
+  //                               response = turbo_stream replaces this frame.
+  document.querySelectorAll('[data-controller~="lyric-block"]').forEach((block) => {
+    const btn = block.querySelector('[data-action*="lyric-block#regenerate"]');
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      btn.style.opacity = '0.4';
+      btn.textContent = 'rigenerando…';
+      setTimeout(() => {
+        btn.style.opacity = '';
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg> rigenera';
+      }, 1200);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
