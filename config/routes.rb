@@ -1,15 +1,21 @@
 Rails.application.routes.draw do
-  devise_for :users
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  devise_for :users
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  constraints BrandConstraint.new(:b2b) do
+    # B2B routes (JinglePro)
+    get   "orders/new",          to: "orders#new",         as: :new_order
+    get   "orders/wizard/:step", to: "orders#wizard_show", as: :wizard_order,  constraints: { step: /[1-5]/ }
+    patch "orders/wizard/:step", to: "orders#wizard_update",                   constraints: { step: /[1-5]/ }
+    resources :orders, only: [ :show ]
+  end
+
+  constraints BrandConstraint.new(:b2c) do
+    # B2C routes (MusicaRegalo)
+    get   "orders/new",          to: "orders#new"
+    get   "orders/wizard/:step", to: "orders#wizard_show", constraints: { step: /[1-5]/ }
+    patch "orders/wizard/:step", to: "orders#wizard_update", constraints: { step: /[1-5]/ }
+    resources :orders, only: [ :show ]
+  end
 end

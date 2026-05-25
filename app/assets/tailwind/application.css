@@ -1,1 +1,43 @@
 @import "tailwindcss";
+
+/* ─── Design tokens ────────────────────────────────────────────────────────── */
+/* Cantabile / B2B — forest palette */
+@theme {
+  --color-cant-ink:   oklch(0.22 0.04 155);
+  --color-cant-paper: oklch(0.97 0.012 80);
+  --color-cant-brass: oklch(0.72 0.13 75);
+  --color-cant-mute:  oklch(0.58 0.02 145);
+  --color-cant-line:  oklch(0.85 0.012 80);
+
+  /* Serenata / B2C — blush palette */
+  --color-ser-cream:  oklch(0.96 0.025 70);
+  --color-ser-ink:    oklch(0.32 0.13 25);
+  --color-ser-blush:  oklch(0.82 0.07 40);
+  --color-ser-shadow: oklch(0.50 0.14 25);
+  --color-ser-mute:   oklch(0.52 0.08 25);
+  --color-ser-line:   oklch(0.88 0.04 40);
+
+  /* Font families */
+  --font-cant-display: "Cormorant Garamond", Georgia, serif;
+  --font-cant-body:    Manrope, system-ui, sans-serif;
+  --font-ser-display:  "Instrument Serif", "Cormorant Garamond", serif;
+  --font-ser-body:     Geist, system-ui, sans-serif;
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────────── */
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.04); opacity: 0.85; }
+}
+
+/* ─── Base resets for wizard layout ────────────────────────────────────────── */
+.wizard-page {
+  min-height: 100vh;
+  background: var(--color-cant-paper);
+  font-family: var(--font-cant-body);
+}
+
+.wizard-page[data-brand="b2c"] {
+  background: var(--color-ser-cream);
+  font-family: var(--font-ser-body);
+}

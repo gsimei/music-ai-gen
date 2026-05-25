@@ -63,27 +63,27 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 5. Brand/Locale resolver
 
-- [ ] Service `BrandLocaleResolver` (detecta brand+locale por host)
-- [ ] `before_action` no `ApplicationController` setando `@brand` e `I18n.locale`
-- [ ] Routes com `constraints` por host
-- [ ] Helper `t_brand(key)` em `ApplicationHelper`
-- [ ] Setup multi-host em `development` (hosts file ou similar)
+- [x] Service `BrandLocaleResolver` (detecta brand+locale por host)
+- [x] `before_action` no `ApplicationController` setando `@brand` e `I18n.locale`
+- [x] Routes com `constraints` por host
+- [x] Helper `t_brand(key)` em `ApplicationHelper`
+- [x] Setup multi-host em `development` (hosts file ou similar)
 
 ## 6. Seed do catálogo de vozes
 
-- [ ] `db/seeds/voices.rb` com vozes placeholder
-- [ ] `db/seeds.rb` chamando o arquivo de vozes
+- [x] `db/seeds/voices.rb` com vozes placeholder
+- [x] `db/seeds.rb` chamando o arquivo de vozes
 
 ## 7. Wizard de briefing
 
-- [ ] `OrdersController#new` com Turbo Frames multi-step
-- [ ] Step 1: dados básicos (about, recipient, occasion)
-- [ ] Step 2: estilo musical (music_style, mood, tempo, duration)
-- [ ] Step 3: keywords e avoid
-- [ ] Step 4: escolha de voz (filtrada por brand/tier)
-- [ ] Step 5: revisão + escolha de tier
-- [ ] Persistência de rascunho entre steps
-- [ ] Validações por step
+- [x] `OrdersController#new` com Turbo Frames multi-step
+- [x] Step 1: dados básicos (about, recipient, occasion)
+- [x] Step 2: estilo musical (music_style, mood, tempo, duration)
+- [x] Step 3: keywords e avoid
+- [x] Step 4: escolha de voz (filtrada por brand/tier)
+- [x] Step 5: revisão + escolha de tier
+- [x] Persistência de rascunho entre steps
+- [x] Validações por step
 
 ## 8. Stripe Checkout + webhook
 

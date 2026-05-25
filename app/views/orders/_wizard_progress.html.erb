@@ -1,0 +1,83 @@
+<%# locals: (current_step:) %>
+<% b2b = current_brand == "b2b" %>
+<%
+  steps = [
+    { num: 1, label: "Informazioni" },
+    { num: 2, label: "Stile" },
+    { num: 3, label: "Dettagli" },
+    { num: 4, label: "Voce" },
+    { num: 5, label: "Revisione" }
+  ]
+%>
+
+<nav aria-label="Progresso wizard" class="px-4 pt-4 pb-3 sm:px-6">
+  <%# Step dots bar %>
+  <div class="flex items-center gap-0 mb-3" role="list">
+    <% steps.each_with_index do |step, i| %>
+      <%
+        done    = step[:num] < current_step
+        active  = step[:num] == current_step
+        future  = step[:num] > current_step
+        segment_color = if b2b
+          done || active ? "bg-cant-brass" : "bg-cant-line"
+        else
+          done || active ? "bg-ser-shadow" : "bg-ser-line"
+        end
+      %>
+
+      <li role="listitem" class="flex items-center flex-1 last:flex-none">
+        <%# Dot %>
+        <div
+          class="relative flex-none w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors duration-200
+                 <%= if done
+                       b2b ? 'bg-cant-brass text-cant-ink' : 'bg-ser-shadow text-ser-cream'
+                     elsif active
+                       b2b ? 'bg-cant-ink text-cant-paper ring-2 ring-offset-1 ring-cant-ink' : 'bg-ser-ink text-ser-cream ring-2 ring-offset-1 ring-ser-ink'
+                     else
+                       b2b ? 'bg-cant-line text-cant-mute' : 'bg-ser-line text-ser-mute'
+                     end %>"
+          <% if active %>
+            aria-current="step"
+            aria-label="Passo <%= step[:num] %>: <%= step[:label] %> — corrente"
+          <% elsif done %>
+            aria-label="Passo <%= step[:num] %>: <%= step[:label] %> — completato"
+          <% else %>
+            aria-label="Passo <%= step[:num] %>: <%= step[:label] %> — in attesa"
+          <% end %>
+        >
+          <% if done %>
+            <%# Checkmark SVG %>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          <% else %>
+            <span aria-hidden="true"><%= step[:num] %></span>
+          <% end %>
+        </div>
+
+        <%# Connector segment (not after last) %>
+        <% unless step[:num] == 5 %>
+          <div class="flex-1 h-0.5 mx-1 <%= segment_color %> transition-colors duration-300" aria-hidden="true"></div>
+        <% end %>
+      </li>
+    <% end %>
+  </div>
+
+  <%# Step labels (visible on sm+) %>
+  <div class="hidden sm:flex justify-between" aria-hidden="true">
+    <% steps.each do |step| %>
+      <%
+        done   = step[:num] < current_step
+        active = step[:num] == current_step
+        label_class = if active
+          b2b ? 'text-cant-ink font-semibold' : 'text-ser-ink font-semibold'
+        elsif done
+          b2b ? 'text-cant-brass' : 'text-ser-shadow'
+        else
+          b2b ? 'text-cant-mute' : 'text-ser-mute'
+        end
+      %>
+      <span class="text-[10px] tracking-wide uppercase <%= label_class %>"><%= step[:label] %></span>
+    <% end %>
+  </div>
+</nav>

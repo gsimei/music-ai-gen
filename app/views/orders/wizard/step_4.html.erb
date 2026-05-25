@@ -1,0 +1,219 @@
+<% b2b = current_brand == "b2b" %>
+<% saved_voice_id = @wizard_session&.to_h&.dig(:voice_id)&.to_s %>
+<%
+  # Gradient palettes for voice avatar backgrounds — cycling through hue shifts
+  hue_shifts = %w[28 12 50 80 35 60 20 45 70 15]
+%>
+
+<%= turbo_frame_tag "wizard" do %>
+  <div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen"
+       data-controller="wizard-voice">
+
+    <%# Top bar %>
+    <div class="px-4 pt-5 sm:px-6 flex items-center border-b <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+      <div class="flex items-center gap-2 pb-4">
+        <% if b2b %>
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+            <path d="M22 32 H 48" stroke-linecap="square"/>
+            <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="font-cant-display text-xl font-medium" style="font-family: var(--font-cant-display)">JinglePro</span>
+        <% else %>
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "orders/wizard_progress", current_step: 4 %>
+
+    <div class="px-4 pt-2 pb-8 sm:px-6 sm:max-w-2xl sm:mx-auto">
+
+      <%# Step header %>
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.22em] uppercase <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %> mb-1">
+          Passo 4 · Voce
+        </div>
+        <h1 class="text-4xl font-medium tracking-tight"
+            style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>; line-height: 1.1;">
+          <% if b2b %>
+            Chi <span class="italic" style="color: var(--color-cant-brass)">canterà</span> per voi?
+          <% else %>
+            Chi <em>canterà</em> per lei?
+          <% end %>
+        </h1>
+        <p class="mt-2 text-sm leading-relaxed <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+          Ascolta un breve provino e scegli la voce. Puoi cambiare idea anche dopo.
+        </p>
+      </div>
+
+      <%# Validation errors %>
+      <% if @validator&.errors&.any? %>
+        <div role="alert" class="mb-5 px-4 py-3 rounded-lg text-sm flex items-start gap-2 bg-red-50 border border-red-200 text-red-800">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+            <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <strong class="font-semibold">Scegli una voce per continuare.</strong>
+            <% @validator.errors[:voice_id].each do |msg| %>
+              <p class="mt-0.5"><%= msg %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Pro voice hint — hidden by default, shown via Stimulus %>
+      <div id="pro-voice-hint"
+           role="status"
+           aria-live="polite"
+           class="hidden mb-4 px-4 py-3 rounded-lg text-sm flex items-start gap-2
+                  <%= b2b ? 'bg-cant-brass/10 border border-cant-brass/30 text-cant-ink' : 'bg-ser-blush/50 border border-ser-shadow/30 text-ser-ink' %>">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+          <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+          <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Questa voce è disponibile nel <strong>piano Pro</strong>. Verrà selezionato automaticamente al passo successivo.</span>
+      </div>
+
+      <%= form_with url: wizard_order_path(step: 4), method: :patch,
+                    data: { turbo_frame: "wizard" },
+                    id: "voice-form" do |f| %>
+
+        <%# Hidden voice_id field — updated by Stimulus %>
+        <%= f.hidden_field :voice_id,
+            name: "order_wizard[voice_id]",
+            id: "wizard_voice_id",
+            value: saved_voice_id,
+            data: { "wizard-voice-target": "input" } %>
+
+        <%# Voice cards grid %>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-6"
+             role="radiogroup"
+             aria-label="Seleziona una voce"
+             <% if @validator&.errors&.include?(:voice_id) %>aria-describedby="voice-error"<% end %>>
+          <% @voices.each_with_index do |voice, i| %>
+            <%
+              hue = hue_shifts[i % hue_shifts.size]
+              is_selected = saved_voice_id == voice.id.to_s
+              is_pro_only = voice.pro_only?
+              tag_label = voice.gender == "male" ? "Maschio" : voice.gender == "female" ? "Femmina" : "Neutro"
+            %>
+
+            <div class="relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden border transition-all duration-150
+                        focus-within:ring-2 focus-within:ring-offset-1
+                        <%= is_selected ?
+                              (b2b ? 'border-cant-ink shadow-md focus-within:ring-cant-ink' : 'border-ser-ink shadow-md focus-within:ring-ser-ink') :
+                              (b2b ? 'border-cant-line hover:border-cant-mute focus-within:ring-cant-ink' : 'border-ser-line hover:border-ser-mute focus-within:ring-ser-ink') %>"
+                data-wizard-voice-target="card"
+                data-voice-id="<%= voice.id %>"
+                data-pro-only="<%= is_pro_only %>"
+                data-action="click->wizard-voice#select">
+
+              <%# Hidden radio (accessible) %>
+              <input type="radio"
+                     name="voice_card_<%= voice.id %>"
+                     value="<%= voice.id %>"
+                     <%= "checked" if is_selected %>
+                     class="sr-only"
+                     aria-label="<%= voice.name %><%= is_pro_only ? ' (piano Pro)' : '' %>"
+                     tabindex="0"
+                     data-wizard-voice-target="radio">
+
+              <%# Selected badge %>
+              <% if is_selected %>
+                <span class="absolute -top-0 right-2 top-2 text-[9px] tracking-wider px-2 py-0.5 font-semibold z-10
+                             <%= b2b ? 'bg-cant-brass text-cant-ink' : 'bg-ser-shadow text-ser-cream rounded-full' %>">
+                  SCELTA
+                </span>
+              <% end %>
+
+              <%# Pro badge %>
+              <% if is_pro_only %>
+                <span class="absolute top-2 left-2 text-[9px] tracking-wider px-2 py-0.5 font-bold z-10
+                             <%= b2b ? 'bg-cant-ink text-cant-paper' : 'bg-ser-ink text-ser-cream rounded-full' %>">
+                  PRO
+                </span>
+              <% end %>
+
+              <%# Voice avatar area %>
+              <div class="h-24 relative"
+                   style="background: linear-gradient(135deg, oklch(0.55 0.07 <%= hue %>), oklch(0.32 0.05 <%= hue %>));">
+                <div class="absolute left-2.5 top-2.5 text-[12px] text-white italic"
+                     style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>">
+                  <%= tag_label %> · IT
+                </div>
+
+                <%# Sample play button %>
+                <% if voice.sample_audio_url.present? %>
+                  <button type="button"
+                          class="absolute right-2 bottom-2 w-8 h-8 rounded-full bg-white flex items-center justify-center
+                                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white
+                                 hover:scale-105 transition-transform duration-150"
+                          aria-label="Ascolta il provino di <%= voice.name %>"
+                          data-sample-url="<%= voice.sample_audio_url %>"
+                          data-action="click->wizard-voice#playPreview:prevent">
+                    <svg width="10" height="11" viewBox="0 0 8 10" style="margin-left:1px" aria-hidden="true">
+                      <path d="M0.5 0.7v8.6L7.5 5 0.5 0.7z" class="<%= b2b ? 'fill-cant-ink' : 'fill-ser-ink' %>"/>
+                    </svg>
+                  </button>
+                <% end %>
+              </div>
+
+              <%# Voice info %>
+              <div class="p-3">
+                <div class="flex items-baseline justify-between gap-1">
+                  <span class="text-base font-medium"
+                        style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>">
+                    <%= voice.name %>
+                  </span>
+                </div>
+                <% if voice.description.present? %>
+                  <div class="text-[11px] mt-0.5 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+                    <%= voice.description.truncate(30) %>
+                  </div>
+                <% end %>
+                <% if voice.mood_tags.any? %>
+                  <div class="text-[10px] mt-0.5 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+                    <%= voice.mood_tags.first(2).join(", ") %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <%# Empty state when no voices %>
+          <% if @voices.empty? %>
+            <div class="col-span-2 sm:col-span-3 py-10 text-center text-sm <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+              Nessuna voce disponibile al momento. Riprova tra poco.
+            </div>
+          <% end %>
+        </div>
+
+        <%# Navigation %>
+        <div class="flex items-center gap-3">
+          <%= link_to "← Indietro",
+              wizard_order_path(step: 3),
+              class: "px-4 py-3 text-sm rounded-full border transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'border-cant-line text-cant-ink hover:bg-cant-line focus-visible:outline-cant-ink' :
+                        'border-ser-line text-ser-ink hover:bg-ser-line focus-visible:outline-ser-ink'}",
+              data: { turbo_frame: "wizard" } %>
+
+          <%= f.submit "Continua →",
+              class: "flex-1 rounded-full py-3.5 px-4 text-sm font-semibold cursor-pointer transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                        'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+<% end %>

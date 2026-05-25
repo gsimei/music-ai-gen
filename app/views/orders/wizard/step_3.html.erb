@@ -1,0 +1,127 @@
+<% b2b = current_brand == "b2b" %>
+<% saved = @wizard_session&.to_h || {} %>
+
+<%= turbo_frame_tag "wizard" do %>
+  <div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen">
+
+    <%# Top bar %>
+    <div class="px-4 pt-5 sm:px-6 flex items-center border-b <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+      <div class="flex items-center gap-2 pb-4">
+        <% if b2b %>
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+            <path d="M22 32 H 48" stroke-linecap="square"/>
+            <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="font-cant-display text-xl font-medium" style="font-family: var(--font-cant-display)">JinglePro</span>
+        <% else %>
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "orders/wizard_progress", current_step: 3 %>
+
+    <div class="px-4 pt-2 pb-8 sm:px-6 sm:max-w-lg sm:mx-auto">
+
+      <%# Step header %>
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.22em] uppercase <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %> mb-1">
+          Passo 3 · Dettagli
+        </div>
+        <h1 class="text-4xl font-medium tracking-tight"
+            style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>; line-height: 1.1;">
+          <% if b2b %>
+            Aggiungi <span class="italic" style="color: var(--color-cant-brass)">dettagli</span>.
+          <% else %>
+            Aggiungi <em>dettagli</em> (facoltativo).
+          <% end %>
+        </h1>
+        <p class="mt-2 text-sm leading-relaxed <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+          Tutti i campi sono opzionali. Più dettagli ci dai, migliore sarà il risultato.
+        </p>
+      </div>
+
+      <%# Optional hint badge %>
+      <div class="mb-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs
+                  <%= b2b ? 'bg-cant-line text-cant-mute' : 'bg-ser-line text-ser-mute' %>">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <circle cx="6" cy="6" r="5.5" stroke="currentColor"/>
+          <path d="M6 5v4M6 3.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Passo facoltativo — puoi saltarlo premendo Continua
+      </div>
+
+      <%= form_with url: wizard_order_path(step: 3), method: :patch,
+                    data: { turbo_frame: "wizard" },
+                    class: "space-y-5" do |f| %>
+
+        <%# keywords %>
+        <div>
+          <label for="wizard_keywords" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Parole chiave
+          </label>
+          <p class="text-xs mb-2 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>" id="keywords-hint">
+            <%= b2b ? "Termini, slogan, nomi di prodotto che vuoi includere nella letra." : "Parole, frasi o ricordi che vuoi che compaiano nella canzone." %>
+          </p>
+          <%= f.text_area :keywords,
+              name: "order_wizard[keywords]",
+              id: "wizard_keywords",
+              value: saved[:keywords],
+              rows: 3,
+              "aria-describedby": "keywords-hint",
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150 resize-y
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}",
+              placeholder: b2b ? "Es: \"artigianale\", \"tradizione di famiglia\", \"Napoli\"…" : "Es: \"sardegna\", \"il suo sorriso\", \"la canzone dell'estate 2010\"…" %>
+        </div>
+
+        <%# avoid %>
+        <div>
+          <label for="wizard_avoid" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Da evitare
+          </label>
+          <p class="text-xs mb-2 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>" id="avoid-hint">
+            <%= b2b ? "Toni, argomenti, stili o parole che non devono comparire." : "Argomenti, toni o riferimenti da non toccare." %>
+          </p>
+          <%= f.text_area :avoid,
+              name: "order_wizard[avoid]",
+              id: "wizard_avoid",
+              value: saved[:avoid],
+              rows: 3,
+              "aria-describedby": "avoid-hint",
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150 resize-y
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}",
+              placeholder: b2b ? "Es: nessun riferimento a concorrenti, no toni aggressivi…" : "Es: non menzionare l'ex, evitare temi troppo tristi…" %>
+        </div>
+
+        <%# Navigation %>
+        <div class="flex items-center gap-3 pt-2">
+          <%= link_to "← Indietro",
+              wizard_order_path(step: 2),
+              class: "px-4 py-3 text-sm rounded-full border transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'border-cant-line text-cant-ink hover:bg-cant-line focus-visible:outline-cant-ink' :
+                        'border-ser-line text-ser-ink hover:bg-ser-line focus-visible:outline-ser-ink'}",
+              data: { turbo_frame: "wizard" } %>
+
+          <%= f.submit "Continua →",
+              class: "flex-1 rounded-full py-3.5 px-4 text-sm font-semibold cursor-pointer transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                        'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+<% end %>

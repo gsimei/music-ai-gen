@@ -4,3 +4,29 @@ it:
   errors:
     not_found: "Pagina non trovata"
     server_error: "Errore del server"
+  wizard:
+    title: "Crea la tua musica"
+    steps:
+      information: "Informazioni"
+      style:       "Stile"
+      details:     "Dettagli"
+      voice:       "Voce"
+      review:      "Revisione"
+  activemodel:
+    errors:
+      models:
+        orders/step_validator:
+          attributes:
+            delivery_email:
+              blank:   "L'email di consegna è obbligatoria"
+              invalid: "Inserisci un indirizzo email valido"
+            about:
+              blank:   "La descrizione è obbligatoria"
+            music_style:
+              blank:   "Scegli uno stile musicale"
+            voice_id:
+              blank:   "Scegli una voce"
+              invalid: "La voce selezionata non è valida"
+            tier:
+              blank:     "Scegli un piano"
+              inclusion: "Il piano selezionato non è valido"

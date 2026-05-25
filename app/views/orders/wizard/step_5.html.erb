@@ -1,0 +1,260 @@
+<% b2b = current_brand == "b2b" %>
+<% brand_config = BRANDS_CONFIG[current_brand.to_sym] %>
+<% tiers = brand_config[:tiers] || {} %>
+<% saved = @wizard_session&.to_h || {} %>
+<% saved_tier = saved[:tier].to_s %>
+
+<%# Determine if a pro-only voice was chosen %>
+<% chosen_voice = Voice.find_by(id: saved[:voice_id]) if saved[:voice_id].present? %>
+<% voice_requires_pro = chosen_voice&.pro_only? %>
+
+<%= turbo_frame_tag "wizard" do %>
+  <div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen"
+       data-controller="wizard-tier"
+       data-wizard-tier-voice-requires-pro-value="<%= voice_requires_pro %>">
+
+    <%# Top bar %>
+    <div class="px-4 pt-5 sm:px-6 flex items-center border-b <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+      <div class="flex items-center gap-2 pb-4">
+        <% if b2b %>
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+            <path d="M22 32 H 48" stroke-linecap="square"/>
+            <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="font-cant-display text-xl font-medium" style="font-family: var(--font-cant-display)">JinglePro</span>
+        <% else %>
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "orders/wizard_progress", current_step: 5 %>
+
+    <div class="px-4 pt-2 pb-10 sm:px-6 sm:max-w-lg sm:mx-auto">
+
+      <%# Step header %>
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.22em] uppercase <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %> mb-1">
+          Passo 5 · Revisione
+        </div>
+        <h1 class="text-4xl font-medium tracking-tight"
+            style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>; line-height: 1.1;">
+          <% if b2b %>
+            Scegli il <span class="italic" style="color: var(--color-cant-brass)">piano</span>.
+          <% else %>
+            Scegli il <em>tuo piano</em>.
+          <% end %>
+        </h1>
+      </div>
+
+      <%# Pro-voice constraint notice %>
+      <% if voice_requires_pro %>
+        <div role="alert" aria-live="polite"
+             class="mb-5 px-4 py-3 rounded-lg text-sm flex items-start gap-2
+                    <%= b2b ? 'bg-cant-brass/10 border border-cant-brass/30 text-cant-ink' : 'bg-ser-blush/50 border border-ser-shadow/30 text-ser-ink' %>">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+            <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>La voce scelta è disponibile solo nel piano <strong>Pro</strong>. Il piano Standard è disabilitato.</span>
+        </div>
+      <% end %>
+
+      <%# Validation errors %>
+      <% if @validator&.errors&.any? %>
+        <div role="alert" class="mb-5 px-4 py-3 rounded-lg text-sm flex items-start gap-2 bg-red-50 border border-red-200 text-red-800">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+            <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <strong class="font-semibold">Seleziona un piano per continuare.</strong>
+            <% @validator.errors[:tier].each do |msg| %>
+              <p class="mt-0.5"><%= msg %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%= form_with url: wizard_order_path(step: 5), method: :patch,
+                    data: { turbo_frame: "wizard", "wizard-tier-target": "form" },
+                    id: "tier-form" do |f| %>
+
+        <%# Tier cards %>
+        <div class="space-y-3 mb-6"
+             role="radiogroup"
+             aria-label="Seleziona un piano">
+
+          <% tiers.each_with_index do |(tier_key, tier_data), i| %>
+            <%
+              tier_name = tier_key.to_s
+              is_pro = tier_name == "pro"
+              is_standard = !is_pro
+              is_selected = saved_tier == tier_name || (voice_requires_pro && is_pro && saved_tier.blank?)
+              is_disabled = voice_requires_pro && is_standard
+              price_euros = (tier_data[:price_cents].to_f / 100).to_s
+              price_fmt = "€#{price_euros.gsub(/\.0$/, '')}"
+            %>
+
+            <label class="relative block cursor-pointer <%= is_disabled ? 'opacity-50 cursor-not-allowed' : '' %>">
+              <input type="radio"
+                     name="order_wizard[tier]"
+                     value="<%= tier_name %>"
+                     <%= "checked" if is_selected %>
+                     <%= "disabled" if is_disabled %>
+                     class="sr-only peer"
+                     aria-label="Piano <%= tier_name.capitalize %> <%= price_fmt %><%= is_disabled ? ' — non disponibile con la voce scelta' : '' %>"
+                     data-wizard-tier-target="radio"
+                     data-tier="<%= tier_name %>"
+                     data-action="change->wizard-tier#selectTier">
+
+              <span class="block p-4 rounded-xl border-2 transition-all duration-150
+                           peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1
+                           <%= is_selected ?
+                                 (b2b ? 'border-cant-ink bg-cant-ink text-cant-paper' : 'border-ser-ink bg-ser-ink text-ser-cream') :
+                                 (b2b ? 'border-cant-line bg-cant-paper text-cant-ink hover:border-cant-mute' : 'border-ser-line bg-white text-ser-ink hover:border-ser-mute') %>
+                           <%= b2b ? 'peer-focus-visible:ring-cant-ink' : 'peer-focus-visible:ring-ser-ink' %>"
+                    data-wizard-tier-target="card"
+                    data-tier="<%= tier_name %>">
+
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-base font-semibold capitalize"><%= tier_name %></span>
+                      <% if is_pro %>
+                        <span class="text-[9px] tracking-wider font-bold px-2 py-0.5
+                                     <%= is_selected ?
+                                           (b2b ? 'bg-cant-brass text-cant-ink' : 'bg-ser-blush text-ser-ink') :
+                                           (b2b ? 'bg-cant-brass/20 text-cant-ink' : 'bg-ser-blush/60 text-ser-ink') %>">
+                          CONSIGLIATO
+                        </span>
+                      <% end %>
+                    </div>
+                    <ul class="space-y-1 text-sm <%= is_selected ? 'opacity-80' : (b2b ? 'text-cant-mute' : 'text-ser-mute') %>">
+                      <li class="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <%= tier_data[:lyrics_regen_limit] %> rigenerazioni testo
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <%= tier_data[:music_regen_limit] %> rigenerazione<%= tier_data[:music_regen_limit] > 1 ? 'i' : '' %> musica
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <% if tier_data[:includes_stems] %>
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                          <% else %>
+                            <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                          <% end %>
+                        </svg>
+                        Stems separati
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Max <%= tier_data[:max_duration_seconds] %> secondi
+                      </li>
+                    </ul>
+                  </div>
+
+                  <%# Price %>
+                  <div class="text-right flex-none">
+                    <div class="text-2xl font-semibold"
+                         style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>">
+                      <%= price_fmt %>
+                    </div>
+                    <div class="text-[10px] tracking-wide uppercase opacity-60">una tantum</div>
+                  </div>
+                </div>
+              </span>
+            </label>
+          <% end %>
+        </div>
+
+        <%# Order summary %>
+        <div class="mb-6 rounded-xl p-4 border
+                    <%= b2b ? 'border-cant-line bg-cant-paper' : 'border-ser-line bg-white' %>">
+          <h2 class="text-xs tracking-[0.18em] uppercase font-semibold mb-3
+                     <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+            Riepilogo ordine
+          </h2>
+          <dl class="space-y-2 text-sm">
+            <% if saved[:delivery_email].present? %>
+              <div class="flex justify-between gap-2">
+                <dt class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">Email</dt>
+                <dd class="font-medium truncate max-w-[60%]"><%= saved[:delivery_email] %></dd>
+              </div>
+            <% end %>
+            <% if saved[:recipient].present? %>
+              <div class="flex justify-between gap-2">
+                <dt class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>"><%= b2b ? "Attività" : "Destinatario" %></dt>
+                <dd class="font-medium"><%= saved[:recipient] %></dd>
+              </div>
+            <% end %>
+            <% if saved[:occasion].present? %>
+              <div class="flex justify-between gap-2">
+                <dt class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">Occasione</dt>
+                <dd class="font-medium"><%= saved[:occasion] %></dd>
+              </div>
+            <% end %>
+            <% if saved[:music_style].present? %>
+              <div class="flex justify-between gap-2">
+                <dt class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">Stile</dt>
+                <dd class="font-medium capitalize"><%= saved[:music_style] %></dd>
+              </div>
+            <% end %>
+            <% if chosen_voice %>
+              <div class="flex justify-between gap-2">
+                <dt class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">Voce</dt>
+                <dd class="font-medium">
+                  <%= chosen_voice.name %>
+                  <% if chosen_voice.pro_only? %>
+                    <span class="ml-1 text-[9px] tracking-wider font-bold px-1.5 py-0.5
+                                 <%= b2b ? 'bg-cant-brass text-cant-ink' : 'bg-ser-shadow text-ser-cream' %>">PRO</span>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+
+        <%# Navigation + submit %>
+        <div class="flex items-center gap-3">
+          <%= link_to "← Indietro",
+              wizard_order_path(step: 4),
+              class: "px-4 py-3 text-sm rounded-full border transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'border-cant-line text-cant-ink hover:bg-cant-line focus-visible:outline-cant-ink' :
+                        'border-ser-line text-ser-ink hover:bg-ser-line focus-visible:outline-ser-ink'}",
+              data: { turbo_frame: "wizard" } %>
+
+          <button type="submit"
+                  form="tier-form"
+                  <%= "disabled" unless saved_tier.present? || voice_requires_pro %>
+                  class="flex-1 rounded-full py-3.5 px-4 text-sm font-semibold transition-colors duration-150
+                         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                         disabled:opacity-40 disabled:cursor-not-allowed
+                         <%= b2b ?
+                           'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                           'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink' %>"
+                  data-wizard-tier-target="submitBtn"
+                  aria-label="Finalizza e vai al pagamento">
+            Finalizza e paga →
+          </button>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+<% end %>

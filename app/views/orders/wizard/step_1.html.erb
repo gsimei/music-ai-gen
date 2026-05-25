@@ -1,0 +1,180 @@
+<% b2b = current_brand == "b2b" %>
+<% content_for :title, t_brand("wizard.title", default: b2b ? "JinglePro · Crea il tuo jingle" : "MusicaRegalo · Inizia una canzone") %>
+
+<%= turbo_frame_tag "wizard" do %>
+  <div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen">
+
+    <%# Top bar %>
+    <div class="px-4 pt-5 sm:px-6 flex items-center justify-between border-b <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+      <div class="flex items-center gap-2 pb-4">
+        <% if b2b %>
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+            <path d="M22 32 H 48" stroke-linecap="square"/>
+            <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="font-cant-display text-xl font-medium" style="font-family: var(--font-cant-display)">JinglePro</span>
+        <% else %>
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "orders/wizard_progress", current_step: 1 %>
+
+    <div class="px-4 pt-2 pb-6 sm:px-6 sm:max-w-lg sm:mx-auto">
+
+      <%# Step header %>
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.22em] uppercase <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %> mb-1">
+          Passo 1 · Informazioni
+        </div>
+        <h1 class="<%= b2b ? 'font-cant-display text-4xl font-medium tracking-tight' : 'text-[36px] tracking-tight' %>"
+            style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>; line-height: 1.1;">
+          <% if b2b %>
+            Parla<span class="italic" style="color: var(--color-cant-brass)"> di te</span>.
+          <% else %>
+            Raccontaci <em>la storia</em>.
+          <% end %>
+        </h1>
+        <p class="mt-2 text-sm leading-relaxed <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+          <%= b2b ? "Descrivi la tua attività — più dettagli ci dai, più il jingle sarà tuo." : "Dimmi chi è il destinatario e in che occasione vuoi sorprenderlo." %>
+        </p>
+      </div>
+
+      <%# Validation errors banner %>
+      <% if @validator&.errors&.any? %>
+        <div role="alert" class="mb-5 px-4 py-3 rounded-lg text-sm flex items-start gap-2
+                                 <%= b2b ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-red-50 border border-red-200 text-red-800' %>">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+            <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <strong class="font-semibold">Correggi i seguenti errori:</strong>
+            <ul class="mt-1 list-disc list-inside">
+              <% @validator.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Form %>
+      <%= form_with url: wizard_order_path(step: 1), method: :patch,
+                    data: { turbo_frame: "wizard" },
+                    class: "space-y-5" do |f| %>
+
+        <%# delivery_email %>
+        <div>
+          <label for="wizard_delivery_email" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Email di consegna <span aria-label="campo obbligatorio" class="<%= b2b ? 'text-cant-brass' : 'text-ser-shadow' %>">*</span>
+          </label>
+          <p class="text-xs mb-2 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>" id="delivery-email-hint">
+            Qui riceverai la musica completata.
+          </p>
+          <%= f.email_field :delivery_email,
+              name: "order_wizard[delivery_email]",
+              id: "wizard_delivery_email",
+              value: @wizard_session&.to_h&.dig(:delivery_email),
+              required: true,
+              autocomplete: "email",
+              inputmode: "email",
+              "aria-describedby": "delivery-email-hint #{"delivery-email-error" if @validator&.errors&.include?(:delivery_email)}",
+              "aria-invalid": @validator&.errors&.include?(:delivery_email) ? "true" : nil,
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}
+                      #{@validator&.errors&.include?(:delivery_email) ? 'border-red-400' : ''}",
+              placeholder: "esempio@email.com" %>
+          <% if @validator&.errors&.include?(:delivery_email) %>
+            <p id="delivery-email-error" role="alert" class="mt-1.5 text-xs text-red-600">
+              <%= @validator.errors[:delivery_email].first %>
+            </p>
+          <% end %>
+        </div>
+
+        <%# about %>
+        <div>
+          <label for="wizard_about" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            <%= b2b ? "Parlaci della tua attività" : "Chi è il destinatario?" %>
+            <span aria-label="campo obbligatorio" class="<%= b2b ? 'text-cant-brass' : 'text-ser-shadow' %>">*</span>
+          </label>
+          <p class="text-xs mb-2 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>" id="about-hint">
+            <%= b2b ? "Nome, settore, valori, clienti tipici, tono di voce…" : "Nome, carattere, cosa lo rende speciale…" %>
+          </p>
+          <%= f.text_area :about,
+              name: "order_wizard[about]",
+              id: "wizard_about",
+              value: @wizard_session&.to_h&.dig(:about),
+              required: true,
+              rows: 4,
+              "aria-describedby": "about-hint #{"about-error" if @validator&.errors&.include?(:about)}",
+              "aria-invalid": @validator&.errors&.include?(:about) ? "true" : nil,
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150 resize-y
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}
+                      #{@validator&.errors&.include?(:about) ? 'border-red-400' : ''}",
+              placeholder: b2b ? "Es: Pasticceria artigianale a Milano, valori famigliari, clienti affezionati da 30 anni…" : "Es: Mia madre, Carla, si occupa degli altri da sempre. Ama la musica classica e il mare…" %>
+          <% if @validator&.errors&.include?(:about) %>
+            <p id="about-error" role="alert" class="mt-1.5 text-xs text-red-600">
+              <%= @validator.errors[:about].first %>
+            </p>
+          <% end %>
+        </div>
+
+        <%# recipient %>
+        <div>
+          <label for="wizard_recipient" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            <%= b2b ? "Nome dell'attività" : "Nome del destinatario" %>
+          </label>
+          <%= f.text_field :recipient,
+              name: "order_wizard[recipient]",
+              id: "wizard_recipient",
+              value: @wizard_session&.to_h&.dig(:recipient),
+              autocomplete: "off",
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}",
+              placeholder: b2b ? "Pasticceria Marisa" : "Carla, la mia mamma" %>
+        </div>
+
+        <%# occasion %>
+        <div>
+          <label for="wizard_occasion" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            <%= b2b ? "Occasione / contesto d'uso" : "Occasione" %>
+          </label>
+          <%= f.text_field :occasion,
+              name: "order_wizard[occasion]",
+              id: "wizard_occasion",
+              value: @wizard_session&.to_h&.dig(:occasion),
+              autocomplete: "off",
+              class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150
+                      #{b2b ?
+                        'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                        'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}",
+              placeholder: b2b ? "Apertura nuovo punto vendita, spot radio, reel Instagram…" : "60° compleanno, anniversario, richiesta di scuse…" %>
+        </div>
+
+        <%# Submit %>
+        <div class="pt-2">
+          <%= f.submit "Continua →",
+              class: "w-full rounded-full py-3.5 px-4 text-sm font-semibold cursor-pointer transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                        'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+<% end %>

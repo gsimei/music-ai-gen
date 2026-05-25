@@ -1,0 +1,239 @@
+<% b2b = current_brand == "b2b" %>
+<% content_for :title, b2b ? "JinglePro · Stile musicale" : "MusicaRegalo · Stile musicale" %>
+
+<% music_styles = [
+  { value: "pop",         label: "Pop" },
+  { value: "rock",        label: "Rock" },
+  { value: "jazz",        label: "Jazz" },
+  { value: "classica",    label: "Classica" },
+  { value: "folk",        label: "Folk" },
+  { value: "elettronica", label: "Elettronica" },
+  { value: "hiphop",      label: "Hip-Hop" },
+  { value: "country",     label: "Country" },
+  { value: "rnb",         label: "R&B" },
+  { value: "altro",       label: "Altro" }
+] %>
+
+<% mood_options = [
+  { value: "allegro",     label: "Allegro" },
+  { value: "romantico",   label: "Romantico" },
+  { value: "energico",    label: "Energico" },
+  { value: "malinconico", label: "Malinconico" },
+  { value: "intimo",      label: "Intimo" },
+  { value: "epico",       label: "Epico" }
+] %>
+
+<% tempo_options = [
+  { value: "lento",   label: "Lento" },
+  { value: "medio",   label: "Medio" },
+  { value: "veloce",  label: "Veloce" }
+] %>
+
+<% duration_options = [
+  { value: "30",  label: "30 sec" },
+  { value: "60",  label: "1 min" },
+  { value: "90",  label: "1 min 30" },
+  { value: "120", label: "2 min" }
+] %>
+
+<% saved = @wizard_session&.to_h || {} %>
+
+<%= turbo_frame_tag "wizard" do %>
+  <div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen">
+
+    <%# Top bar %>
+    <div class="px-4 pt-5 sm:px-6 flex items-center justify-between border-b <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+      <div class="flex items-center gap-2 pb-4">
+        <% if b2b %>
+          <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+            <path d="M22 32 H 48" stroke-linecap="square"/>
+            <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="font-cant-display text-xl font-medium" style="font-family: var(--font-cant-display)">JinglePro</span>
+        <% else %>
+          <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+            <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+          </svg>
+          <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "orders/wizard_progress", current_step: 2 %>
+
+    <div class="px-4 pt-2 pb-8 sm:px-6 sm:max-w-lg sm:mx-auto">
+
+      <%# Step header %>
+      <div class="mb-6">
+        <div class="text-[10px] tracking-[0.22em] uppercase <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %> mb-1">
+          Passo 2 · Stile
+        </div>
+        <h1 class="text-4xl font-medium tracking-tight"
+            style="font-family: <%= b2b ? 'var(--font-cant-display)' : 'var(--font-ser-display)' %>; line-height: 1.1;">
+          <% if b2b %>
+            Che <span class="italic" style="color: var(--color-cant-brass)">suono</span> vuoi?
+          <% else %>
+            Che <em>musica</em> sente nel cuore?
+          <% end %>
+        </h1>
+        <p class="mt-2 text-sm leading-relaxed <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+          Scegli lo stile musicale e il mood. Puoi cambiare idea in seguito.
+        </p>
+      </div>
+
+      <%# Validation errors %>
+      <% if @validator&.errors&.any? %>
+        <div role="alert" class="mb-5 px-4 py-3 rounded-lg text-sm flex items-start gap-2 bg-red-50 border border-red-200 text-red-800">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+            <path d="M8 4v5M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <strong class="font-semibold">Correggi i seguenti errori:</strong>
+            <ul class="mt-1 list-disc list-inside">
+              <% @validator.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+
+      <%= form_with url: wizard_order_path(step: 2), method: :patch,
+                    data: { turbo_frame: "wizard" },
+                    class: "space-y-6" do |f| %>
+
+        <%# music_style — visual radio grid %>
+        <fieldset>
+          <legend class="block text-sm font-medium mb-3 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Stile musicale
+            <span aria-label="campo obbligatorio" class="<%= b2b ? 'text-cant-brass' : 'text-ser-shadow' %>">*</span>
+          </legend>
+          <% if @validator&.errors&.include?(:music_style) %>
+            <p id="music-style-error" role="alert" class="mb-2 text-xs text-red-600">
+              <%= @validator.errors[:music_style].first %>
+            </p>
+          <% end %>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3"
+               role="group"
+               aria-labelledby="music-style-legend"
+               <% if @validator&.errors&.include?(:music_style) %>aria-describedby="music-style-error"<% end %>>
+            <% music_styles.each do |style| %>
+              <% checked = saved[:music_style].to_s == style[:value] %>
+              <label class="relative cursor-pointer select-none">
+                <input type="radio"
+                       name="order_wizard[music_style]"
+                       value="<%= style[:value] %>"
+                       <%= "checked" if checked %>
+                       class="sr-only peer"
+                       aria-label="<%= style[:label] %>">
+                <span class="block px-3 py-2.5 text-sm text-center rounded-lg border transition-colors duration-150
+                             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1
+                             <%= b2b ?
+                               'border-cant-line text-cant-ink peer-checked:bg-cant-ink peer-checked:text-cant-paper peer-checked:border-cant-ink peer-focus-visible:ring-cant-ink' :
+                               'border-ser-line text-ser-ink peer-checked:bg-ser-ink peer-checked:text-ser-cream peer-checked:border-ser-ink peer-focus-visible:ring-ser-ink' %>">
+                  <%= style[:label] %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <%# mood %>
+        <div>
+          <label for="wizard_mood" class="block text-sm font-medium mb-1.5 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Mood (opzionale)
+          </label>
+          <select name="order_wizard[mood]"
+                  id="wizard_mood"
+                  class="w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150 appearance-none
+                         focus:outline-none focus-visible:ring-2
+                         <%= b2b ?
+                           'border-cant-line bg-cant-paper text-cant-ink focus-visible:ring-cant-ink' :
+                           'border-ser-line bg-white text-ser-ink focus-visible:ring-ser-ink' %>">
+            <option value="">Scegli un mood…</option>
+            <% mood_options.each do |opt| %>
+              <option value="<%= opt[:value] %>" <%= "selected" if saved[:mood].to_s == opt[:value] %>>
+                <%= opt[:label] %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+
+        <%# tempo %>
+        <fieldset>
+          <legend class="block text-sm font-medium mb-3 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Tempo (opzionale)
+          </legend>
+          <div class="flex gap-2">
+            <% tempo_options.each do |opt| %>
+              <% checked = saved[:tempo].to_s == opt[:value] %>
+              <label class="flex-1 cursor-pointer select-none">
+                <input type="radio"
+                       name="order_wizard[tempo]"
+                       value="<%= opt[:value] %>"
+                       <%= "checked" if checked %>
+                       class="sr-only peer">
+                <span class="block px-2 py-2.5 text-sm text-center rounded-lg border transition-colors duration-150
+                             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1
+                             <%= b2b ?
+                               'border-cant-line text-cant-ink peer-checked:bg-cant-ink peer-checked:text-cant-paper peer-focus-visible:ring-cant-ink' :
+                               'border-ser-line text-ser-ink peer-checked:bg-ser-ink peer-checked:text-ser-cream peer-focus-visible:ring-ser-ink' %>">
+                  <%= opt[:label] %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <%# target_duration_seconds %>
+        <fieldset>
+          <legend class="block text-sm font-medium mb-3 <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            Durata desiderata (opzionale)
+          </legend>
+          <div class="flex gap-2">
+            <% duration_options.each do |opt| %>
+              <% checked = saved[:target_duration_seconds].to_s == opt[:value] %>
+              <label class="flex-1 cursor-pointer select-none">
+                <input type="radio"
+                       name="order_wizard[target_duration_seconds]"
+                       value="<%= opt[:value] %>"
+                       <%= "checked" if checked %>
+                       class="sr-only peer">
+                <span class="block px-1 py-2.5 text-xs text-center rounded-lg border transition-colors duration-150
+                             peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1
+                             <%= b2b ?
+                               'border-cant-line text-cant-ink peer-checked:bg-cant-ink peer-checked:text-cant-paper peer-focus-visible:ring-cant-ink' :
+                               'border-ser-line text-ser-ink peer-checked:bg-ser-ink peer-checked:text-ser-cream peer-focus-visible:ring-ser-ink' %>">
+                  <%= opt[:label] %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+
+        <%# Navigation %>
+        <div class="flex items-center gap-3 pt-2">
+          <%= link_to "← Indietro",
+              wizard_order_path(step: 1),
+              class: "px-4 py-3 text-sm rounded-full border transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'border-cant-line text-cant-ink hover:bg-cant-line focus-visible:outline-cant-ink' :
+                        'border-ser-line text-ser-ink hover:bg-ser-line focus-visible:outline-ser-ink'}",
+              data: { turbo_frame: "wizard" } %>
+
+          <%= f.submit "Continua →",
+              class: "flex-1 rounded-full py-3.5 px-4 text-sm font-semibold cursor-pointer transition-colors duration-150
+                      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                      #{b2b ?
+                        'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                        'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+<% end %>
