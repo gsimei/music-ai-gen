@@ -1,0 +1,50 @@
+standard_voice:
+  provider: "mureka"
+  external_id: "voice-001"
+  name: "Sofia"
+  slug: "sofia"
+  gender: "female"
+  min_tier: 0
+  allowed_brands: "{b2b,b2c}"
+  display_order: 1
+  active: true
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+pro_voice:
+  provider: "mureka"
+  mureka_prompt: "pop, male vocal, powerful, emotional"
+  name: "Marco"
+  slug: "marco"
+  gender: "male"
+  min_tier: 1
+  allowed_brands: "{b2b,b2c}"
+  display_order: 2
+  active: true
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+b2b_only_voice:
+  provider: "mureka"
+  external_id: "voice-003"
+  name: "Corporate Voice"
+  slug: "corporate-voice"
+  gender: "neutral"
+  min_tier: 0
+  allowed_brands: "{b2b}"
+  display_order: 3
+  active: true
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+inactive_voice:
+  provider: "mureka"
+  external_id: "voice-004"
+  name: "Inactive"
+  slug: "inactive-voice"
+  min_tier: 0
+  allowed_brands: "{b2b,b2c}"
+  display_order: 99
+  active: false
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"

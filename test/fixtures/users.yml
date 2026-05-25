@@ -1,11 +1,65 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+customer_b2c:
+  email: "customer@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "customer"
+  locale: "it"
+  origin_brand: "b2c"
+  guest: false
+  confirmed_at: "2026-01-01 00:00:00"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+customer_b2b:
+  email: "business@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "customer"
+  locale: "it"
+  origin_brand: "b2b"
+  guest: false
+  confirmed_at: "2026-01-01 00:00:00"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+guest_user:
+  email: "guest@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "customer"
+  locale: "it"
+  origin_brand: "b2c"
+  guest: true
+  confirmed_at: "2026-01-01 00:00:00"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+admin_user:
+  email: "admin@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "admin"
+  locale: "it"
+  origin_brand: "b2b"
+  guest: false
+  confirmed_at: "2026-01-01 00:00:00"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+support_user:
+  email: "support@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "support"
+  locale: "en"
+  origin_brand: "b2c"
+  guest: false
+  confirmed_at: "2026-01-01 00:00:00"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+unconfirmed_user:
+  email: "unconfirmed@example.com"
+  encrypted_password: "$2a$12$o.cGIlIUYiSCHee5JM5wfu5zhaFVNiIy5L0hmCQE6HE6aasn1cTqi"
+  role: "customer"
+  locale: "it"
+  origin_brand: "b2c"
+  guest: false
+  confirmed_at: null
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"

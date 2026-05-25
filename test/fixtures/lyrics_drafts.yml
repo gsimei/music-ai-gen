@@ -1,0 +1,32 @@
+draft_v1:
+  order: b2c_paid
+  version: 1
+  source: "ai_generated"
+  content: "Buon compleanno cara mamma\nOgni giorno sei la mia guida\nTi voglio tanto bene"
+  is_approved: false
+  is_locked: false
+  created_at: "2026-01-02 11:00:00"
+  updated_at: "2026-01-02 11:00:00"
+
+draft_v2_regen:
+  order: b2c_paid
+  parent_draft: draft_v1
+  version: 2
+  source: "regenerated"
+  content: "Cara mamma ti voglio bene\nSei la luce della mia vita\nBuon compleanno"
+  user_feedback: "Piu romantica per favore"
+  is_approved: false
+  is_locked: false
+  created_at: "2026-01-02 12:00:00"
+  updated_at: "2026-01-02 12:00:00"
+
+draft_approved:
+  order: b2c_delivered
+  version: 1
+  source: "ai_generated"
+  content: "Una canzone speciale per te\nCara e dolce come il miele\nBuon compleanno"
+  is_approved: true
+  is_locked: true
+  approved_at: "2026-01-04 08:00:00"
+  created_at: "2026-01-04 07:00:00"
+  updated_at: "2026-01-04 08:00:00"

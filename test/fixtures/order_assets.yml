@@ -1,0 +1,18 @@
+final_mp3:
+  order: b2c_delivered
+  music_generation: generation_completed
+  kind: "final_mp3"
+  storage_key: "finals/b2c-delivered/audio.mp3"
+  mime_type: "audio/mpeg"
+  file_size_bytes: 5242880
+  created_at: "2026-01-04 15:00:00"
+  updated_at: "2026-01-04 15:00:00"
+
+lyrics_pdf:
+  order: b2c_delivered
+  kind: "lyrics_pdf"
+  storage_key: "finals/b2c-delivered/lyrics.pdf"
+  mime_type: "application/pdf"
+  file_size_bytes: 102400
+  created_at: "2026-01-04 15:00:00"
+  updated_at: "2026-01-04 15:00:00"

@@ -4,6 +4,8 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 **Legenda:** `[ ]` pendente · `[~]` em progresso · `[x]` concluído
 
+**Design de referência:** `Plataforma - Vanilla.html` (raiz do projeto) — protótipo HTML/JS vanilla com B2B e B2C. Toda task de frontend deve consultar antes de implementar (ver CLAUDE.md).
+
 ---
 
 ## 1. Setup base
@@ -20,36 +22,36 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 2. Schema do banco de dados
 
-- [ ] Migration 1: `users` (Devise + campos de negócio)
+- [x] Migration 1: `users` (Devise + campos de negócio)
   - Incluir módulos Devise: `:lockable`, `:confirmable`, `:trackable`, `:timeoutable` (security review C-1/A-1/A-2)
   - Habilitar `config.paranoid = true` em `devise.rb` (A-3 — anti enumeration)
   - Configurar `lock_strategy`, `maximum_attempts: 10`, `unlock_in: 1.hour`, `timeout_in: 30.minutes`
   - Configurar `sign_in_after_reset_password = false` (M-5)
-- [ ] Migration 2: `voices` (catálogo Mureka)
-- [ ] Migration 3: `orders`
-- [ ] Migration 4: `briefings`
-- [ ] Migration 5: `lyrics_drafts`
-- [ ] Migration 6: `music_generations`
-- [ ] Migration 7: `generation_jobs` (log LLM)
-- [ ] Migration 8: `order_assets`
-- [ ] Migration 9: `stripe_events` (idempotência webhook)
-- [ ] Migration 10: `refund_requests`
-- [ ] Migration 11: `email_deliveries`
-- [ ] `db:migrate` + verificar `schema.rb`
+- [x] Migration 2: `voices` (catálogo Mureka — inclui `mureka_prompt`, `external_id` nullable)
+- [x] Migration 3: `orders`
+- [x] Migration 4: `briefings`
+- [x] Migration 5: `lyrics_drafts`
+- [x] Migration 6: `music_generations`
+- [x] Migration 7: `generation_jobs` (log LLM)
+- [x] Migration 8: `order_assets`
+- [x] Migration 9: `stripe_events` (idempotência webhook)
+- [x] Migration 10: `refund_requests`
+- [x] Migration 11: `email_deliveries`
+- [x] `db:migrate` + verificar `schema.rb`
 
 ## 3. Models, associations e validations
 
-- [ ] `User` (sem AASM)
-- [ ] `Voice`
-- [ ] `Order` (sem AASM ainda)
-- [ ] `Briefing`
-- [ ] `LyricsDraft`
-- [ ] `MusicGeneration`
-- [ ] `GenerationJob`
-- [ ] `OrderAsset`
-- [ ] `StripeEvent`
-- [ ] `RefundRequest`
-- [ ] `EmailDelivery`
+- [x] `User` (sem AASM)
+- [x] `Voice`
+- [x] `Order` (sem AASM ainda)
+- [x] `Briefing`
+- [x] `LyricsDraft`
+- [x] `MusicGeneration`
+- [x] `GenerationJob`
+- [x] `OrderAsset`
+- [x] `StripeEvent`
+- [x] `RefundRequest`
+- [x] `EmailDelivery`
 
 ## 4. State machine (AASM) na Order
 
@@ -93,23 +95,30 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 - [ ] Handlers: `checkout.session.completed`, `payment_intent.payment_failed`, `charge.refunded`
 - [ ] Testes com WebMock
 
-## 9. LyricsGenerator + Claude integration
+## 9. LyricsGenerator — pipeline dupla (Mureka → Claude)
 
-- [ ] Service `LyricsGenerator::ClaudeClient` (wrapper Anthropic API)
-- [ ] Service `LyricsGenerator::PromptBuilder` (monta prompt do briefing)
-- [ ] Service `LyricsGenerator::Generator` (orquestra geração + regen)
-- [ ] Job `GenerateLyricsJob`
+- [ ] **DECISÃO PENDENTE**: confirmar se `POST /v1/lyrics/generate` da Mureka desconta créditos (ver SPEC 13.1)
+- [ ] Service `LyricsGenerator::MurekaLyricsClient` (etapa 1 — rascunho bruto) — só se Mureka for inclusa
+- [ ] Service `LyricsGenerator::ClaudeClient` (wrapper Anthropic API — etapa 2 refino + regen)
+- [ ] Service `LyricsGenerator::PromptBuilder` (REFINE_PROMPT, REGEN_PROMPT, ou direct se sem Mureka)
+- [ ] Service `LyricsGenerator::Generator` (orquestra Mureka → Claude → save em lyrics_drafts)
+- [ ] Job `GenerateLyricsJob` (suporta initial + regen)
 - [ ] Versionamento de prompt (`prompt_version`)
-- [ ] Log em `GenerationJob`
-- [ ] Testes com WebMock
+- [ ] Log em `GenerationJob` (uma row por chamada Mureka + uma por chamada Claude)
+- [ ] Testes com WebMock (Mureka + Anthropic)
 
-## 10. Editor de letra
+## 10. Revisão de letra (UI simplificada — ver SPEC 10.1)
 
-- [ ] View `/orders/:id/lyrics`
-- [ ] Stimulus controller para edição inline
-- [ ] Turbo Streams para regeneração sem reload
-- [ ] Validação de limite de regenerações
+- [ ] View `/orders/:id/lyrics` — letra como texto corrido, sem blocos editáveis por seção
+- [ ] Dois botões: "Está perfeita ✓" / "Quero ajustar"
+- [ ] Campo de texto livre para feedback (quando "Quero ajustar")
+- [ ] Contador discreto de regenerações restantes
+- [ ] Stimulus controller mínimo (toggle do feedback form, submit via Turbo)
+- [ ] Turbo Streams substituem a letra quando o job de regen termina
+- [ ] Botão "Quero ajustar" desabilitado quando regen_limit atingido
 - [ ] Endpoint `POST /orders/:id/approve_lyrics` (trava letra + dispara música)
+- [ ] Endpoint `POST /orders/:id/lyrics/regenerate` (cria nova draft + enfileira job)
+- [ ] **NÃO implementar:** blocos editáveis, regen por bloco, exposição da JSON structure
 
 ## 11. MurekaClient + integração
 

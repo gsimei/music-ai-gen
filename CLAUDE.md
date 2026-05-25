@@ -43,6 +43,23 @@ kamal deploy                     # deploy de nova versão
 
 ---
 
+## Referência de design
+
+O design de referência para o frontend está em `Plataforma - Vanilla.html` na raiz do projeto. É um protótipo HTML + JS vanilla gerado via Claude Design contendo as duas versões (B2B e B2C) já estilizadas.
+
+**Uso obrigatório pelo `frontend-architect`:**
+- Antes de implementar qualquer view, ViewComponent ou layout, abrir o arquivo e referenciar o design correspondente
+- Reproduzir paleta, tipografia, espaçamentos, componentes e estados (hover, focus, disabled) conforme o protótipo
+- Adaptar a sintaxe (HTML/Tailwind/Stimulus) mas manter fidelidade visual
+- Quando houver divergência entre B2B e B2C no protótipo, espelhar via `t_brand` + `BRANDS_CONFIG`
+
+**Uso pelo `frontend-analyzer`:**
+- Comparar render real (via Playwright) com o protótipo para validar fidelidade visual antes do merge
+
+O arquivo é estático (HTML único) — não está no asset pipeline, não é servido pela aplicação. Tratá-lo como artefato de design, similar a um Figma exportado.
+
+---
+
 ## MCP Servers
 
 Usado pelo agente `frontend-analyzer`. O servidor de desenvolvimento deve estar rodando (`bin/dev`) antes de acioná-lo.

@@ -1,0 +1,86 @@
+b2c_pending:
+  user: customer_b2c
+  reference: "ORD-2026-A1B2C"
+  brand: "b2c"
+  locale: "it"
+  status: "pending"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  created_at: "2026-01-01 00:00:00"
+  updated_at: "2026-01-01 00:00:00"
+
+b2c_paid:
+  user: customer_b2c
+  reference: "ORD-2026-B2C3D"
+  brand: "b2c"
+  locale: "en"
+  status: "paid"
+  tier: "pro"
+  price_cents: 3900
+  currency: "EUR"
+  lyrics_regen_limit: 3
+  lyrics_regen_used: 0
+  music_regen_limit: 2
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  paid_at: "2026-01-02 10:00:00"
+  created_at: "2026-01-02 09:00:00"
+  updated_at: "2026-01-02 10:00:00"
+
+b2b_pending:
+  user: customer_b2b
+  reference: "ORD-2026-D4E5F"
+  brand: "b2b"
+  locale: "it"
+  status: "pending"
+  tier: "starter"
+  price_cents: 7900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "business@example.com"
+  created_at: "2026-01-03 00:00:00"
+  updated_at: "2026-01-03 00:00:00"
+
+b2c_delivered:
+  user: customer_b2c
+  reference: "ORD-2026-F6G7H"
+  brand: "b2c"
+  locale: "it"
+  status: "delivered"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 1
+  music_regen_limit: 1
+  music_regen_used: 1
+  delivery_email: "customer@example.com"
+  delivered_at: "2026-01-04 15:00:00"
+  created_at: "2026-01-04 00:00:00"
+  updated_at: "2026-01-04 15:00:00"
+
+guest_order:
+  user: guest_user
+  reference: "ORD-2026-H8I9J"
+  brand: "b2c"
+  locale: "it"
+  status: "pending"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "guest@example.com"
+  created_at: "2026-01-05 00:00:00"
+  updated_at: "2026-01-05 00:00:00"

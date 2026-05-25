@@ -1,0 +1,25 @@
+checkout_completed:
+  stripe_event_id: "evt_1234567890abcdef"
+  event_type: "checkout.session.completed"
+  status: "processed"
+  order: b2c_paid
+  payload: '{"id": "evt_1234567890abcdef", "type": "checkout.session.completed"}'
+  processed_at: "2026-01-02 10:00:00"
+  created_at: "2026-01-02 10:00:00"
+  updated_at: "2026-01-02 10:00:00"
+
+payment_failed_event:
+  stripe_event_id: "evt_abcdef1234567890"
+  event_type: "payment_intent.payment_failed"
+  status: "pending"
+  payload: '{"id": "evt_abcdef1234567890", "type": "payment_intent.payment_failed"}'
+  created_at: "2026-01-03 00:00:00"
+  updated_at: "2026-01-03 00:00:00"
+
+skipped_event:
+  stripe_event_id: "evt_skipme12345"
+  event_type: "customer.updated"
+  status: "skipped"
+  payload: '{"id": "evt_skipme12345", "type": "customer.updated"}'
+  created_at: "2026-01-03 01:00:00"
+  updated_at: "2026-01-03 01:00:00"

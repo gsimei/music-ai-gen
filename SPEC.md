@@ -116,7 +116,8 @@ add_index :users, :origin_brand
 Migration 2: Voices (catálogo curado)
 rubycreate_table :voices do |t|
   t.string :provider, null: false              # "mureka"
-  t.string :external_id, null: false           # ID da voz na Mureka
+  t.string :external_id                        # ID da voz na Mureka (opcional — algumas vozes são descritas só via prompt)
+  t.string :mureka_prompt                      # ex: "pop, female vocal, warm, emotional, italian" — vai no payload da Mureka
   t.string :name, null: false
   t.string :slug, null: false
   t.text :description
@@ -138,10 +139,13 @@ rubycreate_table :voices do |t|
   t.timestamps
 end
 
-add_index :voices, [:provider, :external_id], unique: true
+add_index :voices, [:provider, :external_id], unique: true   # PG permite múltiplos NULLs em unique index
 add_index :voices, :slug, unique: true
 add_index :voices, :active
 add_index :voices, :display_order
+
+# Regra de modelo (Seção 3): voice deve ter pelo menos um entre external_id OU mureka_prompt
+# (validado no model, não no schema, para permitir migração futura sem rebuild)
 Migration 3: Orders
 rubycreate_table :orders do |t|
   t.references :user, foreign_key: true, null: true
@@ -222,8 +226,8 @@ rubycreate_table :lyrics_drafts do |t|
   t.integer :version, null: false
   t.string :source, null: false                # "ai_generated" | "user_edited" | "regenerated"
 
-  t.text :content, null: false
-  t.jsonb :structure, default: {}
+  t.text :content, null: false                 # texto corrido formatado (fonte de verdade exposta ao usuário)
+  t.jsonb :structure, default: {}              # JSON estruturado (verse_1, chorus, ...) — INTERNO: usado para montar prompt da Mureka, nunca exposto na UI
 
   t.text :user_feedback
   t.references :parent_draft, foreign_key: { to_table: :lyrics_drafts }, null: true
@@ -546,7 +550,7 @@ Públicas (sem auth)
 Autenticadas
 
 /orders/:id → Status da order (varia por estado)
-/orders/:id/lyrics → Editor de letra (Stimulus controller pra edição inline)
+/orders/:id/lyrics → Revisão de letra (NÃO é editor inline — ver seção 10.1)
 /orders/:id/preview → Player das 2 variantes A/B
 /orders/:id/download → Página de download final
 /dashboard → Lista de orders do usuário
@@ -558,6 +562,35 @@ Admin
 /admin/voices → CRUD de catálogo
 /admin/refund_requests → Gestão de refunds
 Usar administrate gem ou montar manual com Pundit
+
+10.1 UI de revisão de letra (princípio: simplicidade radical)
+
+O usuário NÃO vê a estrutura musical (verso/refrão/bridge). A estrutura JSON existe só no banco e no prompt da Mureka — nunca exposta na UI.
+
+A página exibe:
+- Letra como texto corrido, formatada como poema (preserva quebras de linha)
+- Dois botões grandes:
+  - "Está perfeita ✓" → aprova letra, dispara geração de música (trava o draft via lyrics_approved)
+  - "Quero ajustar" → abre um campo de texto livre: "O que você gostaria de mudar?"
+- Contador discreto no topo ou rodapé: "Você tem X ajustes disponíveis"
+  - X = order.lyrics_regen_limit - order.lyrics_regen_used
+
+Quando o usuário envia feedback no "Quero ajustar":
+- Cria nova LyricsDraft com source: "regenerated", parent_draft apontando para a versão anterior
+- Incrementa order.lyrics_regen_used
+- Enfileira GenerateLyricsJob (regen, ver seção 13.2)
+- Turbo Stream substitui a letra renderizada quando o job terminar
+
+Quando esgotar regenerações:
+- Botão "Quero ajustar" desabilitado com tooltip "Limite de ajustes atingido"
+- Mantém apenas "Está perfeita ✓"
+
+NÃO IMPLEMENTAR:
+- Blocos editáveis por seção (verso, refrão, etc.)
+- Botão "regenerar este bloco"
+- Editor inline de texto da letra
+- Qualquer menção a estrutura musical na interface
+- Visualização da JSON estruturada
 
 11. I18n
 Estrutura:
@@ -593,37 +626,102 @@ Download dos MP3s, upload pro S3/R2, geração de previews com FFmpeg
 
 Webhook se disponível: preferir webhook a polling. Endpoint /webhooks/mureka recebe notificação.
 Catálogo de vozes: buscar via API ou popular manualmente no banco com seed (db/seeds/voices.rb).
-13. Prompt do Claude pra letra
-rubySYSTEM_PROMPT = <<~PROMPT
+13. Geração de letra — pipeline dupla
+
+13.1 Geração inicial (Mureka → Claude)
+
+⚠️ DECISÃO PENDENTE: confirmar se POST /v1/lyrics/generate (Mureka) desconta créditos do plano $30/mês ou é incluso. Verificar na doc oficial https://platform.mureka.ai/docs antes de implementar a Seção 9.
+- Se for incluso: usar pipeline dupla (Mureka → Claude).
+- Se cobrar por chamada: PULAR etapa 1 e ir direto pro Claude com o prompt de geração inicial.
+
+Pipeline (assumindo Mureka inclusa):
+
+Etapa 1 — Mureka gera rascunho bruto:
+  POST /v1/lyrics/generate com prompt resumido do briefing
+  Input: "{{music_style}} song in {{language}} about {{about}} for {{recipient}} on {{occasion}}"
+  Output: texto bruto de letra (sem estrutura formal garantida)
+
+Etapa 2 — Claude refina e estrutura:
+  Input: rascunho da Mureka + briefing completo
+  Claude:
+  - Estrutura em JSON (verse_1, chorus, verse_2, bridge, chorus_final)
+  - Garante idioma correto (não traduz, escreve naturalmente em {{language}})
+  - Incorpora keywords obrigatórios
+  - Remove temas a evitar
+  - Ajusta tom/estilo conforme briefing
+  Output: JSON estruturado
+
+Etapa 3 — Persistência:
+  - lyrics_drafts.content = texto corrido formatado (extraído do JSON, com quebras de linha entre seções)
+  - lyrics_drafts.structure = JSON estruturado (interno, nunca exposto na UI — ver seção 10.1)
+  - lyrics_drafts.source = "ai_generated"
+  - lyrics_drafts.version = 1
+  - Log em generation_jobs (provider: "mureka" + "anthropic", uma row pra cada chamada)
+
+Prompt do Claude (etapa 2, refino):
+
+rubyREFINE_PROMPT = <<~PROMPT
   You are a professional songwriter specialized in {{music_style}} music in {{language}}.
 
-  Generate song lyrics that:
-  - Are structured with sections: [verse 1], [chorus], [verse 2], [bridge], [chorus]
-  - Match the style "{{music_style}}" with appropriate meter and rhyme
-  - Convey the mood "{{mood}}"
-  - Are roughly {{target_duration}} seconds when sung (verse ~30s, chorus ~20s)
-  - Are written in {{language}} naturally, not translated
+  Below is a raw draft generated by another AI. Your job is to refine and structure it.
 
-  Constraints:
-  - Always include these keywords or facts: {{keywords}}
-  - Never use these words or themes: {{avoid}}
+  RAW DRAFT:
+  {{mureka_raw_draft}}
+
+  BRIEFING (must be respected):
+  - Style: {{music_style}}
+  - Mood: {{mood}}
+  - Language: {{language}} (write naturally, do not translate)
   - Recipient/context: {{recipient}} for {{occasion}}
+  - Must include: {{keywords}}
+  - Avoid: {{avoid}}
+  - Target duration: ~{{target_duration}}s when sung (verse ~30s, chorus ~20s)
+
+  Restructure the draft into proper song sections, fix any language/style inconsistencies,
+  ensure keywords are present, and remove any avoided themes.
 
   Output STRICTLY as JSON:
   {
-    "structure": {
-      "verse_1": "...",
-      "chorus": "...",
-      "verse_2": "...",
-      "bridge": "...",
-      "chorus_final": "..."
-    },
-    "full_text": "complete formatted lyrics with line breaks"
+    "verse_1": "...",
+    "chorus": "...",
+    "verse_2": "...",
+    "bridge": "...",
+    "chorus_final": "..."
   }
 
   Do not include any explanation, only the JSON.
 PROMPT
-Versioning: cada mudança no prompt incrementa prompt_version ("v1.0", "v1.1") e fica registrado em LyricsDraft.prompt_version pra A/B testing futuro.
+
+Se Mureka cobra por chamada (decisão pendente acima), usar este prompt direto com o briefing no lugar de RAW DRAFT, removendo a etapa Mureka.
+
+13.2 Regeneração (Claude apenas, sempre)
+
+Quando o usuário pede ajuste via "Quero ajustar" (seção 10.1), só Claude é chamado — Mureka não participa da regen, pois temos a letra base e o feedback livre é mais bem interpretado por LLM.
+
+Prompt:
+
+rubyREGEN_PROMPT = <<~PROMPT
+  CURRENT LYRICS:
+  {{current_lyrics_full_text}}
+
+  USER FEEDBACK:
+  "{{user_feedback}}"
+
+  BRIEFING (never forget):
+  - Style: {{music_style}}
+  - Mood: {{mood}}
+  - Language: {{language}}
+  - Must include: {{keywords}}
+  - Avoid: {{avoid}}
+
+  Rewrite incorporating the feedback naturally.
+  Keep what's working, change what the user asked.
+  Output STRICTLY as JSON: { verse_1, chorus, verse_2, bridge, chorus_final }
+PROMPT
+
+13.3 Versionamento de prompts
+
+Cada mudança em qualquer prompt (REFINE, REGEN, ou geração direta) incrementa prompt_version ("v1.0", "v1.1") e fica registrado em LyricsDraft.prompt_version pra A/B testing futuro.
 14. FFmpeg — processamento de preview
 bash# Corta primeiros 30s + fade-out 3s
 ffmpeg -y -i input.mp3 \
