@@ -454,9 +454,7 @@ class OrderAasmTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
   test "mark_paid transitions from pending to paid" do
     order = orders(:b2c_pending)
-    perform_enqueued_jobs do
-      order.mark_paid!
-    end
+    order.mark_paid!
     assert_equal "paid", order.status
   end
 

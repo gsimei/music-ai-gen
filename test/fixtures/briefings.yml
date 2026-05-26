@@ -20,3 +20,37 @@ b2b_briefing:
   language: "it"
   created_at: "2026-01-01 00:00:00"
   updated_at: "2026-01-01 00:00:00"
+
+b2c_paid_briefing:
+  order: b2c_paid_with_stripe
+  about: "Uma musica especial para o aniversario da minha mae"
+  recipient: "Maria"
+  occasion: "birthday"
+  music_style: "pop"
+  mood: "happy"
+  tempo: "moderate"
+  target_duration_seconds: 120
+  language: "it"
+  created_at: "2026-01-12 09:00:00"
+  updated_at: "2026-01-12 09:00:00"
+
+b2c_paid_no_optional_briefing:
+  order: b2c_paid
+  about: "Uma musica especial"
+  music_style: "pop"
+  language: "en"
+  created_at: "2026-01-02 09:00:00"
+  updated_at: "2026-01-02 09:00:00"
+
+b2c_lyrics_ready_briefing:
+  order: b2c_lyrics_ready
+  about: "Uma musica especial para o aniversario do meu pai"
+  recipient: "Giovanni"
+  occasion: "birthday"
+  music_style: "ballad"
+  mood: "emotional"
+  tempo: "slow"
+  target_duration_seconds: 180
+  language: "it"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 09:00:00"

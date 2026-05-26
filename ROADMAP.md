@@ -97,15 +97,15 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 9. LyricsGenerator — pipeline dupla (Mureka → Claude)
 
-- [ ] **DECISÃO PENDENTE**: confirmar se `POST /v1/lyrics/generate` da Mureka desconta créditos (ver SPEC 13.1)
-- [ ] Service `LyricsGenerator::MurekaLyricsClient` (etapa 1 — rascunho bruto) — só se Mureka for inclusa
-- [ ] Service `LyricsGenerator::ClaudeClient` (wrapper Anthropic API — etapa 2 refino + regen)
-- [ ] Service `LyricsGenerator::PromptBuilder` (REFINE_PROMPT, REGEN_PROMPT, ou direct se sem Mureka)
-- [ ] Service `LyricsGenerator::Generator` (orquestra Mureka → Claude → save em lyrics_drafts)
-- [ ] Job `GenerateLyricsJob` (suporta initial + regen)
-- [ ] Versionamento de prompt (`prompt_version`)
-- [ ] Log em `GenerationJob` (uma row por chamada Mureka + uma por chamada Claude)
-- [ ] Testes com WebMock (Mureka + Anthropic)
+- [x] **DECISÃO PENDENTE**: confirmar se `POST /v1/lyrics/generate` da Mureka desconta créditos (ver SPEC 13.1)
+- [x] Service `LyricsGenerator::MurekaLyricsClient` (etapa 1 — rascunho bruto) — só se Mureka for inclusa
+- [x] Service `LyricsGenerator::ClaudeClient` (wrapper Anthropic API — etapa 2 refino + regen)
+- [x] Service `LyricsGenerator::PromptBuilder` (REFINE_PROMPT, REGEN_PROMPT, ou direct se sem Mureka)
+- [x] Service `LyricsGenerator::Generator` (orquestra Mureka → Claude → save em lyrics_drafts)
+- [x] Job `GenerateLyricsJob` (suporta initial + regen)
+- [x] Versionamento de prompt (`prompt_version`)
+- [x] Log em `GenerationJob` (uma row por chamada Mureka + uma por chamada Claude)
+- [x] Testes com WebMock (Mureka + Anthropic)
 
 ## 10. Revisão de letra (UI simplificada — ver SPEC 10.1)
 

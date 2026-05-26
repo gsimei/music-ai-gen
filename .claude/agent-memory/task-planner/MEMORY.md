@@ -1,2 +1,3 @@
 - [Visão geral do projeto](project_overview.md) — Stack, marcas, mercados, Ruby/Rails versions confirmadas
 - [Stripe integration notes](stripe_integration_notes.md) — Gems, webhook contract, idempotency, AASM events relevantes
+- [LyricsGenerator pipeline notes](lyrics_generator_notes.md) — Claude-only mode, prompt versioning, GenerationJob log pattern, AASM hooks, job parameters
