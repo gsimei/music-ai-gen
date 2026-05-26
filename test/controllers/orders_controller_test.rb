@@ -317,6 +317,50 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to wizard_order_path(step: 1)
   end
 
+  # ---------------------------------------------------------------------------
+  # POST /orders/:id/checkout — initiates Stripe Checkout
+  # ---------------------------------------------------------------------------
+
+  test "POST /orders/:id/checkout for pending order redirects to Stripe checkout URL" do
+    host! "b2c.lvh.me"
+    order = orders(:b2c_pending)
+    checkout_url = "https://checkout.stripe.com/pay/cs_test_controller_001"
+
+    # Stub CheckoutBuilder to return a success result with the URL
+    Stripe::CheckoutBuilder.stub(:call, ->(_args) {
+      ServiceResult.new(success: true, value: { url: checkout_url }, errors: nil)
+    }) do
+      post checkout_order_path(order)
+    end
+
+    assert_redirected_to checkout_url
+  end
+
+  test "POST /orders/:id/checkout for non-pending order redirects to order path" do
+    host! "b2c.lvh.me"
+    order = orders(:b2c_paid_with_stripe)
+
+    # CheckoutBuilder should NOT be called for non-pending orders
+    Stripe::CheckoutBuilder.stub(:call, ->(_args) { raise "Should not call CheckoutBuilder for paid order" }) do
+      post checkout_order_path(order)
+    end
+
+    assert_redirected_to order_path(order)
+  end
+
+  test "POST /orders/:id/checkout when CheckoutBuilder fails redirects to order path with alert" do
+    host! "b2c.lvh.me"
+    order = orders(:b2c_pending)
+
+    Stripe::CheckoutBuilder.stub(:call, ->(_args) {
+      ServiceResult.new(success: false, value: nil, errors: "stripe_error")
+    }) do
+      post checkout_order_path(order)
+    end
+
+    assert_redirected_to order_path(order)
+  end
+
   private
 
   # Fills steps 1-3 in the session using PATCH requests.

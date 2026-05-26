@@ -213,3 +213,58 @@ b2c_cancelled:
   cancellation_reason: "Customer changed mind"
   created_at: "2026-01-11 00:00:00"
   updated_at: "2026-01-11 00:00:00"
+
+b2c_paid_with_stripe:
+  user: customer_b2c
+  reference: "ORD-2026-S1T2R"
+  brand: "b2c"
+  locale: "it"
+  status: "paid"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  stripe_session_id: "cs_test_paid_session_001"
+  stripe_payment_intent_id: "pi_test_paid_intent_001"
+  paid_at: "2026-01-12 10:00:00"
+  created_at: "2026-01-12 09:00:00"
+  updated_at: "2026-01-12 10:00:00"
+
+b2c_payment_failed:
+  user: customer_b2c
+  reference: "ORD-2026-F1L2D"
+  brand: "b2c"
+  locale: "it"
+  status: "payment_failed"
+  tier: "standard"
+  price_cents: 1900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "customer@example.com"
+  stripe_payment_intent_id: "pi_test_failed_intent_001"
+  created_at: "2026-01-13 09:00:00"
+  updated_at: "2026-01-13 09:30:00"
+
+b2b_pending_with_stripe:
+  user: customer_b2b
+  reference: "ORD-2026-B2B1S"
+  brand: "b2b"
+  locale: "it"
+  status: "pending"
+  tier: "starter"
+  price_cents: 7900
+  currency: "EUR"
+  lyrics_regen_limit: 2
+  lyrics_regen_used: 0
+  music_regen_limit: 1
+  music_regen_used: 0
+  delivery_email: "business@example.com"
+  created_at: "2026-01-14 00:00:00"
+  updated_at: "2026-01-14 00:00:00"

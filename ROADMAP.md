@@ -87,13 +87,13 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 8. Stripe Checkout + webhook
 
-- [ ] Service `Stripe::CheckoutBuilder` (cria Checkout Session)
-- [ ] Endpoint `POST /orders/:id/checkout`
-- [ ] Endpoint `POST /stripe/webhook` (verificação HMAC)
-- [ ] Service `Stripe::WebhookHandler` (idempotência via StripeEvent)
-- [ ] Job `StripeWebhookProcessorJob`
-- [ ] Handlers: `checkout.session.completed`, `payment_intent.payment_failed`, `charge.refunded`
-- [ ] Testes com WebMock
+- [x] Service `Stripe::CheckoutBuilder` (cria Checkout Session)
+- [x] Endpoint `POST /orders/:id/checkout`
+- [x] Endpoint `POST /stripe/webhook` (verificação HMAC)
+- [x] Service `Stripe::WebhookHandler` (idempotência via StripeEvent)
+- [x] Job `StripeWebhookProcessorJob`
+- [x] Handlers: `checkout.session.completed`, `payment_intent.payment_failed`, `charge.refunded`
+- [x] Testes com WebMock
 
 ## 9. LyricsGenerator — pipeline dupla (Mureka → Claude)
 

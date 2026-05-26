@@ -13,6 +13,22 @@ class OrdersController < ApplicationController
     @order = Order.find(params[:id])
   end
 
+  def checkout
+    @order = Order.find(params[:id])
+
+    unless @order.pending?
+      redirect_to order_path(@order) and return
+    end
+
+    result = ::Stripe::CheckoutBuilder.call(order: @order)
+
+    if result.success?
+      redirect_to result.value[:url], allow_other_host: true
+    else
+      redirect_to order_path(@order), alert: "Errore durante il pagamento"
+    end
+  end
+
   def wizard_show
     step = params[:step].to_i
     wizard = Orders::WizardSession.new(session)
