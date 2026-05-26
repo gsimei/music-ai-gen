@@ -17,29 +17,14 @@ module LyricsGenerator
       end
 
       success_result({
-        system_prompt:  build_system_prompt,
-        user_prompt:    build_user_prompt(mode_sym),
+        prompt:         build_prompt(mode_sym),
         prompt_version: PROMPT_VERSION
       })
     end
 
     private
 
-    def build_system_prompt
-      <<~PROMPT.strip
-        You are an expert music lyrics writer. Generate lyrics in JSON format with the following structure:
-        {
-          "title": "Song title",
-          "sections": [
-            { "type": "verse", "lines": ["Line 1", "Line 2"] },
-            { "type": "chorus", "lines": ["Line 1", "Line 2"] }
-          ]
-        }
-        Return ONLY valid JSON, no additional text.
-      PROMPT
-    end
-
-    def build_user_prompt(mode_sym)
+    def build_prompt(mode_sym)
       case mode_sym
       when :regen then build_regen_prompt
       else             build_initial_prompt
@@ -48,6 +33,7 @@ module LyricsGenerator
 
     def build_initial_prompt
       parts = [
+        "You are an expert music lyrics writer.",
         "Write song lyrics based on the following briefing:",
         "Topic: #{briefing.about}",
         "Music style: #{briefing.music_style}",
@@ -66,6 +52,7 @@ module LyricsGenerator
 
     def build_regen_prompt
       parts = [
+        "You are an expert music lyrics writer.",
         "Regenerate the following song lyrics based on user feedback:",
         "",
         "Current lyrics:",
@@ -84,9 +71,6 @@ module LyricsGenerator
         parts << ""
         parts << "User feedback: #{user_feedback}"
       end
-
-      parts << ""
-      parts << "Return ONLY valid JSON."
 
       parts.join("\n")
     end

@@ -1,6 +1,22 @@
 fr:
   hello: "Bonjour"
   site_name: "Music AI Gen"
+  lyrics:
+    title: "Vos paroles"
+    approve_button: "Approuver"
+    adjust_button: "Je veux ajuster"
+    adjust_button_disabled: "Limite atteinte"
+    feedback_placeholder: "Qu'est-ce que vous changeriez ?"
+    feedback_submit: "Envoyer et régénérer"
+    lock_warning: "Après approbation vous ne pourrez plus modifier"
+    generating: "Nous réécrivons vos paroles..."
+    regen_remaining:
+      zero: "Aucune modification disponible"
+      one: "1 modification disponible"
+      other: "%{count} modifications disponibles"
+    approved: "Approuvé ! Nous générons la musique."
+    approve_failed: "Erreur lors de l'approbation. Réessayez."
+    regen_failed: "Impossible de régénérer. Réessayez."
   errors:
     not_found: "Page non trouvée"
     server_error: "Erreur du serveur"

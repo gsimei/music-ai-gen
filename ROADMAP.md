@@ -109,16 +109,16 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 ## 10. Revisão de letra (UI simplificada — ver SPEC 10.1)
 
-- [ ] View `/orders/:id/lyrics` — letra como texto corrido, sem blocos editáveis por seção
-- [ ] Dois botões: "Está perfeita ✓" / "Quero ajustar"
-- [ ] Campo de texto livre para feedback (quando "Quero ajustar")
-- [ ] Contador discreto de regenerações restantes
-- [ ] Stimulus controller mínimo (toggle do feedback form, submit via Turbo)
-- [ ] Turbo Streams substituem a letra quando o job de regen termina
-- [ ] Botão "Quero ajustar" desabilitado quando regen_limit atingido
-- [ ] Endpoint `POST /orders/:id/approve_lyrics` (trava letra + dispara música)
-- [ ] Endpoint `POST /orders/:id/lyrics/regenerate` (cria nova draft + enfileira job)
-- [ ] **NÃO implementar:** blocos editáveis, regen por bloco, exposição da JSON structure
+- [x] View `/orders/:id/lyrics` — letra como texto corrido, sem blocos editáveis por seção
+- [x] Dois botões: "Está perfeita ✓" / "Quero ajustar"
+- [x] Campo de texto livre para feedback (quando "Quero ajustar")
+- [x] Contador discreto de regenerações restantes
+- [x] Stimulus controller mínimo (toggle do feedback form, submit via Turbo)
+- [x] Turbo Streams substituem a letra quando o job de regen termina
+- [x] Botão "Quero ajustar" desabilitado quando regen_limit atingido
+- [x] Endpoint `POST /orders/:id/approve_lyrics` (trava letra + dispara música)
+- [x] Endpoint `POST /orders/:id/lyrics/regenerate` (cria nova draft + enfileira job)
+- [x] **NÃO implementar:** blocos editáveis, regen por bloco, exposição da JSON structure
 
 ## 11. MurekaClient + integração
 

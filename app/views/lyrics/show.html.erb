@@ -1,0 +1,87 @@
+<% b2b = current_brand == "b2b" %>
+<% content_for :title, @order.briefing&.about.presence || t("lyrics.title") %>
+
+<%# Turbo Stream subscription — receives broadcast after regen job completes %>
+<%= turbo_stream_from "order_#{@order.id}_lyrics" %>
+
+<div class="<%= b2b ? 'bg-cant-paper text-cant-ink font-cant-body' : 'bg-ser-cream text-ser-ink font-ser-body' %> min-h-screen w-full">
+
+  <%# Top bar %>
+  <div class="px-4 pt-5 sm:px-6 flex items-center justify-between border-b
+              <%= b2b ? 'border-cant-line' : 'border-ser-line' %>">
+    <div class="flex items-center gap-2 pb-4">
+      <% if b2b %>
+        <svg width="20" height="22" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+          <path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/>
+          <path d="M22 32 H 48" stroke-linecap="square"/>
+          <circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/>
+        </svg>
+        <span class="font-medium text-xl" style="font-family: var(--font-cant-display)">JinglePro</span>
+      <% else %>
+        <svg width="22" height="20" viewBox="0 0 70 64" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+          <path d="M35 56 C8 38, 4 18, 18 10 C26 5, 32 10, 35 16 C38 10, 44 5, 52 10 C66 18, 62 38, 35 56 Z" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="35" cy="30" r="2.8" fill="currentColor" stroke="none"/>
+        </svg>
+        <span class="text-xl tracking-tight" style="font-family: var(--font-ser-display)">Sere<em>n</em>ata</span>
+      <% end %>
+    </div>
+    <span class="text-[10px] tracking-wider pb-4 <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+      <%= b2b ? "Passo 5 · 05 / 05" : "passo 5 di 5" %>
+    </span>
+  </div>
+
+  <%# Page header %>
+  <div class="px-4 pt-6 pb-3 sm:px-6 sm:max-w-lg sm:mx-auto">
+    <% if b2b %>
+      <div class="text-[10px] tracking-[0.22em] uppercase text-cant-mute mb-2">
+        <%= t("lyrics.title") %>
+      </div>
+      <h1 class="font-medium tracking-tight leading-none text-[32px]"
+          style="font-family: var(--font-cant-display)">
+        <%= @order.briefing&.about.presence || t("lyrics.title") %>
+      </h1>
+    <% else %>
+      <div class="italic text-sm text-ser-shadow mb-2"
+           style="font-family: var(--font-ser-display)">
+        ✻ &nbsp;<%= t("lyrics.title") %>
+      </div>
+      <h1 class="tracking-tight leading-none text-[36px]"
+          style="font-family: var(--font-ser-display)">
+        <%= @order.briefing&.about.presence || t("lyrics.title") %>
+      </h1>
+    <% end %>
+  </div>
+
+  <%# Flash messages %>
+  <% if notice.present? %>
+    <div role="alert"
+         aria-live="polite"
+         class="mx-4 mb-4 sm:mx-6 sm:max-w-lg sm:mx-auto px-4 py-3 rounded-lg text-sm
+                <%= b2b ?
+                  'bg-green-50 border border-green-200 text-green-800' :
+                  'bg-green-50 border border-green-200 text-green-800' %>">
+      <%= notice %>
+    </div>
+  <% end %>
+
+  <% if alert.present? %>
+    <div role="alert"
+         aria-live="assertive"
+         class="mx-4 mb-4 sm:mx-6 sm:max-w-lg sm:mx-auto px-4 py-3 rounded-lg text-sm
+                bg-red-50 border border-red-200 text-red-800">
+      <%= alert %>
+    </div>
+  <% end %>
+
+  <%# Error zone for Turbo Stream regen errors %>
+  <div id="lyrics_errors" class="mx-4 sm:mx-6 sm:max-w-lg sm:mx-auto"></div>
+
+  <%# Generating notice zone — replaced by Turbo Stream when regen is submitted %>
+  <div id="lyrics_generating_notice" class="mx-4 sm:mx-6 sm:max-w-lg sm:mx-auto"></div>
+
+  <%# Main content area — replaced wholesale by Turbo Stream when regen completes %>
+  <div id="lyrics_content" class="px-4 pb-10 sm:px-6 sm:max-w-lg sm:mx-auto">
+    <%= render "lyrics/lyrics_content", order: @order, draft: @draft %>
+  </div>
+
+</div>

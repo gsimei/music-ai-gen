@@ -29,13 +29,9 @@ module LyricsGenerator
       )
       return failure_result(prompt_result.errors) unless prompt_result.success?
 
-      claude_result = ClaudeClient.call(
-        system_prompt:  prompt_result.value[:system_prompt],
-        user_prompt:    prompt_result.value[:user_prompt],
-        prompt_version: prompt_result.value[:prompt_version]
-      )
+      api_result = MurekaLyricsClient.call(prompt: prompt_result.value[:prompt])
 
-      if claude_result.failure?
+      if api_result.failure?
         record_generation_job(
           order:          order,
           step:           step_for(mode_sym),
@@ -44,10 +40,10 @@ module LyricsGenerator
           lyrics_draft:   nil,
           api_result:     nil
         )
-        return failure_result(claude_result.errors)
+        return failure_result(api_result.errors)
       end
 
-      draft = build_and_save_draft(mode_sym, parent_draft, claude_result.value, prompt_result.value[:prompt_version])
+      draft = build_and_save_draft(mode_sym, parent_draft, api_result.value, prompt_result.value[:prompt_version])
       return failure_result(draft.errors) unless draft.persisted?
 
       order.increment!(:lyrics_regen_used) if mode_sym == :regen
@@ -58,7 +54,7 @@ module LyricsGenerator
         status:         "success",
         prompt_version: prompt_result.value[:prompt_version],
         lyrics_draft:   draft,
-        api_result:     claude_result.value
+        api_result:     api_result.value
       )
 
       success_result(draft)
@@ -76,19 +72,18 @@ module LyricsGenerator
 
     def build_and_save_draft(mode_sym, parent_draft, api_result, prompt_version)
       next_version = (order.lyrics_drafts.maximum(:version) || 0) + 1
-      content      = extract_text_content(api_result[:parsed_json])
 
       attrs = {
         order:          order,
         version:        next_version,
         source:         mode_sym == :regen ? "regenerated" : "ai_generated",
-        content:        content,
-        structure:      api_result[:parsed_json],
+        content:        api_result[:lyrics],
+        structure:      { "title" => api_result[:title], "lyrics" => api_result[:lyrics] },
         prompt_version: prompt_version,
-        llm_model:      api_result[:model],
-        llm_provider:   "anthropic",
-        input_tokens:   api_result[:input_tokens],
-        output_tokens:  api_result[:output_tokens],
+        llm_model:      "mureka-lyrics",
+        llm_provider:   "mureka",
+        input_tokens:   nil,
+        output_tokens:  nil,
         latency_ms:     api_result[:latency_ms]
       }
 
@@ -100,31 +95,20 @@ module LyricsGenerator
       LyricsDraft.create(attrs)
     end
 
-    def extract_text_content(parsed_json)
-      sections = parsed_json["sections"] || []
-      lines    = sections.flat_map { |s| s["lines"] || [] }
-      lines.join("\n").presence || parsed_json.to_json
-    end
-
     def record_generation_job(order:, step:, status:, prompt_version:, lyrics_draft:, api_result:)
       attrs = {
         order:          order,
         step:           step,
         status:         status,
-        provider:       "anthropic",
-        model:          ClaudeClient::MODEL,
+        provider:       "mureka",
+        model:          "mureka-lyrics",
         prompt_version: prompt_version,
         lyrics_draft:   lyrics_draft,
         finished_at:    Time.current
       }
 
       if api_result
-        attrs.merge!(
-          input_tokens:  api_result[:input_tokens],
-          output_tokens: api_result[:output_tokens],
-          cost_usd:      api_result[:cost_usd],
-          latency_ms:    api_result[:latency_ms]
-        )
+        attrs[:latency_ms] = api_result[:latency_ms]
       end
 
       GenerationJob.create(attrs)

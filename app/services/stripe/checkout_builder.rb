@@ -10,6 +10,7 @@ module ::Stripe
   # - Returns success_result(session) or failure_result on API/validation error
   class CheckoutBuilder < BaseService
     attribute :order
+    attribute :host, :string
 
     def call
       return failure_result("order_not_pending") unless order.pending?
@@ -60,15 +61,15 @@ module ::Stripe
     end
 
     def success_url
-      routes.order_url(order, host: brand_host(order.brand))
+      routes.order_url(order, host: resolved_host)
     end
 
     def cancel_url
-      routes.order_url(order, host: brand_host(order.brand))
+      routes.order_url(order, host: resolved_host)
     end
 
-    def brand_host(brand)
-      BRANDS_CONFIG.dig(brand.to_sym, :hosts).first
+    def resolved_host
+      host.presence || BRANDS_CONFIG.dig(order.brand.to_sym, :hosts).first
     end
 
     def routes

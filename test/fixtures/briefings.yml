@@ -54,3 +54,16 @@ b2c_lyrics_ready_briefing:
   language: "it"
   created_at: "2026-01-10 09:00:00"
   updated_at: "2026-01-10 09:00:00"
+
+b2c_lyrics_ready_at_limit_briefing:
+  order: b2c_lyrics_ready_at_limit
+  about: "Uma musica especial para o aniversario do meu pai"
+  recipient: "Giovanni"
+  occasion: "birthday"
+  music_style: "ballad"
+  mood: "emotional"
+  tempo: "slow"
+  target_duration_seconds: 180
+  language: "it"
+  created_at: "2026-01-10 09:00:00"
+  updated_at: "2026-01-10 09:00:00"

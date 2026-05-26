@@ -131,6 +131,14 @@ class Order < ApplicationRecord
     lyrics_regen_limit - lyrics_regen_used
   end
 
+  def lyrics_regen_exhausted?
+    lyrics_regen_used >= lyrics_regen_limit
+  end
+
+  def current_draft
+    lyrics_drafts.order(version: :desc).first
+  end
+
   def music_regen_remaining
     music_regen_limit - music_regen_used
   end
@@ -159,7 +167,10 @@ class Order < ApplicationRecord
     self.approved_lyrics_draft_id = draft.id
     self.approved_at = Time.current
     save!
-    start_music_generation!
+    # Music generation is enqueued asynchronously so the order remains in
+    # lyrics_approved state after approval.  The job is responsible for calling
+    # start_music_generation! and kicking off the Mureka pipeline.
+    GenerateMusicJob.perform_later(id)
   end
 
   def enqueue_lyrics_generation

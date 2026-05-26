@@ -477,10 +477,10 @@ class OrderAasmTest < ActiveSupport::TestCase
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
     order.current_lyrics_draft_id = draft.id
 
-    # approve_lyrics calls lock_lyrics_and_start_music which calls start_music_generation!
-    # so final state will be music_generating
+    # approve_lyrics calls lock_lyrics_and_start_music which enqueues GenerateMusicJob
+    # asynchronously, so the order remains in lyrics_approved after the event.
     order.approve_lyrics!
-    assert_equal "music_generating", order.status
+    assert_equal "lyrics_approved", order.status
     assert draft.reload.is_approved
     assert draft.reload.is_locked
     assert_not_nil order.approved_lyrics_draft_id

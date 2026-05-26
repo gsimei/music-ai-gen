@@ -3,3 +3,4 @@
 - [AASM Secao 4](aasm_secao4.md) — State machine Order: 14 estados, 12 events, guards, callbacks, 393 testes passando
 - [Brand/Locale Secao 5](brand_locale_secao5.md) — BrandLocaleResolver, I18n config, around_action, t_brand helper, 431 testes passando
 - [Wizard Briefing Secao 7](wizard_briefing_secao7.md) — ReferenceGenerator, WizardSession, StepValidator, CreateDraftService, OrdersController, 515 testes passando
+- [Lyrics Review Secao 10](lyrics_review_secao10.md) — LyricsApprover, LyricsRegenerator, LyricsController, kwargs patch, GenerateMusicJob stub, 693 testes passando

@@ -1,0 +1,29 @@
+<% b2b = current_brand == "b2b" %>
+
+<div role="status"
+     aria-live="polite"
+     aria-label="<%= t('lyrics.generating') %>"
+     class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm my-3
+            <%= b2b ?
+              'bg-cant-paper border border-cant-line text-cant-mute' :
+              'bg-white border border-ser-line text-ser-mute rounded-xl' %>">
+  <%# Animated spinner %>
+  <svg class="shrink-0 animate-spin"
+       width="16" height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       aria-hidden="true">
+    <circle cx="12" cy="12" r="10"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-dasharray="60"
+            stroke-dashoffset="30"
+            stroke-linecap="round"
+            opacity="0.3"/>
+    <path d="M12 2 a10 10 0 0 1 10 10"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"/>
+  </svg>
+  <span><%= t("lyrics.generating") %></span>
+</div>

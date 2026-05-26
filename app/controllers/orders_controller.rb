@@ -20,9 +20,10 @@ class OrdersController < ApplicationController
       redirect_to order_path(@order) and return
     end
 
-    result = ::Stripe::CheckoutBuilder.call(order: @order)
+    result = ::Stripe::CheckoutBuilder.call(order: @order, host: request.host_with_port)
 
     if result.success?
+      response.set_header("Turbo-Frame", "_top")
       redirect_to result.value[:url], allow_other_host: true
     else
       redirect_to order_path(@order), alert: "Errore durante il pagamento"
@@ -82,6 +83,7 @@ class OrdersController < ApplicationController
 
       if result.success?
         wizard.clear!
+        response.set_header("Turbo-Frame", "_top")
         redirect_to order_path(result.value)
       else
         @step = step

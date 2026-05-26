@@ -20,7 +20,7 @@ require "test_helper"
 #   )
 #
 # Returns ServiceResult:
-#   success? => true,  value: { system_prompt: String, user_prompt: String, prompt_version: String }
+#   success? => true,  value: { prompt: String, prompt_version: String }
 #   success? => false, errors: Symbol (e.g. :missing_current_lyrics)
 class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     assert_equal "v1.0", result.value[:prompt_version]
   end
 
-  test "mode :initial result value contains system_prompt string" do
+  test "mode :initial result value contains prompt string" do
     briefing = briefings(:b2c_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -72,11 +72,11 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_kind_of String, result.value[:system_prompt]
-    assert_not result.value[:system_prompt].empty?
+    assert_kind_of String, result.value[:prompt]
+    assert_not result.value[:prompt].empty?
   end
 
-  test "mode :initial result value contains user_prompt string" do
+  test "mode :initial prompt includes briefing about field" do
     briefing = briefings(:b2c_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -85,11 +85,10 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_kind_of String, result.value[:user_prompt]
-    assert_not result.value[:user_prompt].empty?
+    assert_includes result.value[:prompt], briefing.about
   end
 
-  test "mode :initial user_prompt includes briefing about field" do
+  test "mode :initial prompt includes music_style" do
     briefing = briefings(:b2c_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -98,10 +97,10 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], briefing.about
+    assert_includes result.value[:prompt], briefing.music_style
   end
 
-  test "mode :initial user_prompt includes music_style" do
+  test "mode :initial prompt includes language" do
     briefing = briefings(:b2c_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -110,22 +109,10 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], briefing.music_style
+    assert_includes result.value[:prompt], briefing.language
   end
 
-  test "mode :initial user_prompt includes language" do
-    briefing = briefings(:b2c_paid_briefing)
-
-    result = LyricsGenerator::PromptBuilder.call(
-      mode:     :initial,
-      briefing: briefing
-    )
-
-    assert result.success?
-    assert_includes result.value[:user_prompt], briefing.language
-  end
-
-  test "mode :initial user_prompt includes recipient when present" do
+  test "mode :initial prompt includes recipient when present" do
     briefing = briefings(:b2c_paid_briefing)
     assert_equal "Maria", briefing.recipient
 
@@ -135,10 +122,10 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], "Maria"
+    assert_includes result.value[:prompt], "Maria"
   end
 
-  test "mode :initial user_prompt includes mood when present" do
+  test "mode :initial prompt includes mood when present" do
     briefing = briefings(:b2c_paid_briefing)
     assert_equal "happy", briefing.mood
 
@@ -148,7 +135,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], "happy"
+    assert_includes result.value[:prompt], "happy"
   end
 
   # ---------------------------------------------------------------------------
@@ -167,9 +154,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    # The prompts must not contain the literal string "nil"
-    refute_includes result.value[:user_prompt], "nil"
-    refute_includes result.value[:system_prompt], "nil"
+    refute_includes result.value[:prompt], "nil"
   end
 
   test "mode :initial without optional fields still returns success" do
@@ -209,7 +194,6 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    # Errors should communicate the specific cause
     assert_includes result.errors.to_s, "current_lyrics"
   end
 
@@ -253,12 +237,12 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], current_lyrics
+    assert_includes result.value[:prompt], current_lyrics
   end
 
   test "mode :regen prompt includes user_feedback" do
-    briefing       = briefings(:b2c_paid_briefing)
-    user_feedback  = "Piu romantica per favore"
+    briefing      = briefings(:b2c_paid_briefing)
+    user_feedback = "Piu romantica per favore"
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -268,7 +252,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_includes result.value[:user_prompt], user_feedback
+    assert_includes result.value[:prompt], user_feedback
   end
 
   test "mode :regen with current_lyrics but nil user_feedback returns success" do
@@ -282,7 +266,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    refute_includes result.value[:user_prompt], "nil"
+    refute_includes result.value[:prompt], "nil"
   end
 
   test "mode :regen result includes prompt_version" do

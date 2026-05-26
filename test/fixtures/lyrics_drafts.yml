@@ -41,3 +41,25 @@ draft_lyrics_ready_v1:
   is_locked: false
   created_at: "2026-01-10 10:30:00"
   updated_at: "2026-01-10 10:30:00"
+
+# Draft para o order b2c_lyrics_ready_at_limit — regen limit esgotado
+draft_at_limit_v1:
+  order: b2c_lyrics_ready_at_limit
+  version: 1
+  source: "ai_generated"
+  content: "Testo originale prima delle rigenerazioni"
+  is_approved: false
+  is_locked: false
+  created_at: "2026-01-10 10:30:00"
+  updated_at: "2026-01-10 10:30:00"
+
+draft_at_limit_v2:
+  order: b2c_lyrics_ready_at_limit
+  parent_draft: draft_at_limit_v1
+  version: 2
+  source: "regenerated"
+  content: "Testo dopo due rigenerazioni"
+  is_approved: false
+  is_locked: false
+  created_at: "2026-01-10 11:00:00"
+  updated_at: "2026-01-10 11:00:00"

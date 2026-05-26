@@ -30,6 +30,22 @@
 en:
   hello: "Hello world"
   site_name: "Music AI Gen"
+  lyrics:
+    title: "Your lyrics"
+    approve_button: "Approve"
+    adjust_button: "I want to adjust"
+    adjust_button_disabled: "Limit reached"
+    feedback_placeholder: "What would you change?"
+    feedback_submit: "Send and regenerate"
+    lock_warning: "After approval you will not be able to make changes"
+    generating: "We are rewriting your lyrics..."
+    regen_remaining:
+      zero: "No changes available"
+      one: "1 change available"
+      other: "%{count} changes available"
+    approved: "Approved! We are generating the music."
+    approve_failed: "Error during approval. Please try again."
+    regen_failed: "Unable to regenerate. Please try again."
   errors:
     not_found: "Page not found"
     server_error: "Server error"

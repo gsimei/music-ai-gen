@@ -1,6 +1,22 @@
 de:
   hello: "Hallo"
   site_name: "Music AI Gen"
+  lyrics:
+    title: "Ihr Liedtext"
+    approve_button: "Genehmigen"
+    adjust_button: "Ich möchte anpassen"
+    adjust_button_disabled: "Limit erreicht"
+    feedback_placeholder: "Was würden Sie ändern?"
+    feedback_submit: "Senden und neu generieren"
+    lock_warning: "Nach der Genehmigung können Sie keine Änderungen mehr vornehmen"
+    generating: "Wir schreiben Ihren Liedtext neu..."
+    regen_remaining:
+      zero: "Keine Änderungen verfügbar"
+      one: "1 Änderung verfügbar"
+      other: "%{count} Änderungen verfügbar"
+    approved: "Genehmigt! Wir generieren die Musik."
+    approve_failed: "Fehler bei der Genehmigung. Bitte versuchen Sie es erneut."
+    regen_failed: "Neu generieren nicht möglich. Bitte versuchen Sie es erneut."
   errors:
     not_found: "Seite nicht gefunden"
     server_error: "Serverfehler"

@@ -1,0 +1,149 @@
+<% b2b = current_brand == "b2b" %>
+
+<%# Regen counter — subtle, below title area %>
+<div id="regen_counter"
+     class="mb-4 px-3.5 py-2.5 text-[11.5px] flex items-center justify-between rounded-sm
+            <%= b2b ?
+              'border border-cant-line bg-cant-paper text-cant-ink' :
+              'border border-ser-line bg-white text-ser-ink rounded-xl' %>"
+     aria-live="polite"
+     aria-label="<%= t('lyrics.regen_remaining', count: order.lyrics_regen_remaining) %>">
+  <span class="<%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+    <% if b2b %>
+      <strong class="<%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+        <%= order.lyrics_regen_remaining %>
+      </strong>
+      <%= t("lyrics.regen_remaining", count: order.lyrics_regen_remaining) %>
+    <% else %>
+      <%= t("lyrics.regen_remaining", count: order.lyrics_regen_remaining).html_safe %>
+    <% end %>
+  </span>
+  <% if b2b %>
+    <span class="<%= b2b ? 'text-cant-brass' : 'text-ser-shadow' %>"
+          style="font-family: var(<%= b2b ? '--font-cant-display' : '--font-ser-display' %>)">
+      <em><%= order.tier&.capitalize %></em>
+    </span>
+  <% end %>
+</div>
+
+<%# Lyrics text area — plain poem format, no section labels %>
+<div class="mb-5 px-4 py-5 rounded-sm leading-relaxed
+            <%= b2b ?
+              'bg-cant-paper border border-cant-line font-cant-display text-base text-cant-ink' :
+              'bg-white border border-ser-line rounded-2xl text-ser-ink' %>"
+     style="font-family: var(<%= b2b ? '--font-cant-display' : '--font-ser-display' %>)">
+  <%= simple_format(draft.content,
+        {},
+        wrapper_tag: "div",
+        class: "space-y-1 text-base leading-snug") %>
+</div>
+
+<%# Action buttons area %>
+<div class="space-y-3" data-controller="lyrics-review">
+  <%# Lock warning disclaimer %>
+  <p class="text-[10.5px] flex items-center gap-1.5
+            <%= b2b ? 'text-cant-mute' : 'text-ser-mute' %>">
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <circle cx="6" cy="6" r="5.5" stroke="currentColor"/>
+      <path d="M6 3v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="6" cy="9" r="0.6" fill="currentColor"/>
+    </svg>
+    <%= t("lyrics.lock_warning") %>
+  </p>
+
+  <%# Approve button — full-page POST, no turbo on this form %>
+  <%= button_to approve_order_lyrics_path(order),
+        method: :post,
+        params: { draft_id: draft.id },
+        data: { turbo: false },
+        class: "w-full rounded-full py-3.5 px-4 text-sm font-semibold flex items-center justify-center gap-2
+                transition-colors duration-150
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                #{b2b ?
+                  'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                  'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" do %>
+    <%= t("lyrics.approve_button") %>
+    <span aria-hidden="true"
+          style="font-family: var(<%= b2b ? '--font-cant-display' : '--font-ser-display' %>)">
+      <em class="opacity-70">♪</em>
+    </span>
+  <% end %>
+
+  <%# Adjust / Regen button — triggers feedback form via Stimulus %>
+  <% if order.lyrics_regen_exhausted? %>
+    <button type="button"
+            disabled
+            aria-disabled="true"
+            title="<%= t('lyrics.adjust_button_disabled') %>"
+            class="w-full rounded-full py-3 px-4 text-sm font-medium border
+                   opacity-40 cursor-not-allowed
+                   <%= b2b ?
+                     'border-cant-line text-cant-mute' :
+                     'border-ser-line text-ser-mute' %>">
+      <%= t("lyrics.adjust_button_disabled") %>
+    </button>
+  <% else %>
+    <button type="button"
+            data-lyrics-review-target="adjustButton"
+            data-action="click->lyrics-review#showFeedback"
+            class="w-full rounded-full py-3 px-4 text-sm font-medium border
+                   transition-colors duration-150
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                   <%= b2b ?
+                     'border-cant-ink text-cant-ink hover:bg-cant-ink hover:text-cant-paper focus-visible:outline-cant-ink' :
+                     'border-ser-ink text-ser-ink hover:bg-ser-ink hover:text-ser-cream focus-visible:outline-ser-ink' %>">
+      <%= t("lyrics.adjust_button") %>
+    </button>
+  <% end %>
+
+  <%# Feedback form — hidden by default, revealed by Stimulus %>
+  <% unless order.lyrics_regen_exhausted? %>
+    <div data-lyrics-review-target="feedbackForm"
+         class="hidden"
+         aria-label="<%= t('lyrics.adjust_button') %>">
+      <%= form_with url: regenerate_order_lyrics_path(order),
+            method: :post,
+            data: { turbo: true },
+            class: "space-y-3" do |f| %>
+        <div>
+          <label for="regenerate_feedback"
+                 class="block text-sm font-medium mb-1.5
+                        <%= b2b ? 'text-cant-ink' : 'text-ser-ink' %>">
+            <%= t("lyrics.feedback_placeholder") %>
+          </label>
+          <%= f.text_area :feedback,
+                id: "regenerate_feedback",
+                name: "regenerate[feedback]",
+                rows: 3,
+                placeholder: t("lyrics.feedback_placeholder"),
+                "aria-required": "true",
+                class: "w-full px-3.5 py-3 rounded-lg text-sm border transition-colors duration-150 resize-y
+                        #{b2b ?
+                          'border-cant-line bg-cant-paper text-cant-ink placeholder:text-cant-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-cant-ink' :
+                          'border-ser-line bg-white text-ser-ink placeholder:text-ser-mute focus:outline-none focus-visible:ring-2 focus-visible:ring-ser-ink'}" %>
+        </div>
+
+        <div class="flex gap-2">
+          <%= f.submit t("lyrics.feedback_submit"),
+                class: "flex-1 rounded-full py-3 px-4 text-sm font-semibold cursor-pointer
+                        transition-colors duration-150
+                        focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                        #{b2b ?
+                          'bg-cant-ink text-cant-paper hover:opacity-90 focus-visible:outline-cant-ink' :
+                          'bg-ser-ink text-ser-cream hover:opacity-90 focus-visible:outline-ser-ink'}" %>
+
+          <button type="button"
+                  data-action="click->lyrics-review#hideFeedback"
+                  class="px-4 py-3 text-sm rounded-full border transition-colors duration-150
+                         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                         <%= b2b ?
+                           'border-cant-line text-cant-mute hover:border-cant-ink hover:text-cant-ink focus-visible:outline-cant-ink' :
+                           'border-ser-line text-ser-mute hover:border-ser-ink hover:text-ser-ink focus-visible:outline-ser-ink' %>">
+            Annulla
+          </button>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>
