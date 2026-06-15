@@ -51,7 +51,7 @@ gem "aasm", "~> 5.5"
 gem "after_commit_everywhere", "~> 1.0"
 
 # Payments
-gem "stripe", "~> 13.0"
+gem "stripe", "~> 19.2"
 
 # AI
 gem "anthropic"
