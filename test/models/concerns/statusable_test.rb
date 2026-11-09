@@ -4,7 +4,7 @@ require "test_helper"
 class StatusableTest < ActiveSupport::TestCase
   # Order — validates inclusion in STATUSES
   test "Order is invalid with an unrecognized status" do
-    order = orders(:b2c_pending)
+    order = orders(:b2b_pending)
     order.status = "flying_to_moon"
     assert_not order.valid?
     assert_includes order.errors[:status], order.errors.generate_message(:status, :inclusion)
@@ -14,9 +14,9 @@ class StatusableTest < ActiveSupport::TestCase
     valid_statuses = %w[
       pending payment_failed paid lyrics_drafting lyrics_ready lyrics_failed
       lyrics_approved music_generating preview_ready music_failed
-      approved delivered cancelled refunded
+      approved cancelled refunded
     ]
-    order = orders(:b2c_pending)
+    order = orders(:b2b_pending)
     valid_statuses.each do |s|
       order.status = s
       order.validate

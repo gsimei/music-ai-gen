@@ -1,0 +1,47 @@
+<% content_for :title, "JinglePro · Minhas campanhas" %>
+<% content_for :body_class, "studio-page" %>
+<div class="studio-home studio-app studio-library">
+  <%= render "shared/studio_header" %>
+  <main class="studio-library-main">
+    <%= render "shared/studio_flash" %>
+    <div class="studio-library-heading">
+      <div><p class="studio-kicker">SUAS CRIAÇÕES / <%= @orders.size.to_s.rjust(2, "0") %> <%= @orders.size == 1 ? "campanha" : "campanhas" %></p><h1>Suas campanhas.<br><span>Tudo aqui.</span></h1><p>Retome uma criação ou baixe sua campanha pronta para postar.</p></div>
+      <%= link_to "Criar uma promoção ↗", new_order_path, class: "studio-button studio-button-green" %>
+    </div>
+    <% if @orders.empty? %>
+      <section class="studio-library-empty">
+        <div class="studio-mini-record" aria-hidden="true"><span>JP</span></div>
+        <p class="studio-kicker">SUA PRIMEIRA PROMOÇÃO</p>
+        <h2>Seu próximo post começa aqui.</h2>
+        <p>Suas campanhas ficam salvas aqui.<br>Comece com uma oferta do seu negócio.</p>
+        <%= link_to "Criar minha primeira promoção ↗", new_order_path, class: "studio-button studio-button-outline" %>
+      </section>
+    <% else %>
+      <div class="studio-track-list">
+        <% @orders.each_with_index do |order, index| %>
+          <% asset = approved_music_asset(order) %>
+          <% audio_url = asset&.provider_url.presence || asset&.url.presence %>
+          <article class="studio-track" aria-label="Jingle <%= order.reference %>">
+            <div class="studio-track-art" aria-hidden="true"><span><%= (index + 1).to_s.rjust(2, "0") %></span>
+              <% cover = order.campaign&.poster&.attached? ? order.campaign.poster : order.campaign&.product_photos&.first %>
+              <% if cover %><%= image_tag cover, alt: "", loading: "lazy" %><% else %><div class="studio-mini-record"><span>JP</span></div><% end %>
+            </div>
+            <div class="studio-track-info">
+              <p class="studio-kicker"><%= order.reference %> <span> / <%= order.updated_at.strftime("%d.%m.%Y") %></span></p>
+              <h2><%= order.campaign&.business_name.presence || order.briefing&.about.presence&.truncate(80) || "Sua campanha" %></h2>
+              <div class="studio-track-tags"><span><%= order.briefing&.music_style.presence || "Música personalizada" %></span><% if order.briefing&.language.present? %><span><%= order.briefing.language.upcase %></span><% end %><span>Opção <%= order.approved_variant&.upcase || "em criação" %></span></div>
+              <% if audio_url.present? %>
+                <audio controls preload="none" aria-label="Ouvir <%= order.reference %>"><source src="<%= audio_url %>" type="audio/mpeg"></audio>
+              <% else %><p class="studio-track-unavailable">Música ainda em criação.</p><% end %>
+            </div>
+            <div class="studio-track-actions">
+              <% if order.campaign&.video_status == "ready" %><%= link_to "Baixar vídeo MP4 ↓", download_campaign_path(order.campaign), class: "studio-button studio-button-green", data: { turbo: false } %><% end %>
+              <%= link_to (order.campaign&.video_status == "ready" ? "Ver campanha pronta ↗" : "Acompanhar criação ↗"), (order.campaign ? campaign_path(order.campaign) : order_chat_path(order_id: order.id)), class: "studio-text-link" %>
+              <% if audio_url.present? %><%= link_to "Baixar MP3 ↓", audio_url, download: "#{order.reference}.mp3", target: "_blank", rel: "noopener noreferrer", class: "studio-button studio-button-outline", aria: { label: "Baixar música #{order.reference} em MP3" } %><% end %>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
+  </main>
+</div>

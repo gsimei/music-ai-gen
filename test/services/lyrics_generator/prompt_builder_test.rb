@@ -23,12 +23,23 @@ require "test_helper"
 #   success? => true,  value: { prompt: String, prompt_version: String }
 #   success? => false, errors: Symbol (e.g. :missing_current_lyrics)
 class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
+  test "a campaign revision receives the original conditions even when the previous lyrics omitted them" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.about = "Café com 10% de desconto, terça a quinta, somente para consumir no local."
+    briefing.extra_params = { "campaign" => true }
+    result = LyricsGenerator::PromptBuilder.call(mode: :regen, briefing: briefing,
+      current_lyrics: "Venha ao café!", user_feedback: "Deixe mais animado")
+    assert result.success?
+    assert_includes result.value[:prompt], briefing.about
+    assert_includes result.value[:prompt], "Offer accuracy takes priority"
+  end
+
   # ---------------------------------------------------------------------------
   # PROMPT_VERSION constant
   # ---------------------------------------------------------------------------
 
   test "PROMPT_VERSION is defined as a non-empty string" do
-    assert_equal "v1.0", LyricsGenerator::PromptBuilder::PROMPT_VERSION
+    assert_equal "v2.1", LyricsGenerator::PromptBuilder::PROMPT_VERSION
   end
 
   test "PROMPT_VERSION is a String" do
@@ -41,7 +52,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode :initial with complete briefing returns success" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -52,7 +63,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial result value contains prompt_version v1.0" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -60,11 +71,11 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v1.0", result.value[:prompt_version]
+    assert_equal "v2.1", result.value[:prompt_version]
   end
 
   test "mode :initial result value contains prompt string" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -77,7 +88,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial prompt includes briefing about field" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -89,7 +100,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial prompt includes music_style" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -101,7 +112,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial prompt includes language" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -113,7 +124,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial prompt includes recipient when present" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
     assert_equal "Maria", briefing.recipient
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -126,7 +137,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial prompt includes mood when present" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
     assert_equal "happy", briefing.mood
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -143,7 +154,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode :initial with nil optional fields does not contain literal nil in prompt" do
-    briefing = briefings(:b2c_paid_no_optional_briefing)
+    briefing = briefings(:b2b_paid_no_optional_briefing)
     assert_nil briefing.recipient
     assert_nil briefing.mood
     assert_nil briefing.occasion
@@ -158,7 +169,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :initial without optional fields still returns success" do
-    briefing = briefings(:b2c_paid_no_optional_briefing)
+    briefing = briefings(:b2b_paid_no_optional_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :initial,
@@ -173,7 +184,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode :regen without current_lyrics returns failure" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -185,7 +196,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen without current_lyrics returns :missing_current_lyrics error" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -198,7 +209,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen without current_lyrics key (not passed) returns failure" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:     :regen,
@@ -213,7 +224,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode :regen with current_lyrics and user_feedback returns success" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -226,7 +237,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen prompt includes current_lyrics content" do
-    briefing       = briefings(:b2c_paid_briefing)
+    briefing       = briefings(:b2b_paid_briefing)
     current_lyrics = "Buon compleanno cara mamma"
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -241,7 +252,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen prompt includes user_feedback" do
-    briefing      = briefings(:b2c_paid_briefing)
+    briefing      = briefings(:b2b_paid_briefing)
     user_feedback = "Piu romantica per favore"
 
     result = LyricsGenerator::PromptBuilder.call(
@@ -256,7 +267,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen with current_lyrics but nil user_feedback returns success" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -270,7 +281,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   end
 
   test "mode :regen result includes prompt_version" do
-    briefing = briefings(:b2c_paid_briefing)
+    briefing = briefings(:b2b_paid_briefing)
 
     result = LyricsGenerator::PromptBuilder.call(
       mode:           :regen,
@@ -279,6 +290,147 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v1.0", result.value[:prompt_version]
+    assert_equal "v2.1", result.value[:prompt_version]
+  end
+
+  # ---------------------------------------------------------------------------
+  # Short-form constraint (duration <= 60s)
+  # ---------------------------------------------------------------------------
+
+  test "mode :initial with duration <= 60 includes short-form structure constraint" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.target_duration_seconds = 30
+
+    result = LyricsGenerator::PromptBuilder.call(mode: :initial, briefing: briefing)
+
+    assert result.success?
+    assert_includes result.value[:prompt], "Maximum 30 words total"
+    assert_includes result.value[:prompt], "No intro, no bridge, no outro"
+  end
+
+  test "mode :initial with duration exactly 60 includes short-form constraint" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.target_duration_seconds = 60
+
+    result = LyricsGenerator::PromptBuilder.call(mode: :initial, briefing: briefing)
+
+    assert result.success?
+    assert_includes result.value[:prompt], "Maximum 30 words total"
+  end
+
+  test "mode :initial with duration > 60 does NOT include short-form constraint" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.target_duration_seconds = 90
+
+    result = LyricsGenerator::PromptBuilder.call(mode: :initial, briefing: briefing)
+
+    assert result.success?
+    refute_includes result.value[:prompt], "Maximum 30 words total"
+    refute_includes result.value[:prompt], "No intro, no bridge, no outro"
+  end
+
+  test "mode :regen with duration <= 60 includes short-form constraint" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.target_duration_seconds = 30
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:           :regen,
+      briefing:       briefing,
+      current_lyrics: "Test lyrics"
+    )
+
+    assert result.success?
+    assert_includes result.value[:prompt], "Keep it SHORT"
+    assert_includes result.value[:prompt], "30 words total"
+  end
+
+  test "mode :regen with duration > 60 does NOT include short-form constraint" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.target_duration_seconds = 90
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:           :regen,
+      briefing:       briefing,
+      current_lyrics: "Test lyrics"
+    )
+
+    assert result.success?
+    refute_includes result.value[:prompt], "Keep it SHORT"
+  end
+
+  # ---------------------------------------------------------------------------
+  # structure_hint — mode :initial
+  # ---------------------------------------------------------------------------
+
+  test "mode :initial with structure_hint present includes 'Preferred structure:' line in prompt" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.structure_hint = "Verse - Chorus - Verse - Chorus - Bridge - Chorus"
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:     :initial,
+      briefing: briefing
+    )
+
+    assert result.success?
+    assert_includes result.value[:prompt], "Preferred structure:"
+    assert_includes result.value[:prompt], "Verse - Chorus - Verse - Chorus - Bridge - Chorus"
+  end
+
+  test "mode :initial with blank structure_hint does NOT include 'Preferred structure:' in prompt" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.structure_hint = ""
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:     :initial,
+      briefing: briefing
+    )
+
+    assert result.success?
+    refute_includes result.value[:prompt], "Preferred structure:"
+  end
+
+  test "mode :initial with nil structure_hint does NOT include 'Preferred structure:' in prompt" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.structure_hint = nil
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:     :initial,
+      briefing: briefing
+    )
+
+    assert result.success?
+    refute_includes result.value[:prompt], "Preferred structure:"
+  end
+
+  # ---------------------------------------------------------------------------
+  # structure_hint — mode :regen
+  # ---------------------------------------------------------------------------
+
+  test "mode :regen with structure_hint present includes structure in prompt" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.structure_hint = "Intro - Verse - Chorus"
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:           :regen,
+      briefing:       briefing,
+      current_lyrics: "Buon compleanno cara mamma"
+    )
+
+    assert result.success?
+    assert_includes result.value[:prompt], "Intro - Verse - Chorus"
+  end
+
+  test "mode :regen with nil structure_hint does NOT include 'Song structure:' in prompt" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.structure_hint = nil
+
+    result = LyricsGenerator::PromptBuilder.call(
+      mode:           :regen,
+      briefing:       briefing,
+      current_lyrics: "Buon compleanno cara mamma"
+    )
+
+    assert result.success?
+    refute_includes result.value[:prompt], "Song structure:"
   end
 end

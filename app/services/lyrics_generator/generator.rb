@@ -17,7 +17,7 @@ module LyricsGenerator
       if mode_sym == :regen
         return failure_result(:regen_limit_reached) if regen_limit_reached?
 
-        parent_draft = parent_draft_id.present? ? LyricsDraft.find_by(id: parent_draft_id) : nil
+        parent_draft = parent_draft_id.present? ? order.lyrics_drafts.find_by(id: parent_draft_id) : nil
         return failure_result(:invalid_parent_draft) if parent_draft.nil?
       end
 
@@ -29,7 +29,7 @@ module LyricsGenerator
       )
       return failure_result(prompt_result.errors) unless prompt_result.success?
 
-      api_result = MurekaLyricsClient.call(prompt: prompt_result.value[:prompt])
+      api_result = MurekaLyricsClient.call(prompt: prompt_result.value[:prompt], order: order)
 
       if api_result.failure?
         record_generation_job(

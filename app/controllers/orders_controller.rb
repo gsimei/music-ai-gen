@@ -3,30 +3,115 @@
 class OrdersController < ApplicationController
   # TODO: add skip_authorization when Pundit verify_authorized is enabled (ROADMAP M-6)
 
+  skip_before_action :authenticate_user!, only: :new
+
+  before_action :set_order, only: %i[show approve_lyrics regenerate_lyrics approve_music regenerate_music]
+  before_action :authenticate_user!, only: %i[wizard_show wizard_update approve_lyrics regenerate_lyrics approve_music regenerate_music]
+
   def new
-    wizard = Orders::WizardSession.new(session)
-    wizard.clear!
-    redirect_to wizard_order_path(step: 1)
+    unless user_signed_in?
+      store_location_for(:user, new_campaign_path)
+      return redirect_to new_user_registration_path
+    end
+    redirect_to new_campaign_path
   end
 
   def show
-    @order = Order.find(params[:id])
+    @draft            = @order.current_draft
+    @assets           = @order.music_variant_assets
+    @soundtrack_input = @order.soundtrack_input
   end
 
   def checkout
-    @order = Order.find(params[:id])
-
-    unless @order.pending?
-      redirect_to order_path(@order) and return
-    end
+    @order = current_user.orders.find(params[:id])
+    destination = @order.campaign || @order
+    return redirect_to destination unless @order.pending?
 
     result = ::Stripe::CheckoutBuilder.call(order: @order, host: request.host_with_port)
-
     if result.success?
-      response.set_header("Turbo-Frame", "_top")
-      redirect_to result.value[:url], allow_other_host: true
+      redirect_to result.value[:url], allow_other_host: true, status: :see_other
     else
-      redirect_to order_path(@order), alert: "Errore durante il pagamento"
+      redirect_to destination, alert: "Não foi possível abrir o pagamento. Nenhuma cobrança foi confirmada. Tente novamente."
+    end
+  end
+
+  def approve_lyrics
+    authorize @order, :approve_lyrics?
+    result = Orders::LyricsApprover.call(
+      order:    @order,
+      draft_id: params[:draft_id]
+    )
+    if result.success?
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("lyrics_section", partial: "orders/lyrics_section", locals: { order: @order.reload, draft: @order.reload.current_draft }) }
+        format.html { redirect_to order_path(@order), notice: t("orders.lyrics_approved") }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("lyrics_errors", partial: "orders/lyrics_errors", locals: { errors: result.errors }) }
+        format.html { redirect_to order_path(@order), alert: result.errors.to_s }
+      end
+    end
+  end
+
+  def regenerate_lyrics
+    authorize @order, :regenerate_lyrics?
+    result = Orders::LyricsRegenerator.call(
+      order:         @order,
+      user_feedback: params.dig(:regenerate, :feedback)
+    )
+    if result.success?
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace("lyrics_generating_notice",
+              partial: "orders/lyrics_generating"),
+            turbo_stream.replace("lyrics_content",
+              html: '<div id="lyrics_content"></div>')
+          ]
+        end
+        format.html { redirect_to order_path(@order) }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("lyrics_errors", partial: "orders/lyrics_errors", locals: { errors: result.errors }) }
+        format.html { redirect_to order_path(@order), alert: result.errors.to_s }
+      end
+    end
+  end
+
+  def approve_music
+    authorize @order, :approve_music?
+    result = Orders::MusicApprover.call(order: @order, variant: params[:variant])
+    if result.success?
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("music_section", partial: "orders/music_section", locals: { order: @order.reload, assets: @assets }) }
+        format.html { redirect_to order_path(@order), notice: t("orders.music_approved") }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("music_section_errors", partial: "orders/music_section_errors", locals: { errors: result.errors }) }
+        format.html { redirect_to order_path(@order), alert: result.errors.to_s }
+      end
+    end
+  end
+
+  def regenerate_music
+    authorize @order, :regenerate_music?
+    result = Orders::MusicRegenerator.call(
+      order:        @order,
+      melody_hint:  params.dig(:regenerate, :feedback)
+    )
+    if result.success?
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("music_section", partial: "orders/music_section", locals: { order: @order.reload, assets: [] }) }
+        format.html { redirect_to order_path(@order) }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("music_section_errors", partial: "orders/music_section_errors", locals: { errors: result.errors }) }
+        format.html { redirect_to order_path(@order), alert: result.errors.to_s }
+      end
     end
   end
 
@@ -46,7 +131,7 @@ class OrdersController < ApplicationController
 
   def wizard_update
     step = params[:step].to_i
-    step_params = params.require(:order_wizard).permit!.to_h.symbolize_keys
+    step_params = params.fetch(:order_wizard, {}).permit!.to_h.symbolize_keys
 
     validator = Orders::StepValidator.new(
       step:   step,
@@ -77,13 +162,13 @@ class OrdersController < ApplicationController
       result = Orders::CreateDraftService.call(
         brand:       @current_brand,
         locale:      I18n.locale.to_s,
-        user_id:     current_user&.id,
+        user_id:     current_user.id,
+        user_email:  current_user.email,
         wizard_data: wizard.to_h.merge(step_params)
       )
 
       if result.success?
         wizard.clear!
-        response.set_header("Turbo-Frame", "_top")
         redirect_to order_path(result.value)
       else
         @step = step
@@ -95,6 +180,10 @@ class OrdersController < ApplicationController
   end
 
   private
+
+  def set_order
+    @order = Order.find(params[:id])
+  end
 
   def load_step_resources(step)
     case step

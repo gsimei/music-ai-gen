@@ -17,7 +17,7 @@ module Orders
     # Step 5 is the final submission — no sentinel needed because
     # complete? gates the CreateDraftService call.
     STEP_SENTINEL_KEYS = {
-      1 => :delivery_email,
+      1 => :about,
       2 => :music_style,
       3 => :step_3_visited,
       4 => :voice_id

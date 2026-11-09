@@ -1,13 +1,42 @@
 # frozen_string_literal: true
 
-# Enqueued after lyrics approval.  Calls start_music_generation! on the order
-# and drives the Mureka API pipeline.  Implementation in ROADMAP Section 11.
 class GenerateMusicJob < ApplicationJob
   queue_as :ai
 
-  def perform(order_id)
+  def perform(order_id, melody_hint: nil)
     order = Order.find(order_id)
-    order.start_music_generation!
-    # Mureka integration — ROADMAP Section 11
+    if order.campaign
+      if order.lyrics_approved?
+        result = Campaigns::MusicRounds.call(order: order, feedback: melody_hint)
+        if result.failure?
+          order.with_lock { order.update!(status: "music_failed") if order.lyrics_approved? }
+          Rails.logger.warn "[Campaign music #{order.id}] #{result.errors}"
+          OrderChatBroadcaster.call(order)
+        end
+      end
+      return
+    end
+
+    unless order.music_generating?
+      begin
+        order.start_music_generation!
+      rescue AASM::InvalidTransition => e
+        Rails.logger.warn "[GenerateMusicJob] Invalid transition for Order##{order_id}: #{e.message}"
+        return
+      end
+    end
+
+    OrderChatBroadcaster.call(order)
+    result = MusicGenerator::Generator.call(order: order, melody_hint: melody_hint)
+
+    unless result.success?
+      Rails.logger.error "[GenerateMusicJob] Generator failed for Order##{order_id}: #{result.errors.inspect}"
+      begin
+        order.fail_music!
+        OrderChatBroadcaster.call(order)
+      rescue AASM::InvalidTransition => e
+        Rails.logger.warn "[GenerateMusicJob] Could not transition to music_failed for Order##{order_id}: #{e.message}"
+      end
+    end
   end
 end

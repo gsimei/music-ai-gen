@@ -11,10 +11,6 @@ module Brandable
     brand_value == "b2b"
   end
 
-  def b2c?
-    brand_value == "b2c"
-  end
-
   private
 
   def brand_value

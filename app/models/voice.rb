@@ -3,7 +3,7 @@
 class Voice < ApplicationRecord
   PROVIDERS      = %w[mureka].freeze
   GENDERS        = %w[male female neutral].freeze
-  VALID_BRANDS   = %w[b2b b2c].freeze
+  VALID_BRANDS   = %w[b2b].freeze
   MIN_TIER_RANGE = (0..1).freeze
 
   # Validations

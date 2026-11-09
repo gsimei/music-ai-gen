@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "purpose": "Illustrative product photos for fictional JinglePro demo campaigns; real merchant campaigns use the uploaded photo.",
+  "assets": [
+    {
+      "file": "pizzaria-forno-da-vila.png",
+      "prompt": "Use case: ads-marketing. Create a photorealistic product photograph for a fictional Brazilian neighborhood pizzeria's vertical social media ad. Two freshly baked large pizzas on a dark rustic wooden counter, one mozzarella with basil and one Brazilian calabresa sausage and onion. Delicious realistic melted cheese, golden blistered crust, warm side light, shallow depth of field, premium authentic food photography, three-quarter overhead angle. Vertical 9:16 composition, pizzas occupy central 65% with breathing room at top and bottom for later text overlays. No people, no lettering, no logos, no watermark. Output intended as product photo in a moving promotional video."
+    },
+    {
+      "file": "cafe-aurora.png",
+      "prompt": "Use case: ads-marketing. Create a photorealistic product photograph for a fictional Brazilian neighborhood café's vertical social media ad. A ceramic cup of fresh black coffee with subtle steam next to a small plate of golden Brazilian pão de queijo, one broken open showing soft airy cheesy interior. Warm morning window light on a textured dark wood café table, appetizing true-to-life textures, refined editorial food photography, close three-quarter angle. Vertical 9:16 composition, cup and bread occupy central 65% with breathing room at top and bottom for later text overlays. No people, no lettering, no logos, no watermark. Output intended as product photo in a moving promotional video."
+    }
+  ]
+}

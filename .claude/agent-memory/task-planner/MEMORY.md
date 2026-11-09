@@ -2,3 +2,7 @@
 - [Stripe integration notes](stripe_integration_notes.md) — Gems, webhook contract, idempotency, AASM events relevantes
 - [LyricsGenerator pipeline notes](lyrics_generator_notes.md) — Claude-only mode, prompt versioning, GenerationJob log pattern, AASM hooks, job parameters
 - [Lyrics review UI plan](project_lyrics_review.md) — ROADMAP item 10: routes, LyricsController, services, Stimulus, Turbo Stream broadcast approach
+- [Music creation flow redesign](project_music_creation_flow_redesign.md) — Single-page orders#show hub, structure_hint, music regen, Turbo Stream setup — planned 2026-05-27
+- [Conversational chat interface plan](project_chat_interface.md) — BriefingMessage migration, ConversationalBriefingService, OrderChatController, Turbo Stream cards, Stimulus controllers — planned 2026-05-29
+- [Soundtrack feature plan](project_soundtrack_feature.md) — Pro-only, SoundtrackInput model, Mureka /v1/soundtrack/generate, skip-lyrics flow, video upload, GDPR deletion
+- [JinglePro redesign plan](project_jinglepro_redesign.md) — Slices 0-5, verified seams (OrderChatBroadcaster, dual CSS, class-coupled tests), pending user decisions — planned 2026-11-09

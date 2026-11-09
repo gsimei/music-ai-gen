@@ -17,6 +17,9 @@ de:
     approved: "Genehmigt! Wir generieren die Musik."
     approve_failed: "Fehler bei der Genehmigung. Bitte versuchen Sie es erneut."
     regen_failed: "Neu generieren nicht möglich. Bitte versuchen Sie es erneut."
+  music_preview:
+    approved: "Musik erfolgreich genehmigt!"
+    approve_failed: "Genehmigung nicht möglich. Bitte versuchen Sie es erneut."
   errors:
     not_found: "Seite nicht gefunden"
     server_error: "Serverfehler"

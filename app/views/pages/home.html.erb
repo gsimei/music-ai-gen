@@ -1,0 +1,55 @@
+<% content_for :title, "JinglePro — Sua promoção com música e vídeo por #{campaign_price}" %>
+<% content_for :body_class, "studio-page landing-page" %>
+<% content_for :head do %><meta name="description" content="Transforme a promoção da sua loja em música e vídeo. Até 5 fotos, uma música com sua marca e uma campanha pronta para postar por <%= campaign_price %>."><% end %>
+<div class="studio-home landing-home" data-controller="landing-motion demo-media" data-action="visibilitychange@document->landing-motion#visibilityChanged">
+  <a class="studio-skip" href="#conteudo" data-turbo="false">Pular para o conteúdo</a>
+  <header class="lp-nav lp-width">
+    <%= render "shared/studio_logo" %>
+    <nav aria-label="Navegação principal"><a href="#exemplos" data-turbo="false">Veja na prática</a><a href="#como-funciona" data-turbo="false">Como funciona</a><a href="#preco" data-turbo="false">Quanto custa</a></nav>
+    <div class="lp-nav-actions"><button class="lp-motion-toggle" type="button" data-landing-motion-target="toggle" data-action="landing-motion#toggleMotion" aria-label="Pausar animações" aria-pressed="false" hidden><span aria-hidden="true">Ⅱ</span></button><%= link_to(user_signed_in? ? "Minhas campanhas ↗" : "Entrar ↗", user_signed_in? ? songs_path : new_user_session_path, class: "lp-login") %></div>
+  </header>
+  <main id="conteudo">
+    <section class="lp-hero lp-width" aria-labelledby="studio-title">
+      <div class="lp-hero-copy">
+        <p class="lp-eyebrow"><span class="lp-dot"></span> SUA LOJA TEM MUITO PARA CONTAR.</p>
+        <h1 id="studio-title"><span class="lp-title-line">Seu negócio,</span><span class="lp-title-line">em outro</span><span class="lp-title-line lp-title-accent"><em>ritmo.</em><span class="lp-soundmark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></span></h1>
+        <p class="lp-intro">As fotos são suas. A oferta também.<br>A gente transforma tudo em música e vídeo<br class="lp-desktop-break"> para a sua próxima publicação.</p>
+        <div class="lp-hero-actions"><%= link_to new_order_path, class: "lp-button" do %>Criar minha promoção <span aria-hidden="true">↗</span><% end %><a class="lp-watch" href="#exemplos" data-turbo="false"><span aria-hidden="true">▶</span> Ver e ouvir exemplos</a></div>
+        <p class="lp-price-note"><strong><%= campaign_price %></strong> por campanha <span>·</span> Sem assinatura.</p>
+      </div>
+      <div class="lp-stage" data-landing-motion-target="stage">
+        <div class="lp-stage-label"><span>DO BALCÃO PARA O FEED</span><span>VOL. 01</span></div>
+        <div class="lp-stage-orbit" aria-hidden="true"></div>
+        <figure class="lp-photo lp-photo-one"><img src="/demos/photos/pizzaria-forno-da-vila.png" alt="Pizza usada na campanha de exemplo" width="720" height="1280"><figcaption>01 / suas fotos</figcaption></figure>
+        <figure class="lp-photo lp-photo-two"><img src="/demos/photos/cafe-aurora.png" alt="Café e pão de queijo" width="720" height="1280"><figcaption>02 / sua marca</figcaption></figure>
+        <div class="lp-preview" data-demo-container>
+          <video muted loop playsinline controls preload="none" width="720" height="1280" poster="/demos/sabores-da-vila-campanha.jpg" aria-label="Prévia da campanha Sabores da Vila" data-landing-motion-target="preview" data-demo-media-target="player" data-action="play->demo-media#play error->demo-media#error volumechange->landing-motion#syncSound">
+            <source src="/demos/sabores-da-vila-campanha.mp4" type="video/mp4">
+            <a href="/demos/sabores-da-vila-campanha.mp4">Assistir à campanha</a>
+          </video>
+          <button type="button" class="lp-sound-button" data-landing-motion-target="sound" data-action="landing-motion#toggleSound" aria-pressed="false" hidden>Ouvir campanha ↗</button>
+          <p class="lp-media-error" role="status" data-demo-error hidden>Não foi possível reproduzir. <a href="#exemplos" data-turbo="false">Veja os exemplos abaixo.</a></p>
+        </div>
+        <div class="lp-sticker"><span>feito pra</span><strong>sua loja.</strong><span aria-hidden="true">✳</span></div>
+        <div class="lp-stage-footer"><span class="lp-dot"></span> EXEMPLO CRIADO NO APP <span>5 FOTOS / 30S</span></div>
+      </div>
+    </section>
+    <div class="lp-ticker" aria-label="Música com sua marca. Vídeo com suas fotos. Pronto para Reels, Stories e WhatsApp."><div class="lp-ticker-track" aria-hidden="true"><% 2.times do %><div><span>Sua marca no refrão</span><b>✳</b><span>Suas fotos em movimento</span><b>✳</b><span>Pronto para postar</span><b>✳</b></div><% end %></div></div>
+    <div class="lp-showcase"><%= render "pages/campaign_examples" %></div>
+    <section id="como-funciona" class="lp-process lp-width" aria-labelledby="process-title">
+      <div data-landing-motion-target="reveal"><p class="lp-eyebrow">POUCA COMPLICAÇÃO. MUITO RITMO.</p><h2 id="process-title">Você toca<br>o negócio.<br><em>A gente cria.</em></h2><p class="lp-section-intro">Não precisa entender de IA.<br>Nem de música. Nem de edição.</p><a class="lp-inline-link" href="#preco" data-turbo="false">Conheça a campanha completa <span>↗</span></a></div>
+      <div class="lp-process-steps">
+        <article data-landing-motion-target="reveal"><span>01</span><div><h3>Conte o que vai rolar.</h3><p>Nome da loja, promoção e contato. Envie até 5 fotos e coloque na ordem que preferir. Pode fazer tudo pelo celular.</p><small>SUAS FOTOS + SUA OFERTA</small></div></article>
+        <article data-landing-motion-target="reveal"><span>02</span><div><h3>Encontre o seu som.</h3><p>Depois do pagamento, revise a letra e ouça duas opções de música. Escolha a que mais combina com o seu negócio.</p><small>SUA MARCA NO REFRÃO</small></div></article>
+        <article data-landing-motion-target="reveal"><span>03</span><div><h3>Deu play? Pode postar.</h3><p>Baixe o vídeo com as fotos, as transições e a música escolhida. O áudio e a legenda vão junto.</p><small>REELS · STORIES · WHATSAPP</small></div></article>
+      </div>
+    </section>
+    <section id="preco" class="lp-pricing" aria-labelledby="price-title"><div class="lp-width lp-pricing-grid">
+      <div class="lp-price-copy" data-landing-motion-target="reveal"><p class="lp-eyebrow">UMA OFERTA. UMA CAMPANHA. PRONTO.</p><h2 id="price-title">Um post com<br>cara de <em>marca.</em></h2><p class="lp-section-intro">Para a promoção da semana, a novidade do cardápio ou aquela data especial da sua loja.</p><p class="lp-price-aside">Sem assinatura.<br>Sem contar créditos.<br><strong>Só a sua próxima campanha.</strong></p></div>
+      <article class="studio-plan lp-plan" data-landing-motion-target="reveal"><div class="lp-plan-heading"><h3>Campanha completa</h3><span>PAGAMENTO ÚNICO</span></div><p class="studio-price"><%= campaign_price %><span>/ campanha</span></p><p class="lp-plan-subtitle">Música, vídeo e legenda. Do seu jeito.</p><ul><li>Música cantada em português com o nome do negócio</li><li>Até 3 rodadas com 2 versões por rodada</li><li>Letra editável, ajustes com IA e favorita salva</li><li>Vídeo vertical em MP4 com até 5 fotos, transições e oferta</li><li>Áudio em MP3 e legenda para copiar</li></ul><%= link_to new_order_path, class: "lp-button lp-button-lime" do %>Criar minha promoção <span aria-hidden="true">↗</span><% end %><p class="lp-plan-note">Você confere os dados antes de pagar.</p></article>
+    </div></section>
+    <section class="lp-faq lp-width" aria-labelledby="faq-title"><div><p class="lp-eyebrow">ANTES DO PRIMEIRO PLAY</p><h2 id="faq-title">Ficou alguma<br><em>dúvida?</em></h2></div><div class="lp-faq-list"><details data-controller="accordion" data-action="resize@window->accordion#finish"><summary data-action="click->accordion#toggle">Preciso saber editar vídeo?<span aria-hidden="true">+</span></summary><div data-accordion-target="content"><p>Não. Você informa a promoção, envia as fotos e escolhe a música. O JinglePro monta o vídeo vertical com as transições e a oferta.</p></div></details><details data-controller="accordion" data-action="resize@window->accordion#finish"><summary data-action="click->accordion#toggle">Posso usar as fotos do meu celular?<span aria-hidden="true">+</span></summary><div data-accordion-target="content"><p>Sim. Envie até 5 fotos em JPG, PNG ou WebP, com até 10 MB cada. Você escolhe qual abre o vídeo e muda a ordem antes de continuar.</p></div></details><details data-controller="accordion" data-action="resize@window->accordion#finish"><summary data-action="click->accordion#toggle">Como funciona o pagamento?<span aria-hidden="true">+</span></summary><div data-accordion-target="content"><p>É um pagamento único de <%= campaign_price %> por campanha. Você revisa os dados antes de pagar. Depois, revisa a letra, escolhe a música e recebe o vídeo pronto para baixar. Não há assinatura.</p></div></details><details data-controller="accordion" data-action="resize@window->accordion#finish"><summary data-action="click->accordion#toggle">Onde posso postar o vídeo?<span aria-hidden="true">+</span></summary><div data-accordion-target="content"><p>O vídeo é vertical, em MP4, com até 30 segundos: pronto para Reels, Stories e Status do WhatsApp. Você também recebe a música em MP3 e uma sugestão de legenda.</p></div></details></div></section>
+    <section class="lp-closing"><div class="lp-width"><p class="lp-eyebrow">TEM UMA PROMOÇÃO EM MENTE?</p><h2>Coloca a sua<br>loja <em>pra tocar.</em></h2><%= link_to new_order_path, class: "lp-button lp-button-lime" do %>Começar minha campanha <span aria-hidden="true">↗</span><% end %></div><div class="lp-closing-wordmark" aria-hidden="true">jinglepro<span>✳</span></div></section>
+  </main>
+  <footer class="lp-footer lp-width"><%= link_to "jinglepro", root_path, class: "studio-logo" %><p>Feito para o comércio de verdade.</p><span>© <%= Date.current.year %> JinglePro</span></footer>
+</div>

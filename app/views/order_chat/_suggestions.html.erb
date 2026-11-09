@@ -1,0 +1,12 @@
+<% if suggestions.any? %>
+  <div class="flex flex-wrap gap-2">
+    <% suggestions.each do |suggestion| %>
+      <button type="button"
+              class="rounded-full border border-cant-line bg-white px-3 py-1.5 text-xs text-cant-ink hover:bg-cant-ink hover:text-cant-paper transition"
+              data-action="click->chat-input#fillSuggestion"
+              data-suggestion="<%= suggestion %>">
+        <%= suggestion %>
+      </button>
+    <% end %>
+  </div>
+<% end %>

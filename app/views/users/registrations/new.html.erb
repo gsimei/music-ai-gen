@@ -1,0 +1,18 @@
+<% content_for :title, "JinglePro · Criar conta" %>
+<%= render layout: "users/shared/studio_auth" do %>
+  <p class="studio-kicker">SUA PRIMEIRA CAMPANHA COMEÇA AQUI</p>
+  <h1>Dê voz ao<br>seu <span>negócio.</span></h1>
+  <p class="studio-form-intro">Crie sua conta para salvar e acompanhar a campanha.</p>
+  <%= render "users/shared/error_messages", resource: resource %>
+  <%= form_for resource, as: resource_name, url: registration_path(resource_name) do |f| %>
+    <div class="studio-field"><%= f.label :email, "Email" %><%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "voce@seunegocio.com.br", required: true %></div>
+    <div class="studio-field">
+      <%= f.label :password, "Senha" %>
+      <%= f.password_field :password, autocomplete: "new-password", required: true, minlength: @minimum_password_length, aria: { describedby: "password-hint" } %>
+      <p id="password-hint" class="studio-field-hint">Pelo menos <%= @minimum_password_length %> caracteres</p>
+    </div>
+    <div class="studio-field"><%= f.label :password_confirmation, "Confirme a senha" %><%= f.password_field :password_confirmation, autocomplete: "new-password", required: true %></div>
+    <%= f.button class: "studio-button studio-button-green studio-submit" do %>Criar conta <span aria-hidden="true">↗</span><% end %>
+    <p class="studio-form-switch">Já tem uma conta? <%= link_to "Entrar", new_user_session_path %></p>
+  <% end %>
+<% end %>

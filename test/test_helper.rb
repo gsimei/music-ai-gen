@@ -101,6 +101,3 @@ end
 
 ActiveSupport::TestCase.prepend(ActiveJobKwargsHelper)
 ActionDispatch::IntegrationTest.prepend(ActiveJobKwargsHelper)
-
-# Ensure ActionMailer uses test delivery in all test cases
-ActionMailer::Base.delivery_method = :test

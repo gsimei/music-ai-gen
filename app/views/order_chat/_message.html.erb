@@ -1,0 +1,5 @@
+<% user_msg = role.to_s == "user" %>
+<div class="studio-message <%= 'studio-message-user' if user_msg %>">
+  <span class="studio-message-author"><%= user_msg ? "TU" : "JINGLEPRO" %></span>
+  <div class="studio-message-content"><%= content %></div>
+</div>

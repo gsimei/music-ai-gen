@@ -35,7 +35,7 @@ class LyricsDraftTest < ActiveSupport::TestCase
   test "is invalid with duplicate version for same order" do
     # draft_v1 is already version 1 for b2c_paid
     draft = LyricsDraft.new(
-      order: orders(:b2c_paid),
+      order: orders(:b2b_paid),
       version: 1,
       source: "user_edited",
       content: "Some content"
@@ -46,7 +46,7 @@ class LyricsDraftTest < ActiveSupport::TestCase
 
   test "is valid with same version for different orders" do
     draft = LyricsDraft.new(
-      order: orders(:b2c_pending),
+      order: orders(:b2b_pending),
       version: 1,
       source: "ai_generated",
       content: "Some content"
@@ -97,7 +97,7 @@ class LyricsDraftTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
   test "is invalid when source is regenerated but parent_draft_id is absent" do
     draft = LyricsDraft.new(
-      order: orders(:b2c_paid),
+      order: orders(:b2b_paid),
       version: 3,
       source: "regenerated",
       content: "New regenerated content",
@@ -170,7 +170,7 @@ class LyricsDraftTest < ActiveSupport::TestCase
   end
 
   test "latest_for returns the draft with highest version for given order_id" do
-    order = orders(:b2c_paid)
+    order = orders(:b2b_paid)
     result = LyricsDraft.latest_for(order.id)
     assert_not_nil result
     assert_equal 2, result.version  # draft_v2_regen has version 2

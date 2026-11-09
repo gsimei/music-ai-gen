@@ -17,7 +17,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns success_result when order is lyrics_ready and draft is valid" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     result = Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -26,7 +26,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order status transitions to lyrics_approved on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -35,7 +35,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "draft is_locked becomes true on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -44,7 +44,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "draft is_approved becomes true on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -53,7 +53,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order approved_lyrics_draft_id is set to the draft id on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -66,7 +66,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result when order is not in lyrics_ready state" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
     draft = lyrics_drafts(:draft_v1)
 
     result = Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -75,7 +75,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order status does not change when order is not in lyrics_ready state" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
     draft = lyrics_drafts(:draft_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: draft.id)
@@ -84,8 +84,8 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "returns failure_result when order is already lyrics_approved" do
-    order = orders(:b2c_lyrics_approved)
-    # draft_approved belongs to b2c_delivered, not b2c_lyrics_approved, but
+    order = orders(:b2b_lyrics_approved)
+    # draft_approved belongs to b2c_approved, not b2c_lyrics_approved, but
     # the state guard fires first — we just need any draft_id to exercise the path
     draft = lyrics_drafts(:draft_approved)
 
@@ -99,7 +99,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result when draft_id does not exist" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     result = Orders::LyricsApprover.call(order: order, draft_id: 0)
 
@@ -107,7 +107,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order status does not change when draft_id does not exist" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     Orders::LyricsApprover.call(order: order, draft_id: 0)
 
@@ -119,7 +119,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result when draft belongs to a different order" do
-    order   = orders(:b2c_lyrics_ready)
+    order   = orders(:b2b_lyrics_ready)
     # draft_v1 belongs to b2c_paid, NOT b2c_lyrics_ready
     other_draft = lyrics_drafts(:draft_v1)
 
@@ -129,7 +129,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order status does not change when draft belongs to a different order" do
-    order       = orders(:b2c_lyrics_ready)
+    order       = orders(:b2b_lyrics_ready)
     other_draft = lyrics_drafts(:draft_v1)
 
     Orders::LyricsApprover.call(order: order, draft_id: other_draft.id)
@@ -142,7 +142,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result when draft is already locked" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
     # Manually lock the draft to simulate a double-approval attempt
     draft.update_columns(is_locked: true, is_approved: true)
@@ -153,7 +153,7 @@ class Orders::LyricsApproverTest < ActiveSupport::TestCase
   end
 
   test "order status does not change when draft is already locked" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
     draft.update_columns(is_locked: true, is_approved: true)
 

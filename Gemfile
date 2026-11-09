@@ -54,7 +54,7 @@ gem "after_commit_everywhere", "~> 1.0"
 gem "stripe", "~> 13.0"
 
 # AI
-gem "anthropic"
+gem "ruby-openai", "~> 7.0"
 
 # Monitoring
 gem "sentry-rails", "~> 5.22"
@@ -88,4 +88,10 @@ group :test do
 
   # HTTP stubbing for external API tests (Claude, Mureka, Stripe)
   gem "webmock", "~> 3.23"
+
+  # Temporarily override ENV vars within test blocks
+  gem "climate_control", "~> 1.0"
+
+  # Restores assigns() helper in integration controller tests
+  gem "rails-controller-testing"
 end

@@ -4,7 +4,9 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 **Legenda:** `[ ]` pendente · `[~]` em progresso · `[x]` concluído
 
-**Design de referência:** `Plataforma - Vanilla.html` (raiz do projeto) — protótipo HTML/JS vanilla com B2B e B2C. Toda task de frontend deve consultar antes de implementar (ver CLAUDE.md).
+**Design de referência:** `design/jinglepro/` — pranchas `*.dc.html` + `canvas.json` + `README.md`, exportadas de um canvas de design em 09/11/2026 (HTML/CSS estáticos que não rodam sozinhos). Substitui o antigo `Plataforma - Vanilla.html`. Toda task de frontend deve consultar a prancha correspondente antes de implementar (mapa prancha → tela em `design/jinglepro/README.md`; ver CLAUDE.md).
+
+**Produto atual:** Campanha JinglePro (pt-BR, BRL, R$ 79 via `config/brands.yml`). As seções 7, 19, 20, 21 e 22 abaixo são do app anterior e estão anotadas como LEGADO/superadas; o trabalho em andamento está na **seção 23**.
 
 ---
 
@@ -56,12 +58,14 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 ## 4. State machine (AASM) na Order
 
 - [x] Instalar gem + setup (after_commit_everywhere 1.6.0)
-- [x] Definir todos os 14 estados
+- [x] Definir os estados (14 no desenho original; o model tem 13, `delivered` não foi implementado — ver SPEC 0.4)
 - [x] Implementar todas as transições + guards
 - [x] Callbacks `after` (jobs e mailers)
 - [x] Testes de todas as transições válidas e inválidas
 
 ## 5. Brand/Locale resolver
+
+> Estado atual: marca única `b2b` (a JinglePro) e locale sempre `pt` (o `ApplicationController` descarta o locale que o resolver calcula). `BrandConstraint` foi removido. Ver CLAUDE.md, "Marca e locale".
 
 - [x] Service `BrandLocaleResolver` (detecta brand+locale por host)
 - [x] `before_action` no `ApplicationController` setando `@brand` e `I18n.locale`
@@ -75,6 +79,8 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 - [x] `db/seeds.rb` chamando o arquivo de vozes
 
 ## 7. Wizard de briefing
+
+> **LEGADO.** O briefing da Campanha é o formulário de `/campaigns/new`. O wizard continua no código até a fatia 5 (seção 23).
 
 - [x] `OrdersController#new` com Turbo Frames multi-step
 - [x] Step 1: dados básicos (about, recipient, occasion)
@@ -223,9 +229,135 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 
 ---
 
+---
+
+## 19. Revisão de tiers e preços
+
+> **SUPERADO.** Esta revisão (Standard €29 / Pro €59) não vale mais: o produto é a Campanha a R$ 79 (`tiers.starter` em `config/brands.yml`; não usa `stripe_price_ids`, o Checkout cria o preço com `price_data`). Mantido como registro; não executar.
+>
+> Descrição original: Standard €29 / Pro €59. Atualizar config e stripe_price_ids.
+
+- [ ] Atualizar `config/brands.yml`: `standard.price_cents: 2900`, `pro.price_cents: 5900`
+- [ ] Renomear tier `starter` → `standard` em `brands.yml` (e em todos os fixtures e testes)
+- [ ] Adicionar campos ao `brands.yml`: `includes_soundtrack`, `includes_voice_clone` por tier
+- [ ] Atualizar fixtures de orders: `tier: "standard"`, `price_cents: 2900`
+- [ ] Atualizar seed de voices: `pro_only` agora significa tier `pro` a €59
+- [ ] Criar novos Stripe Price IDs para os novos valores (via Stripe dashboard)
+- [ ] Atualizar `Stripe::CheckoutBuilder` com os novos price IDs
+- [ ] Rodar `bin/rails test` — suite deve ficar verde
+
+---
+
+## 20. Briefing conversacional (substitui wizard)
+
+> **LEGADO.** O chat foi implementado em parte (`OrderChat`, `ConversationalBriefingService`, `BriefingMessage`) mas está fora do produto atual; a remoção do código morto é a fatia 5 (seção 23). Os itens abaixo não devem ser retomados.
+>
+> Descrição original: Substituir o wizard multi-step por interface de chat. Ver SPEC seção A.
+
+- [ ] Migration: `briefing_messages` (role, content, extracted_briefing jsonb)
+- [ ] Model `BriefingMessage` com association `belongs_to :order`
+- [ ] Association `has_many :briefing_messages` no model `Order`
+- [ ] Service `ConversationalBriefingService < BaseService` (ver SPEC A.2)
+  - [ ] Integra com `LyricsGenerator::ClaudeClient` usando system prompt de extração
+  - [ ] Salva mensagens user + assistant a cada turn
+  - [ ] Faz `order.briefing.update!` com campos extraídos
+  - [ ] Retorna `{ reply, suggestions, ready, briefing }`
+- [ ] Rota `resource :briefing_chat, only: [:show, :create]` dentro de `resources :orders`
+- [ ] `BriefingChatsController` com `show` e `create` (turbo_stream)
+- [ ] Views:
+  - [ ] `app/views/briefing_chats/show.html.erb` — layout do chat
+  - [ ] `app/views/briefing_chats/_message.html.erb` — balão de mensagem (user / assistant)
+  - [ ] `app/views/briefing_chats/_suggestions.html.erb` — botões de ação rápida
+  - [ ] `app/views/briefing_chats/_cta.html.erb` — botão "Confirmar e pagar" (aparece quando ready: true)
+- [ ] Stimulus controller `briefing-chat` (submit do textarea com Enter, scroll automático)
+- [ ] Atualizar `OrdersController#new` para criar order + briefing vazios e redirecionar para o chat
+- [ ] Deprecar (mas não deletar ainda) as views `orders/wizard/step_*.html.erb`
+- [ ] Testes:
+  - [ ] Unit: `ConversationalBriefingService` com Claude stubado (WebMock)
+  - [ ] Integration: `BriefingChatsController` — turbo stream response
+
+---
+
+## 21. Soundtrack — feature Pro
+
+> **LEGADO.** Fora do produto atual; o código existente (`SoundtrackInput` e jobs) sai na fatia 5 (seção 23). Não retomar.
+>
+> Descrição original: Mureka POST /v1/soundtrack/generate. Ver SPEC seção B.
+
+- [ ] Migration: `soundtrack_inputs` (input_type, storage_key, mureka_file_id, mureka_file_status, GDPR fields)
+- [ ] Model `SoundtrackInput` com validações e association `belongs_to :order`
+- [ ] Association `has_one :soundtrack_input` no model `Order`
+- [ ] ActiveStorage attachment para upload do vídeo/imagem (bucket R2 privado)
+- [ ] Controller `SoundtrackInputsController` — upload do arquivo pelo cliente Pro
+- [ ] Job `UploadSoundtrackInputToMurekaJob` (R2 → POST /v1/files/upload → salva mureka_file_id)
+- [ ] Job `GenerateSoundtrackJob` (chama Mureka soundtrack → cria MusicGeneration → enfileira Poll)
+- [ ] Método `MurekaClient#generate_soundtrack` (ver SPEC B.3)
+- [ ] Lógica de decisão em `Order#start_generation_pipeline!` (ver SPEC B.4)
+  - [ ] Atualizar callback `after :pay` na state machine para chamar `start_generation_pipeline!`
+- [ ] UI de upload de vídeo/imagem no fluxo Pro (após pagamento confirmado)
+- [ ] Validações: tamanho máximo de arquivo, tipos MIME aceitos (image/jpeg, image/png, video/mp4)
+- [ ] Job `DeleteSoundtrackInputJob` agendado para `scheduled_deletion_at` (GDPR)
+- [ ] Testes:
+  - [ ] Unit: `UploadSoundtrackInputToMurekaJob` com WebMock
+  - [ ] Unit: `GenerateSoundtrackJob` com WebMock
+  - [ ] Unit: `MurekaClient#generate_soundtrack`
+
+---
+
+## 22. Voice cloning — feature Pro
+
+> **LEGADO, nunca implementado.** Não existe `VoiceUpload` no código e o SPEC (seção 21) proíbe a funcionalidade. Não retomar.
+>
+> Descrição original: GDPR-first. Ver SPEC seção C.
+
+- [ ] Migration: `voice_uploads` (storage_key, mureka_file_id, status, consent fields, GDPR fields)
+- [ ] Model `VoiceUpload` com validações GDPR obrigatórias
+- [ ] Association `has_one :voice_upload` no model `Order`
+- [ ] ActiveStorage attachment para o arquivo de voz (bucket R2 privado)
+- [ ] Controller `VoiceUploadsController` — upload + registro de consentimento
+- [ ] View de upload com checkbox de consentimento explícito (não pré-marcado)
+- [ ] Job `UploadVoiceToMurekaJob` (R2 → POST /v1/files/upload?purpose=voice → salva mureka_file_id)
+- [ ] Integrar `mureka_file_id` como `vocal_id` no payload do `MusicGenerator::Generator`
+- [ ] Job `DeleteVoiceUploadJob` agendado automaticamente para `scheduled_deletion_at` (30 dias após entrega)
+- [ ] Testes:
+  - [ ] Unit: `UploadVoiceToMurekaJob` com WebMock
+  - [ ] Verificar que consent fields são gravados corretamente
+  - [ ] Verificar que job de deleção é agendado
+
+---
+
+## 23. Redesign JinglePro (fatias 0–5)
+
+> Em andamento na branch `redesign/jinglepro`. Referência: `design/jinglepro/` (o README dela mapeia cada prancha à tela do app). O mapeamento de estados que as fatias 1 e 3 implementam está no SPEC, seção 0.4. Cada fatia passa pelo fluxo de agentes do CLAUDE.md.
+
+- [~] **Fatia 0, baseline + docs**
+  - [x] CLAUDE.md, SPEC.md, README.md e ROADMAP.md alinhados com o produto Campanha (alterações no working tree, ainda sem commit)
+  - [ ] Commit do baseline do working tree
+  - [ ] Versionar `design/jinglepro/` (hoje não rastreada pelo git)
+- [ ] **Fatia 1, CSS único, landing, Entrar, Biblioteca, Estados**
+  - [ ] Unificar `landing.css`, `studio.css`, `studio_app.css` e `studio_identity.css` em um CSS único com tokens `--jp-*` (destino do Tailwind a decidir)
+  - [ ] Landing (`pages/home`; pranchas `Main` e `Landing-Mobile`)
+  - [ ] Entrar (`users/sessions/new` e telas de senha; prancha `Entrar`)
+  - [ ] Biblioteca (`songs/index`; prancha `Biblioteca`) com os estados Aguardando pagamento, Em criação (fase N de 3), Pronta e Precisa de atenção (SPEC 0.4). "Precisa de atenção" ainda não foi desenhado
+  - [ ] Estados vazio e de erro (prancha `Estados`)
+- [ ] **Fatia 2, reskin do Criar**
+  - [ ] Passos 1 e 2 de `campaigns/new` (pranchas `Criar` e `Criar-Mobile`). O mobile dos passos 2 e 3 ainda não foi desenhado
+- [ ] **Fatia 3, Estúdio em 3 fases e Entrega**
+  - [ ] Estúdio em 3 fases: letra, músicas, vídeo (pranchas `Estudio` e `Estudio-Mobile`), com a derivação de fase a partir de status + `video_status`
+  - [ ] Definir o destino das ações do estúdio hoje hospedadas em `order_chat#*` (a fatia 5 só pode remover o chat depois disso; a decidir no `task-planner`)
+  - [ ] Entrega (`campaigns/_delivery`; prancha `Entrega`)
+- [ ] **Fatia 4, conta e pagamento no passo 3**
+  - [ ] Passo 3 do Criar com criação de conta e botão "Pagar" (hoje o cadastro vem antes do formulário via `orders#new`)
+  - [ ] Decidir como retomar um pedido em `payment_failed` (hoje checkout e edição só aceitam `pending`)
+  - [ ] Consentimento junto ao botão "Pagar" e e-mail já cadastrado ainda não foram desenhados
+- [ ] **Fatia 5, remoção do código morto do chat**
+  - [ ] Remover chat conversacional (`ConversationalReplyJob`, `ConversationalBriefingService`, `BriefingMessage`, views de conversa de `order_chat/`), soundtrack, wizard de 5 passos e seus testes, depois que a fatia 3 tiver migrado as ações do estúdio
+  - [ ] Confirmar se `lyrics#*`, `music_preview#*`, `orders#show` e `orders/:id/spf/*` também saem (SPEC 0.7)
+
+---
+
 ## Itens fora do MVP (não implementar agora)
 
-- Voice cloning (GDPR/AI Act)
 - Assinatura recorrente
 - App nativo (Hotwire Native)
 - SSO/OAuth

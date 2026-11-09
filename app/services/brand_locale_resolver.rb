@@ -11,9 +11,7 @@ class BrandLocaleResolver < BaseService
   def call
     return failure_result(errors) unless valid?
 
-    brand = detect_brand
-    return failure_result(:unknown_host) if brand.nil?
-
+    brand  = detect_brand
     locale = detect_locale(brand)
 
     success_result(brand: brand.to_s, locale: locale)
@@ -26,16 +24,7 @@ class BrandLocaleResolver < BaseService
   end
 
   def detect_brand
-    BRANDS_CONFIG.each do |brand_key, config|
-      return brand_key if Array(config[:hosts]).include?(normalized_host)
-    end
-
-    if rails_env.development? || rails_env.test?
-      Rails.logger.warn("[BrandLocaleResolver] unknown host '#{normalized_host}' — falling back to :b2c")
-      return :b2c
-    end
-
-    nil
+    :b2b
   end
 
   def detect_locale(brand_key)

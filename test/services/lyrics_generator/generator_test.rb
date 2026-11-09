@@ -58,7 +58,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial with valid briefing returns success" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(
       order: order,
@@ -70,7 +70,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial creates exactly one LyricsDraft record" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     assert_difference "LyricsDraft.count", 1 do
       LyricsGenerator::Generator.call(order: order, mode: :initial)
@@ -79,7 +79,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial draft has version 1" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -89,7 +89,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial draft has source ai_generated" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -99,17 +99,17 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial draft has prompt_version v1.0" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
     assert result.success?
-    assert_equal "v1.0", result.value.prompt_version
+    assert_equal "v2.1", result.value.prompt_version
   end
 
   test "mode :initial draft is associated with the order" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -119,7 +119,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial creates exactly one GenerationJob record" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     assert_difference "GenerationJob.count", 1 do
       LyricsGenerator::Generator.call(order: order, mode: :initial)
@@ -128,7 +128,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial GenerationJob has status success" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -138,7 +138,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial GenerationJob is linked to the created LyricsDraft" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -149,7 +149,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial GenerationJob has provider mureka" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -159,7 +159,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial GenerationJob has step lyrics_initial" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -169,7 +169,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial result value is a LyricsDraft instance" do
     stub_mureka_success
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -183,7 +183,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode :initial without briefing returns failure" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
     order.briefing&.destroy
 
     result = LyricsGenerator::Generator.call(
@@ -195,7 +195,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
   end
 
   test "mode :initial without briefing does not create LyricsDraft" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
     order.briefing&.destroy
 
     assert_no_difference "LyricsDraft.count" do
@@ -204,7 +204,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
   end
 
   test "mode :initial without briefing does not create GenerationJob" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
     order.briefing&.destroy
 
     assert_no_difference "GenerationJob.count" do
@@ -218,7 +218,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial when Mureka fails returns failure" do
     stub_mureka_failure
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -227,7 +227,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial when Mureka fails does not create LyricsDraft" do
     stub_mureka_failure
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     assert_no_difference "LyricsDraft.count" do
       LyricsGenerator::Generator.call(order: order, mode: :initial)
@@ -236,7 +236,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial when Mureka fails creates GenerationJob with status failed" do
     stub_mureka_failure
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     assert_difference "GenerationJob.count", 1 do
       LyricsGenerator::Generator.call(order: order, mode: :initial)
@@ -248,7 +248,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :initial when Mureka fails GenerationJob has no lyrics_draft_id" do
     stub_mureka_failure
-    order = orders(:b2c_paid_with_stripe)
+    order = orders(:b2b_paid_with_stripe)
 
     LyricsGenerator::Generator.call(order: order, mode: :initial)
 
@@ -262,7 +262,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen with valid parent_draft returns success" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     result = LyricsGenerator::Generator.call(
@@ -277,7 +277,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen creates a new LyricsDraft" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     assert_difference "LyricsDraft.count", 1 do
@@ -291,7 +291,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen draft has source regenerated" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     result = LyricsGenerator::Generator.call(
@@ -306,7 +306,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen draft has parent_draft_id set" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     result = LyricsGenerator::Generator.call(
@@ -321,7 +321,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen increments order.lyrics_regen_used by 1" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
     before_count = order.lyrics_regen_used
 
@@ -336,7 +336,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen creates a GenerationJob with status success" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     assert_difference "GenerationJob.count", 1 do
@@ -353,7 +353,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen GenerationJob has step lyrics_regen" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     LyricsGenerator::Generator.call(
@@ -368,7 +368,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen draft has prompt_version v1.0" do
     stub_mureka_success
-    order        = orders(:b2c_lyrics_ready)
+    order        = orders(:b2b_lyrics_ready)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     result = LyricsGenerator::Generator.call(
@@ -378,7 +378,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v1.0", result.value.prompt_version
+    assert_equal "v2.1", result.value.prompt_version
   end
 
   # ---------------------------------------------------------------------------
@@ -387,7 +387,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen returns failure with :regen_limit_reached when limit exhausted" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     order.update_columns(lyrics_regen_used: order.lyrics_regen_limit)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
@@ -402,7 +402,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen with limit exhausted does not create LyricsDraft" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     order.update_columns(lyrics_regen_used: order.lyrics_regen_limit)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
@@ -417,7 +417,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen limit reached error includes regen_limit_reached" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     order.update_columns(lyrics_regen_used: order.lyrics_regen_limit)
     parent_draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
@@ -437,7 +437,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen with nonexistent parent_draft_id returns failure" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     result = LyricsGenerator::Generator.call(
       order:           order,
@@ -450,7 +450,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen with nil parent_draft_id returns failure" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     result = LyricsGenerator::Generator.call(
       order:           order,
@@ -463,7 +463,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
 
   test "mode :regen with invalid parent_draft_id does not create LyricsDraft" do
     stub_mureka_success
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     assert_no_difference "LyricsDraft.count" do
       LyricsGenerator::Generator.call(

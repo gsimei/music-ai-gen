@@ -8,11 +8,12 @@
 # - Always returns 200 for valid signatures — processing is async
 # - Returns 400 only for invalid/missing signatures
 class StripeController < ApplicationController
+  skip_before_action :authenticate_user!
   skip_around_action :set_brand_and_locale
-  protect_from_forgery with: :null_session
+  skip_before_action :verify_authenticity_token
 
   def webhook
-    raw_body  = request.body.tap(&:rewind).read
+    raw_body  = request.raw_post
     signature = request.headers["Stripe-Signature"]
 
     result = ::Stripe::WebhookHandler.call(

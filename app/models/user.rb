@@ -5,10 +5,10 @@ class User < ApplicationRecord
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :confirmable, :lockable, :timeoutable, :trackable
+         :lockable, :timeoutable, :trackable
 
   ROLES  = %w[customer admin support].freeze
-  BRANDS = %w[b2b b2c].freeze
+  BRANDS = %w[b2b].freeze
 
   # Validations
   validates :role, inclusion: { in: ROLES }
@@ -17,12 +17,12 @@ class User < ApplicationRecord
 
   # Associations
   has_many :orders, dependent: :nullify
+  has_many :business_music_profiles, dependent: :destroy
   has_many :refund_requests, dependent: :destroy
   has_many :resolved_refund_requests,
            class_name: "RefundRequest",
            foreign_key: :resolved_by_id,
            dependent: :nullify
-  has_many :email_deliveries, dependent: :nullify
 
   # Scopes
   scope :guests,    -> { where(guest: true) }
@@ -32,13 +32,6 @@ class User < ApplicationRecord
   # Class methods
   def self.all_locales
     BRANDS_CONFIG.values.flat_map { |b| b[:supported_locales] }.uniq.map(&:to_s)
-  end
-
-  # Devise override: guests skip email confirmation entirely.
-  # Non-guests follow Devise default (returns true until confirmed_at is set).
-  def confirmation_required?
-    return false if guest?
-    super
   end
 
   # Predicates

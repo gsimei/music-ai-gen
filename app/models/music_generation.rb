@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class MusicGeneration < ApplicationRecord
-  STATUSES  = %w[pending processing completed failed cancelled].freeze
-  PROVIDERS = %w[mureka].freeze
+  STATUSES          = %w[pending processing completed failed cancelled].freeze
+  PROVIDERS         = %w[mureka].freeze
+  GENERATION_TYPES  = %w[song instrumental soundtrack].freeze
 
   include Statusable
 
@@ -10,13 +11,14 @@ class MusicGeneration < ApplicationRecord
   validates :iteration, presence: true,
                         uniqueness: { scope: :order_id },
                         numericality: { greater_than: 0, only_integer: true }
-  validates :provider, presence: true, inclusion: { in: PROVIDERS }
-  validates :music_style, presence: true
+  validates :provider,         presence: true, inclusion: { in: PROVIDERS }
+  validates :music_style,      presence: true
+  validates :generation_type,  inclusion: { in: GENERATION_TYPES }
 
   # Associations
   belongs_to :order
-  belongs_to :voice
-  belongs_to :lyrics_draft
+  belongs_to :voice,        optional: true
+  belongs_to :lyrics_draft, optional: true
   belongs_to :parent_generation,
              class_name: "MusicGeneration",
              optional:   true
@@ -35,6 +37,11 @@ class MusicGeneration < ApplicationRecord
   STATUSES.each do |s|
     define_method(:"#{s}?") { status == s }
   end
+
+  # Generation type predicates
+  def song?         = generation_type == "song"
+  def instrumental? = generation_type == "instrumental"
+  def soundtrack?   = generation_type == "soundtrack"
 
   # Variant predicates
   def variant_a_complete?

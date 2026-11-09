@@ -19,7 +19,7 @@ require "test_helper"
 class Stripe::Handlers::ChargeRefundedTest < ActiveSupport::TestCase
   setup do
     # b2c_paid_with_stripe: status=paid, user=customer_b2c (not guest)
-    @paid_order = orders(:b2c_paid_with_stripe)
+    @paid_order = orders(:b2b_paid_with_stripe)
     # stripe_payment_intent_id: "pi_test_paid_intent_001"
   end
 

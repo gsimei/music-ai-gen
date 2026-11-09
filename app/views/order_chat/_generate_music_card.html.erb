@@ -1,0 +1,12 @@
+<div id="chat-generate-music-card" class="flex justify-start">
+  <div class="bg-white border border-cant-line rounded-2xl rounded-bl-sm p-5 max-w-[85%] w-full">
+    <p class="text-sm text-cant-ink mb-4"><%= t("order_chat.generate_music_prompt") %></p>
+    <%= form_with url: order_chat_generate_music_path(order_id: order.id),
+                  data: { turbo_stream: true } do |f| %>
+      <button type="submit"
+              class="w-full rounded-xl bg-cant-ink text-cant-paper py-2.5 text-sm font-medium hover:bg-cant-ink/90 transition">
+        <%= t("order_chat.generate_music_button") %>
+      </button>
+    <% end %>
+  </div>
+</div>

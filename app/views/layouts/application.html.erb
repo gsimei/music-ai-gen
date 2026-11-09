@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale == :pt ? "pt-BR" : I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "Music Ai Gen" %></title>
+    <title><%= content_for(:title) || "JinglePro" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Music Ai Gen">
+    <meta name="application-name" content="JinglePro">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="<%= content_for(:body_class).to_s.include?('studio-page') ? '#f6f5ed' : '#f5f1e7' %>">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%= action_cable_meta_tag %>
 
     <%= yield :head %>
 
@@ -21,16 +23,20 @@
     <%# Design-system fonts %>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+  <body class="<%= content_for(:body_class) %>">
+    <div class="grain" aria-hidden="true"></div>
+    <%# Flash messages rendered at top-level so they are available on every page.
+        Individual views that need inline alerts handle them themselves via
+        local notice/alert helpers. This outer wrapper is intentionally transparent
+        so brand-specific pages can own the full viewport. %>
+    <%= yield %>
   </body>
 </html>

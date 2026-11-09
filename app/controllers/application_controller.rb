@@ -3,6 +3,7 @@
 class ApplicationController < ActionController::Base
   # around_action (não before_action) garante thread safety:
   # I18n.with_locale { yield } encapsula o locale na fiber/thread da request.
+  before_action :authenticate_user!
   around_action :set_brand_and_locale
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
@@ -31,7 +32,7 @@ class ApplicationController < ActionController::Base
 
     if result.success?
       @current_brand = result.value[:brand]
-      locale = result.value[:locale]
+      locale = BRANDS_CONFIG.fetch(:b2b).fetch(:default_locale).to_sym
 
       maybe_persist_locale_cookie(locale)
 

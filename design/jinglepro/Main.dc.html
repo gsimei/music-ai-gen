@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>JinglePro — Landing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F5ED}
+a{color:inherit;text-decoration:none}
+a:hover{color:#24593E}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #173E32;outline-offset:3px;border-radius:10px}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+details>summary span{display:inline-block}
+@media (max-width:860px){.nav-links{display:none!important}}
+
+/* ---- Movimento: estado final é o estado base, então sem animação a página continua completa ---- */
+.jp-mark{background:linear-gradient(var(--lime),var(--lime)) no-repeat 0 92%/100% 36%}
+.jp-fillidle{clip-path:inset(0 100% 0 0)}
+.jp-fillplay{clip-path:inset(0 0 0 0)}
+.jp-zoomplay{transform:scale(1.12)}
+
+@keyframes jp-rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes jp-slide{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes jp-pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+@keyframes jp-float{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes jp-bars{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+@keyframes jp-mark{from{background-size:0 36%}to{background-size:100% 36%}}
+@keyframes jp-zoom{from{transform:scale(1)}to{transform:scale(1.1)}}
+@keyframes jp-fill{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes jp-prog{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes jp-fade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes jp-s1{0%,3%{opacity:0;transform:translateY(-12px)}10%,90%{opacity:1;transform:none}96%,100%{opacity:0;transform:translateY(-6px)}}
+@keyframes jp-s2{0%,12%{opacity:0;transform:translateY(18px)}24%,90%{opacity:1;transform:none}96%,100%{opacity:0;transform:translateY(-8px)}}
+@keyframes jp-s3{0%,28%{opacity:0;transform:translateY(14px) scale(.96)}38%,90%{opacity:1;transform:none}96%,100%{opacity:0}}
+
+@media (prefers-reduced-motion:no-preference){
+  .jp-in{animation:jp-rise .9s cubic-bezier(.2,.7,.2,1) both}
+  .jp-d1{animation-delay:.05s}.jp-d2{animation-delay:.15s}.jp-d3{animation-delay:.28s}.jp-d4{animation-delay:.42s}.jp-d5{animation-delay:.56s}
+  .jp-pop{animation:jp-pop 1s cubic-bezier(.2,.7,.2,1) .1s both}
+  .jp-slide{animation:jp-slide .8s cubic-bezier(.2,.7,.2,1) 1.1s both}
+  .jp-float{animation:jp-float 5s ease-in-out infinite alternate}
+  .jp-mark{background-size:0 36%;animation:jp-mark .9s cubic-bezier(.2,.7,.2,1) .9s forwards}
+  .jp-bars rect{transform-box:fill-box;transform-origin:center;animation:jp-bars .5s ease-in-out 6 alternate both}
+  .jp-bars rect:nth-child(2){animation-delay:.1s}.jp-bars rect:nth-child(3){animation-delay:.2s}.jp-bars rect:nth-child(4){animation-delay:.3s}
+  .jp-zoom{animation:jp-zoom 9s ease-in-out infinite alternate}
+  .jp-prog{transform-origin:left;animation:jp-prog 9s linear infinite}
+  .jp-s1{animation:jp-s1 9s ease-in-out infinite}
+  .jp-s2{animation:jp-s2 9s ease-in-out infinite}
+  .jp-s3{animation:jp-s3 9s ease-in-out infinite}
+  .jp-wave{animation:jp-fill 9s linear infinite}
+  .jp-fillplay{animation:jp-fill 28s linear forwards}
+  .jp-zoomidle{transform:scale(1);transition:transform .6s ease}
+  .jp-zoomplay{transition:transform 28s linear}
+  .jp-btn,.jp-btn svg{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .jp-btn:hover{transform:translateY(-2px)}
+  .jp-btn:hover svg{transform:translateX(4px)}
+  details>summary span{transition:transform .25s ease}
+  details[open]>summary span{transform:rotate(45deg)}
+  details[open]>p{animation:jp-fade .35s ease-out both}
+  .jp-paused *{animation-play-state:paused!important}
+}
+@media (prefers-reduced-motion:no-preference){
+  @supports (animation-timeline:view()){
+    .jp-r{animation:jp-rise linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
+    .jp-r2{animation-range:entry 8% entry 48%}
+    .jp-r3{animation-range:entry 16% entry 56%}
+  }
+}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="--lime: {{accent}}; font-family: Manrope, system-ui, sans-serif; color: #173E32; background: #F6F5ED; font-size: 16px; line-height: 1.6">
+
+<!-- ============ HEADER ============ -->
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1280px; margin: 0 auto; padding: 0 48px; height: 88px; box-sizing: border-box">
+  <a href="Main.dc.html" aria-label="jinglepro, início" style="display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 26px; letter-spacing: -0.04em; color: #173E32">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><g class="jp-bars" fill="#173E32"><rect x="1" y="9" width="4" height="10" rx="2"/><rect x="8" y="2" width="4" height="24" rx="2"/><rect x="15" y="6" width="4" height="16" rx="2"/><rect x="22" y="11" width="4" height="7" rx="2"/></g></svg>jinglepro
+  </a>
+  <nav class="nav-links" aria-label="Principal" style="display: flex; gap: 36px; font-size: 16px; font-weight: 600">
+    <a href="#exemplos">Exemplos</a>
+    <a href="#como-funciona">Como funciona</a>
+    <a href="#preco">Preço</a>
+    <a href="#duvidas">Dúvidas</a>
+  </nav>
+  <div style="display: flex; align-items: center; gap: 8px">
+    <a href="Entrar.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 16px; font-size: 16px; font-weight: 600">Entrar</a>
+    <a class="jp-btn" href="Criar.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 999px; background: #173E32; color: #F6F5ED; font-size: 15px; font-weight: 700">Criar campanha</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<main>
+<section style="display: flex; flex-wrap: wrap; align-items: center; gap: 56px; max-width: 1280px; margin: 0 auto; padding: 32px 48px 88px; box-sizing: border-box">
+  <div style="flex: 1 1 520px; min-width: 0">
+    <p class="jp-in jp-d1" style="display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 8px 16px; border-radius: 999px; background: #E5EADC; font-size: 14px; font-weight: 700; color: #173E32">
+      <span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #173E32"></span>Música e vídeo para o seu comércio
+    </p>
+    <h1 class="jp-in jp-d2" style="margin: 24px 0 0; font-size: 76px; line-height: 1.02; font-weight: 800; letter-spacing: -0.035em">A promoção da sua loja, em <span class="jp-mark" style="font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600; font-size: 1.12em; letter-spacing: -0.01em">música</span> e vídeo.</h1>
+    <p class="jp-in jp-d3" style="margin: 28px 0 0; max-width: 560px; font-size: 20px; line-height: 1.6; color: #4C6155">Envie a oferta e até 5 fotos. Você recebe um vídeo vertical com música cantada e o nome do seu negócio, pronto para Reels, Stories e WhatsApp.</p>
+    <div class="jp-in jp-d4" style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 36px">
+      <a class="jp-btn" href="Criar.dc.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 0 32px; border-radius: 999px; background: #173E32; color: #F6F5ED; font-size: 17px; font-weight: 700">
+        Criar minha campanha
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="jp-btn" href="#exemplos" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 0 28px; border-radius: 999px; border: 1.5px solid #173E32; font-size: 17px; font-weight: 700">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+        Ouvir um exemplo
+      </a>
+    </div>
+    <ul class="jp-in jp-d5" style="display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 32px 0 0; padding: 0; list-style: none; font-size: 15px; font-weight: 600; color: #173E32">
+      <li style="display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#24593E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>R$ 79 por campanha</li>
+      <li style="display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#24593E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Sem assinatura</li>
+      <li style="display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#24593E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Você aprova a letra</li>
+    </ul>
+  </div>
+
+  <div style="position: relative; flex: 1 1 400px; display: flex; justify-content: center; align-items: center; min-height: 660px">
+    <div class="jp-pop" aria-hidden="true" style="position: absolute; inset: 0; background: #E5EADC; border-radius: 240px 240px 32px 32px"></div>
+    <div class="jp-in jp-d3" style="position: relative">
+    <div class="jp-float" style="position: relative; width: 292px; height: 580px; border: 8px solid #173E32; border-radius: 44px; overflow: hidden; background: #173E32; box-shadow: 0 28px 56px rgba(23, 62, 50, 0.24)">
+      <img class="jp-zoom" src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="Duas pizzas assadas em forno a lenha, foto usada na campanha de exemplo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+      <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 20, 14, 0.62) 0%, rgba(8, 20, 14, 0) 26%, rgba(8, 20, 14, 0) 42%, rgba(8, 20, 14, 0.94) 100%)"></div>
+      <div class="jp-s1" style="position: absolute; top: 22px; left: 20px; right: 20px">
+        <span aria-hidden="true" style="display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--lime)"></span>
+        <p style="margin: 10px 0 0; font-size: 19px; line-height: 1.2; font-weight: 800; color: #FFFFFF">Pizzaria Forno da Vila</p>
+      </div>
+      <div style="position: absolute; left: 20px; right: 20px; bottom: 20px">
+        <p class="jp-s2" style="margin: 0; font-size: 23px; line-height: 1.18; font-weight: 800; letter-spacing: -0.02em; color: #FFFFFF">Terça da pizza: duas pizzas grandes por <span style="color: var(--lime)">R$ 79,90.</span></p>
+        <p class="jp-s3" style="display: inline-block; margin: 14px 0 0; padding: 9px 16px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 14px; font-weight: 800">Peça pelo WhatsApp</p>
+        <div aria-hidden="true" style="height: 4px; margin-top: 16px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); overflow: hidden"><div class="jp-prog" style="width: 100%; height: 4px; border-radius: 2px; background: var(--lime)"></div></div>
+      </div>
+    </div>
+    </div>
+    <div class="jp-slide" style="position: absolute; left: 4%; bottom: 72px; display: flex; align-items: center; gap: 14px; width: 318px; padding: 14px 18px 14px 14px; box-sizing: border-box; background: #FFFEF9; border: 1px solid #CFD8C9; border-radius: 20px; box-shadow: 0 16px 32px rgba(23, 62, 50, 0.14)">
+      <button type="button" onClick="{{toggleHero}}" aria-label="{{heroLabel}}" style="flex: none; display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%; background: var(--lime); color: #173E32; cursor: pointer">
+        <sc-if value="{{pausedHero}}" hint-placeholder-val="{{false}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></sc-if>
+        <sc-if value="{{playingHero}}" hint-placeholder-val="{{true}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.2"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.2"/></svg></sc-if>
+      </button>
+      <div style="min-width: 0; flex: 1">
+        <p style="margin: 0; font-size: 14px; font-weight: 700; line-height: 1.3">Jingle · Terça da pizza</p>
+        <div style="position: relative; height: 32px; margin-top: 4px">
+          <svg viewBox="0 0 240 36" width="100%" height="32" aria-hidden="true" style="position: absolute; inset: 0; display: block"><path d="M4 15V21M12 9V27M20 13V23M28 5V31M36 11V25M44 16V20M52 7V29M60 13V23M68 3V33M76 9V27M84 15V21M92 5V31M100 11V25M108 16V20M116 7V29M124 13V23M132 4V32M140 10V26M148 16V20M156 7V29M164 12V24M172 3V33M180 9V27M188 14V22M196 6V30M204 11V25M212 16V20M220 8V28M228 13V23M236 17V19" stroke="#9DB0A3" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+          <div class="jp-wave" style="position: absolute; inset: 0"><svg viewBox="0 0 240 36" width="100%" height="32" aria-hidden="true" style="display: block"><path d="M4 15V21M12 9V27M20 13V23M28 5V31M36 11V25M44 16V20M52 7V29M60 13V23M68 3V33M76 9V27M84 15V21M92 5V31M100 11V25M108 16V20M116 7V29M124 13V23M132 4V32M140 10V26M148 16V20M156 7V29M164 12V24M172 3V33M180 9V27M188 14V22M196 6V30M204 11V25M212 16V20M220 8V28M228 13V23M236 17V19" stroke="#173E32" stroke-width="4" stroke-linecap="round" fill="none"/></svg></div>
+        </div>
+      </div>
+      <p style="flex: none; margin: 0; font-size: 13px; font-weight: 600; color: #4C6155">0:28</p>
+    </div>
+  </div>
+</section>
+<p style="max-width: 1280px; margin: -48px auto 0; padding: 0 48px 56px; box-sizing: border-box; font-size: 14px; color: #4C6155">Exemplo de campanha criada no JinglePro para um negócio fictício.</p>
+
+<!-- ============ COMO FUNCIONA ============ -->
+<section id="como-funciona" style="border-top: 1px solid #CFD8C9">
+  <div style="max-width: 1280px; margin: 0 auto; padding: 96px 48px; box-sizing: border-box">
+    <div class="jp-r">
+      <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Como funciona</p>
+      <h2 style="margin: 16px 0 0; max-width: 760px; font-size: 52px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Você toca o negócio. A gente cria a campanha.</h2>
+      <p style="margin: 20px 0 0; max-width: 560px; font-size: 18px; color: #4C6155">Não precisa entender de IA, de música nem de edição de vídeo.</p>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 56px">
+      <article class="jp-r" style="flex: 1 1 300px; padding: 32px; background: #FFFEF9; border: 1px solid #CFD8C9; border-radius: 24px">
+        <p aria-hidden="true" style="display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border-radius: 50%; background: #173E32; color: var(--lime); font-size: 18px; font-weight: 800">1</p>
+        <h3 style="margin: 24px 0 0; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em">Conte o que vai rolar.</h3>
+        <p style="margin: 12px 0 0; font-size: 16px; color: #4C6155">Nome da loja, promoção e contato. Envie até 5 fotos e coloque na ordem que preferir. Dá para fazer tudo pelo celular.</p>
+        <p style="display: inline-block; margin: 24px 0 0; padding: 6px 14px; border-radius: 999px; background: #E5EADC; font-size: 13px; font-weight: 700">Fotos + oferta + contato</p>
+      </article>
+      <article class="jp-r jp-r2" style="flex: 1 1 300px; padding: 32px; background: #FFFEF9; border: 1px solid #CFD8C9; border-radius: 24px">
+        <p aria-hidden="true" style="display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border-radius: 50%; background: #173E32; color: var(--lime); font-size: 18px; font-weight: 800">2</p>
+        <h3 style="margin: 24px 0 0; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em">Escolha o seu som.</h3>
+        <p style="margin: 12px 0 0; font-size: 16px; color: #4C6155">Revise a letra, ouça duas versões de música e fique com a que combina com o seu negócio. Peça novas rodadas se quiser.</p>
+        <p style="display: inline-block; margin: 24px 0 0; padding: 6px 14px; border-radius: 999px; background: #E5EADC; font-size: 13px; font-weight: 700">Até 3 rodadas · 2 versões cada</p>
+      </article>
+      <article class="jp-r jp-r3" style="flex: 1 1 300px; padding: 32px; background: #FFFEF9; border: 1px solid #CFD8C9; border-radius: 24px">
+        <p aria-hidden="true" style="display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border-radius: 50%; background: #173E32; color: var(--lime); font-size: 18px; font-weight: 800">3</p>
+        <h3 style="margin: 24px 0 0; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em">Deu play? Pode postar.</h3>
+        <p style="margin: 12px 0 0; font-size: 16px; color: #4C6155">Baixe o vídeo com as fotos, as transições e a música escolhida. A legenda sugerida vai junto, pronta para copiar.</p>
+        <p style="display: inline-block; margin: 24px 0 0; padding: 6px 14px; border-radius: 999px; background: #E5EADC; font-size: 13px; font-weight: 700">Reels · Stories · WhatsApp</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXEMPLOS ============ -->
+<section id="exemplos" style="background: #173E32; color: #F6F5ED">
+  <div style="max-width: 1280px; margin: 0 auto; padding: 96px 48px; box-sizing: border-box">
+    <div class="jp-r">
+      <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lime)">Exemplos</p>
+      <h2 style="margin: 16px 0 0; max-width: 720px; font-size: 52px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Ouça antes de decidir.</h2>
+      <p style="margin: 20px 0 0; max-width: 560px; font-size: 18px; color: #B9CFBF">Duas campanhas feitas com o JinglePro para negócios fictícios.</p>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 56px">
+
+      <article class="jp-r" style="flex: 1 1 560px; display: flex; flex-wrap: wrap; gap: 28px; padding: 28px; box-sizing: border-box; border: 1px solid rgba(246, 245, 237, 0.2); border-radius: 28px; background: rgba(246, 245, 237, 0.05)">
+        <div style="position: relative; flex: none; width: 200px; height: 356px; border-radius: 20px; overflow: hidden; background: #0C241B">
+          <img class="{{pz.imgClass}}" src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="Pizzas em forno a lenha" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+          <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 20, 14, 0.55) 0%, rgba(8, 20, 14, 0) 30%, rgba(8, 20, 14, 0) 60%, rgba(8, 20, 14, 0.9) 100%)"></div>
+          <p style="position: absolute; top: 16px; left: 16px; right: 16px; margin: 0; font-size: 15px; font-weight: 800; color: #FFFFFF">Pizzaria Forno da Vila</p>
+          <p style="position: absolute; left: 16px; bottom: 16px; margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 13px; font-weight: 800">9:16 · 30 s</p>
+        </div>
+        <div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column">
+          <p style="margin: 0; font-size: 14px; font-weight: 700; color: var(--lime)">Pizzaria Forno da Vila</p>
+          <h3 style="margin: 12px 0 0; font-size: 30px; line-height: 1.15; font-weight: 800; letter-spacing: -0.025em">Terça da pizza: duas pizzas grandes por R$ 79,90.</h3>
+          <p style="margin: 14px 0 0; font-size: 15px; color: #B9CFBF">Música cantada com o nome do negócio, a oferta e o convite para pedir pelo Instagram.</p>
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: auto; padding-top: 24px">
+            <button type="button" onClick="{{pz.toggle}}" aria-label="{{pz.label}}" style="flex: none; display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--lime); color: #173E32; cursor: pointer">
+              <sc-if value="{{pz.off}}" hint-placeholder-val="{{true}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></sc-if>
+              <sc-if value="{{pz.on}}" hint-placeholder-val="{{false}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.2"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.2"/></svg></sc-if>
+            </button>
+            <div style="position: relative; flex: 1; min-width: 0; height: 32px">
+              <svg viewBox="0 0 240 36" height="32" aria-hidden="true" style="position: absolute; inset: 0; width: 100%"><path d="M4 15V21M12 9V27M20 13V23M28 5V31M36 11V25M44 16V20M52 7V29M60 13V23M68 3V33M76 9V27M84 15V21M92 5V31M100 11V25M108 16V20M116 7V29M124 13V23M132 4V32M140 10V26M148 16V20M156 7V29M164 12V24M172 3V33M180 9V27M188 14V22M196 6V30M204 11V25M212 16V20M220 8V28M228 13V23M236 17V19" stroke="#5F7F6E" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+              <div class="{{pz.fillClass}}" style="position: absolute; inset: 0"><svg viewBox="0 0 240 36" height="32" aria-hidden="true" style="display: block; width: 100%"><path d="M4 15V21M12 9V27M20 13V23M28 5V31M36 11V25M44 16V20M52 7V29M60 13V23M68 3V33M76 9V27M84 15V21M92 5V31M100 11V25M108 16V20M116 7V29M124 13V23M132 4V32M140 10V26M148 16V20M156 7V29M164 12V24M172 3V33M180 9V27M188 14V22M196 6V30M204 11V25M212 16V20M220 8V28M228 13V23M236 17V19" stroke="#D6F36B" stroke-width="4" stroke-linecap="round" fill="none"/></svg></div>
+            </div>
+            <p style="flex: none; margin: 0; font-size: 14px; font-weight: 600; color: #B9CFBF">{{pz.time}}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="jp-r jp-r2" style="flex: 1 1 560px; display: flex; flex-wrap: wrap; gap: 28px; padding: 28px; box-sizing: border-box; border: 1px solid rgba(246, 245, 237, 0.2); border-radius: 28px; background: rgba(246, 245, 237, 0.05)">
+        <div style="position: relative; flex: none; width: 200px; height: 356px; border-radius: 20px; overflow: hidden; background: #0C241B">
+          <img class="{{cf.imgClass}}" src="/_blob/b3ed327ac718d8a6d746ddeacb7bf2d4" alt="Café e pães de queijo em uma mesa de madeira" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+          <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 20, 14, 0.55) 0%, rgba(8, 20, 14, 0) 30%, rgba(8, 20, 14, 0) 60%, rgba(8, 20, 14, 0.9) 100%)"></div>
+          <p style="position: absolute; top: 16px; left: 16px; right: 16px; margin: 0; font-size: 15px; font-weight: 800; color: #FFFFFF">Café Aurora</p>
+          <p style="position: absolute; left: 16px; bottom: 16px; margin: 0; padding: 6px 12px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 13px; font-weight: 800">9:16 · 30 s</p>
+        </div>
+        <div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column">
+          <p style="margin: 0; font-size: 14px; font-weight: 700; color: var(--lime)">Café Aurora</p>
+          <h3 style="margin: 12px 0 0; font-size: 30px; line-height: 1.15; font-weight: 800; letter-spacing: -0.025em">Café coado e pão de queijo quentinho, toda manhã.</h3>
+          <p style="margin: 14px 0 0; font-size: 15px; color: #B9CFBF">Um clima acolhedor de bairro, com refrão fácil de cantar e o endereço no final.</p>
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: auto; padding-top: 24px">
+            <button type="button" onClick="{{cf.toggle}}" aria-label="{{cf.label}}" style="flex: none; display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--lime); color: #173E32; cursor: pointer">
+              <sc-if value="{{cf.off}}" hint-placeholder-val="{{true}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></sc-if>
+              <sc-if value="{{cf.on}}" hint-placeholder-val="{{false}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.2"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.2"/></svg></sc-if>
+            </button>
+            <div style="position: relative; flex: 1; min-width: 0; height: 32px">
+              <svg viewBox="0 0 240 36" height="32" aria-hidden="true" style="position: absolute; inset: 0; width: 100%"><path d="M4 17V19M12 11V25M20 15V21M28 7V29M36 13V23M44 17V19M52 9V27M60 14V22M68 5V31M76 11V25M84 16V20M92 7V29M100 12V24M108 17V19M116 9V27M124 14V22M132 5V31M140 11V25M148 16V20M156 8V28M164 13V23M172 4V32M180 10V26M188 15V21M196 7V29M204 12V24M212 17V19M220 9V27M228 14V22M236 17V19" stroke="#5F7F6E" stroke-width="4" stroke-linecap="round" fill="none"/></svg>
+              <div class="{{cf.fillClass}}" style="position: absolute; inset: 0"><svg viewBox="0 0 240 36" height="32" aria-hidden="true" style="display: block; width: 100%"><path d="M4 17V19M12 11V25M20 15V21M28 7V29M36 13V23M44 17V19M52 9V27M60 14V22M68 5V31M76 11V25M84 16V20M92 7V29M100 12V24M108 17V19M116 9V27M124 14V22M132 5V31M140 11V25M148 16V20M156 8V28M164 13V23M172 4V32M180 10V26M188 15V21M196 7V29M204 12V24M212 17V19M220 9V27M228 14V22M236 17V19" stroke="#D6F36B" stroke-width="4" stroke-linecap="round" fill="none"/></svg></div>
+            </div>
+            <p style="flex: none; margin: 0; font-size: 14px; font-weight: 600; color: #B9CFBF">{{cf.time}}</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREÇO ============ -->
+<section id="preco" style="background: #E5EADC">
+  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 64px; max-width: 1280px; margin: 0 auto; padding: 96px 48px; box-sizing: border-box">
+    <div class="jp-r" style="flex: 1 1 420px; min-width: 0">
+      <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Preço</p>
+      <h2 style="margin: 16px 0 0; font-size: 52px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Um preço. Uma campanha. Pronto.</h2>
+      <p style="margin: 20px 0 0; max-width: 460px; font-size: 18px; color: #4C6155">Para a promoção da semana, a novidade do cardápio ou aquela data especial da sua loja.</p>
+      <p style="margin: 32px 0 0; font-size: 22px; line-height: 1.5; font-weight: 700; letter-spacing: -0.01em">Sem assinatura.<br>Sem contar créditos.<br><span style="color: #24593E">Só a sua próxima campanha.</span></p>
+    </div>
+    <article class="jp-r jp-r2" style="flex: 1 1 440px; min-width: 0; padding: 40px; box-sizing: border-box; background: #FFFEF9; border: 1px solid #C4CFBC; border-radius: 32px; box-shadow: 0 24px 48px rgba(23, 62, 50, 0.1)">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800">Campanha completa</h3>
+        <p style="margin: 0; padding: 6px 14px; border-radius: 999px; background: var(--lime); font-size: 13px; font-weight: 800">Pagamento único</p>
+      </div>
+      <p style="margin: 24px 0 0; font-size: 96px; line-height: 1; font-weight: 800; letter-spacing: -0.045em">R$ 79 <span style="font-size: 18px; font-weight: 600; letter-spacing: 0; color: #4C6155">por campanha</span></p>
+      <ul style="margin: 28px 0 0; padding: 24px 0 0; list-style: none; border-top: 1px solid #CFD8C9; display: grid; gap: 14px; font-size: 16px">
+        <li style="display: flex; gap: 12px"><span aria-hidden="true" style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#173E32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Música cantada em português com o nome do negócio</li>
+        <li style="display: flex; gap: 12px"><span aria-hidden="true" style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#173E32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Até 3 rodadas com 2 versões por rodada</li>
+        <li style="display: flex; gap: 12px"><span aria-hidden="true" style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#173E32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Letra editável, ajustes com IA e favorita salva</li>
+        <li style="display: flex; gap: 12px"><span aria-hidden="true" style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#173E32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Vídeo vertical em MP4 com até 5 fotos, transições e oferta</li>
+        <li style="display: flex; gap: 12px"><span aria-hidden="true" style="flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--lime)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#173E32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>Áudio em MP3 e legenda para copiar</li>
+      </ul>
+      <a class="jp-btn" href="Criar.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; margin-top: 32px; border-radius: 999px; background: #173E32; color: #F6F5ED; font-size: 17px; font-weight: 700">Criar minha campanha<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l14 0M13 6l6 6-6 6"/></svg></a>
+      <p style="margin: 16px 0 0; text-align: center; font-size: 14px; color: #4C6155">Você confere tudo antes de pagar. Pagamento pelo Stripe.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ DÚVIDAS ============ -->
+<section id="duvidas">
+  <div style="display: flex; flex-wrap: wrap; gap: 64px; max-width: 1280px; margin: 0 auto; padding: 96px 48px; box-sizing: border-box">
+    <div class="jp-r" style="flex: 1 1 320px; min-width: 0">
+      <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Dúvidas</p>
+      <h2 style="margin: 16px 0 0; font-size: 52px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Ficou alguma <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600; font-size: 1.12em">dúvida?</span></h2>
+    </div>
+    <div class="jp-r jp-r2" style="flex: 2 1 520px; min-width: 0; border-bottom: 1px solid #CFD8C9">
+      <details open style="border-top: 1px solid #CFD8C9; padding: 8px 0">
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; font-size: 19px; font-weight: 700">Preciso saber editar vídeo?<span aria-hidden="true" style="font-size: 28px; font-weight: 500">+</span></summary>
+        <p style="margin: 0 48px 20px 0; font-size: 17px; color: #4C6155">Não. Você informa a promoção, envia as fotos e escolhe a música. O JinglePro monta o vídeo vertical com as transições e a oferta.</p>
+      </details>
+      <details style="border-top: 1px solid #CFD8C9; padding: 8px 0">
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; font-size: 19px; font-weight: 700">Posso usar as fotos do meu celular?<span aria-hidden="true" style="font-size: 28px; font-weight: 500">+</span></summary>
+        <p style="margin: 0 48px 20px 0; font-size: 17px; color: #4C6155">Sim. Envie até 5 fotos em JPG, PNG ou WebP, com até 10 MB cada. Você escolhe qual abre o vídeo e muda a ordem antes de continuar.</p>
+      </details>
+      <details style="border-top: 1px solid #CFD8C9; padding: 8px 0">
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; font-size: 19px; font-weight: 700">Como funciona o pagamento?<span aria-hidden="true" style="font-size: 28px; font-weight: 500">+</span></summary>
+        <p style="margin: 0 48px 20px 0; font-size: 17px; color: #4C6155">É um pagamento único de R$ 79 por campanha. Você revisa os dados antes de pagar. Depois, revisa a letra, escolhe a música e recebe o vídeo pronto para baixar. Não há assinatura.</p>
+      </details>
+      <details style="border-top: 1px solid #CFD8C9; padding: 8px 0">
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; font-size: 19px; font-weight: 700">Onde posso postar o vídeo?<span aria-hidden="true" style="font-size: 28px; font-weight: 500">+</span></summary>
+        <p style="margin: 0 48px 20px 0; font-size: 17px; color: #4C6155">O vídeo é vertical, em MP4, com até 30 segundos: pronto para Reels, Stories e Status do WhatsApp. Você também recebe a música em MP3 e uma sugestão de legenda.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FECHAMENTO ============ -->
+<section style="background: #173E32; color: #F6F5ED; text-align: center">
+  <div class="jp-r" style="max-width: 1280px; margin: 0 auto; padding: 104px 48px; box-sizing: border-box">
+    <h2 style="margin: 0 auto; max-width: 900px; font-size: 76px; line-height: 1.04; font-weight: 800; letter-spacing: -0.035em">Coloca a sua loja <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 600; font-size: 1.12em; color: var(--lime)">pra tocar.</span></h2>
+    <a class="jp-btn" href="Criar.dc.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 64px; margin-top: 44px; padding: 0 40px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 18px; font-weight: 800">Começar minha campanha<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <p style="margin: 20px 0 0; font-size: 15px; color: #B9CFBF">R$ 79 por campanha · pagamento único · sem assinatura</p>
+  </div>
+</section>
+</main>
+
+<footer style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; max-width: 1280px; margin: 0 auto; padding: 32px 48px; box-sizing: border-box; font-size: 14px; color: #4C6155">
+  <a href="Main.dc.html" aria-label="jinglepro, início" style="display: inline-flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 800; letter-spacing: -0.04em; color: #173E32">
+    <svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><g fill="#173E32"><rect x="1" y="9" width="4" height="10" rx="2"/><rect x="8" y="2" width="4" height="24" rx="2"/><rect x="15" y="6" width="4" height="16" rx="2"/><rect x="22" y="11" width="4" height="7" rx="2"/></g></svg>jinglepro
+  </a>
+  <p style="margin: 0">Feito para o comércio de verdade.</p>
+  <nav aria-label="Legal" style="display: flex; gap: 20px"><a href="#" style="display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px">Termos de uso</a><a href="#" style="display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px">Privacidade</a></nav>
+  <p style="margin: 0">© 2026 JinglePro</p>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D6F36B","options":["#D6F36B","#FFD166","#FF9C76","#9BE7C4"]},"$preview":{"width":1440,"height":4000}}'>
+class Component extends DCLogic {
+constructor(props) {
+  super(props);
+  this.state = { paused: false, playing: null };
+}
+renderVals() {
+  const s = this.state;
+  const example = (id, name) => {
+    const on = s.playing === id;
+    return {
+      on,
+      off: !on,
+      label: (on ? 'Pausar o exemplo de ' : 'Ouvir o exemplo de ') + name,
+      fillClass: on ? 'jp-fillplay' : 'jp-fillidle',
+      imgClass: on ? 'jp-zoomplay' : 'jp-zoomidle',
+      time: on ? 'Tocando · 0:28' : '0:00 / 0:28',
+      toggle: () => this.setState({ playing: on ? null : id })
+    };
+  };
+  return {
+    accent: this.props.accent ?? '#D6F36B',
+    rootClass: s.paused ? 'jp-paused' : '',
+    playingHero: !s.paused,
+    pausedHero: s.paused,
+    heroLabel: s.paused ? 'Tocar o exemplo da hero' : 'Pausar o exemplo da hero',
+    toggleHero: () => this.setState({ paused: !s.paused }),
+    pz: example('pz', 'Pizzaria Forno da Vila'),
+    cf: example('cf', 'Café Aurora')
+  };
+}
+}
+</script>
+</body>
+</html>

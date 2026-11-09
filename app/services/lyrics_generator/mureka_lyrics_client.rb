@@ -8,8 +8,11 @@ module LyricsGenerator
     MUREKA_LYRICS_URL = "https://api.mureka.ai/v1/lyrics/generate"
 
     attribute :prompt, :string
+    attribute :order
 
     def call
+      cost = GenerationCost.record!(order: order, operation: "lyrics", provider: "mureka", model: "mureka-lyrics",
+        usd: "0.009", usage: { requests: 1 }, status: "uncertain") if order&.campaign
       started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       response   = post_to_mureka
       latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).to_i
@@ -21,6 +24,7 @@ module LyricsGenerator
       lyrics = body["lyrics"].to_s
 
       return failure_result(:missing_fields) if title.blank? || lyrics.blank?
+      cost&.update!(status: "estimated", usage: { requests: 1, latency_ms: latency_ms })
 
       success_result({
         title:        title,

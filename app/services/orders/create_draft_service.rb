@@ -14,8 +14,8 @@ module Orders
   # On any failure, returns ServiceResult with errors. Nothing is persisted.
   #
   # Tier → min_tier integer mapping:
-  #   b2c "standard" → 0
-  #   b2b "starter"  → 0
+  #   "starter" → 0
+  #   "pro"     → 1
   #   any "pro"      → 1
   class CreateDraftService < BaseService
     TIER_MIN_TIER_MAP = {
@@ -28,9 +28,10 @@ module Orders
     attribute :brand,   :string
     attribute :locale,  :string
     attribute :user_id, :integer
+    attribute :user_email, :string
 
     # Declare error key attributes so ActiveModel::Errors can introspect them.
-    attr_accessor :delivery_email, :about, :music_style, :voice_id, :tier
+    attr_accessor :about, :music_style, :voice_id, :tier
 
     def call
       validate_required_fields!
@@ -46,7 +47,7 @@ module Orders
           reference:          ReferenceGenerator.generate!,
           brand:              brand,
           locale:             locale,
-          delivery_email:     wizard_data_value(:delivery_email),
+          delivery_email:     user_email,
           tier:               tier,
           price_cents:        tier_config[:price_cents],
           lyrics_regen_limit: tier_config[:lyrics_regen_limit],
@@ -55,19 +56,24 @@ module Orders
           status:             "pending"
         )
 
+        visual_context = wizard_data_value(:visual_context).presence
+        extra = visual_context ? { "visual_context" => visual_context } : {}
+
         Briefing.create!(
           order:                   order,
           about:                   wizard_data_value(:about),
           music_style:             wizard_data_value(:music_style),
-          language:                locale,
+          language:                wizard_data_value(:language).presence || locale,
           voice_id:                wizard_data_value(:voice_id),
           recipient:               wizard_data_value(:recipient),
           occasion:                wizard_data_value(:occasion),
           mood:                    wizard_data_value(:mood),
           tempo:                   wizard_data_value(:tempo),
-          target_duration_seconds: wizard_data_value(:target_duration_seconds),
+          target_duration_seconds: tier_config[:max_duration_seconds],
           keywords:                wizard_data_value(:keywords),
-          avoid:                   wizard_data_value(:avoid)
+          avoid:                   wizard_data_value(:avoid),
+          structure_hint:          wizard_data_value(:structure_hint),
+          extra_params:            extra
         )
       end
 
@@ -93,7 +99,7 @@ module Orders
     end
 
     def validate_required_fields!
-      %i[delivery_email about music_style voice_id tier].each do |field|
+      %i[about music_style voice_id tier].each do |field|
         val = wizard_data_value(field)
         errors.add(field, :blank) if val.blank?
       end

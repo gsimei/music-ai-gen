@@ -1,5 +1,5 @@
 lyrics_job_pending:
-  order: b2c_paid
+  order: b2b_paid
   lyrics_draft: draft_v1
   provider: "anthropic"
   model: "claude-opus-4-7"
@@ -9,7 +9,7 @@ lyrics_job_pending:
   updated_at: "2026-01-02 11:00:00"
 
 lyrics_job_success:
-  order: b2c_delivered
+  order: b2b_approved
   lyrics_draft: draft_approved
   provider: "anthropic"
   model: "claude-opus-4-7"
@@ -19,7 +19,7 @@ lyrics_job_success:
   updated_at: "2026-01-04 07:30:00"
 
 music_job_failed:
-  order: b2c_paid
+  order: b2b_paid
   provider: "mureka"
   model: "mureka-v1"
   step: "music_generate"

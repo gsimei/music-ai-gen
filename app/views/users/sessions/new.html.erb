@@ -1,0 +1,19 @@
+<% content_for :title, "JinglePro · Entrar" %>
+<%= render layout: "users/shared/studio_auth" do %>
+  <p class="studio-kicker">BOM TER VOCÊ DE VOLTA</p>
+  <h1>Sua próxima<br><span>boa ideia.</span></h1>
+  <p class="studio-form-intro">Entre para acompanhar suas campanhas.</p>
+  <%= render "users/shared/error_messages", resource: resource %>
+  <%= form_for resource, as: resource_name, url: session_path(resource_name) do |f| %>
+    <div class="studio-field">
+      <%= f.label :email, "Email" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "voce@seunegocio.com.br", required: true %>
+    </div>
+    <div class="studio-field">
+      <div class="studio-label-row"><%= f.label :password, "Senha" %><%= link_to "Esqueceu a senha?", new_user_password_path %></div>
+      <%= f.password_field :password, autocomplete: "current-password", required: true %>
+    </div>
+    <%= f.button class: "studio-button studio-button-green studio-submit" do %>Entrar na minha conta <span aria-hidden="true">↗</span><% end %>
+    <p class="studio-form-switch">Ainda não tem uma conta? <%= link_to "Criar conta", new_user_registration_path %></p>
+  <% end %>
+<% end %>

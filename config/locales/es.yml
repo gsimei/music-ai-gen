@@ -17,6 +17,9 @@ es:
     approved: "¡Aprobada! Estamos generando la música."
     approve_failed: "Error durante la aprobación. Inténtalo de nuevo."
     regen_failed: "No se puede regenerar. Inténtalo de nuevo."
+  music_preview:
+    approved: "¡Música aprobada con éxito!"
+    approve_failed: "Imposible aprobar. Inténtalo de nuevo."
   errors:
     not_found: "Página no encontrada"
     server_error: "Error del servidor"

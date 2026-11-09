@@ -4,11 +4,11 @@ class Order < ApplicationRecord
   STATUSES = %w[
     pending payment_failed paid lyrics_drafting lyrics_ready lyrics_failed
     lyrics_approved music_generating preview_ready music_failed
-    approved delivered cancelled refunded
+    approved cancelled refunded
   ].freeze
 
-  BRANDS            = %w[b2b b2c].freeze
-  CURRENCIES        = %w[EUR].freeze
+  BRANDS            = %w[b2b].freeze
+  CURRENCIES        = %w[EUR BRL].freeze
   APPROVED_VARIANTS = %w[a b].freeze
 
   include Brandable
@@ -31,11 +31,10 @@ class Order < ApplicationRecord
     state :preview_ready
     state :music_failed
     state :approved
-    state :delivered
     state :cancelled
     state :refunded
 
-    event :mark_paid, after_commit: :enqueue_lyrics_generation do
+    event :mark_paid, after_commit: :enqueue_post_payment_generation do
       transitions from: :pending, to: :paid
     end
 
@@ -43,7 +42,7 @@ class Order < ApplicationRecord
       transitions from: :paid, to: :lyrics_drafting
     end
 
-    event :lyrics_drafted, after_commit: :send_lyrics_ready_email do
+    event :lyrics_drafted do
       transitions from: :lyrics_drafting, to: :lyrics_ready
     end
 
@@ -56,16 +55,20 @@ class Order < ApplicationRecord
       transitions from: :lyrics_approved, to: :music_generating
     end
 
-    event :music_ready, after_commit: :send_preview_ready_email do
+    event :start_soundtrack_generation do
+      transitions from: :paid, to: :music_generating
+    end
+
+    event :music_ready do
       transitions from: :music_generating, to: :preview_ready
     end
 
-    event :approve_music, after_commit: :enqueue_delivery do
+    event :approve_music do
       transitions from: :preview_ready, to: :approved
     end
 
-    event :mark_delivered, after_commit: :send_delivered_email do
-      transitions from: :approved, to: :delivered
+    event :regenerate_music do
+      transitions from: :preview_ready, to: :music_generating
     end
 
     event :fail_lyrics, after_commit: :notify_admin do
@@ -107,15 +110,19 @@ class Order < ApplicationRecord
   # Associations
   belongs_to :user, optional: true
   has_one    :briefing,                dependent: :destroy
+  has_one    :campaign,                dependent: :destroy
+  has_one    :soundtrack_input,        dependent: :destroy
+  has_many   :briefing_messages,       -> { chronological }, dependent: :destroy
   has_many   :lyrics_drafts,           dependent: :destroy
   has_many   :music_generations,       dependent: :destroy
   has_many   :generation_jobs,         dependent: :destroy
+  has_many   :generation_costs,        dependent: :destroy
   has_many   :order_assets,            dependent: :destroy
   has_many   :stripe_events,           dependent: :nullify
   has_many   :refund_requests,         dependent: :destroy
-  has_many   :email_deliveries,        dependent: :nullify
   belongs_to :approved_lyrics_draft,   class_name: "LyricsDraft",      optional: true
   belongs_to :approved_music_generation, class_name: "MusicGeneration", optional: true
+  belongs_to :favorite_music_asset, class_name: "OrderAsset", optional: true
 
   # Scopes
   scope :for_brand,       ->(b) { where(brand: b) }
@@ -140,12 +147,43 @@ class Order < ApplicationRecord
   end
 
   def music_regen_remaining
+    return [Campaigns::MusicRounds::LIMIT - completed_music_rounds, 0].max if campaign
     music_regen_limit - music_regen_used
+  end
+
+  def completed_music_rounds
+    music_generations.completed.count
+  end
+
+  def all_music_assets
+    order_assets.where(kind: "music_variant").joins(:music_generation)
+      .where(music_generations: { status: "completed" }).order(:music_generation_id, :variant_index)
+  end
+
+  def lyrics_editable?
+    %w[lyrics_ready preview_ready music_failed].include?(status) && lyrics_revision_token.blank?
+  end
+
+  def music_variant_assets
+    assets = order_assets.where(kind: "music_variant")
+    latest = assets.order(id: :desc).first
+    return assets.none unless latest
+    assets.where(music_generation_id: latest.music_generation_id).order(:variant_index)
+  end
+
+  def creation_version
+    [status, lyrics_drafts.maximum(:id), lyrics_regen_used, music_regen_used, favorite_music_asset_id, lyrics_revision_token, lyrics_revision_error,
+      order_assets.maximum(:updated_at)&.iso8601(6), campaign&.updated_at&.iso8601(6),
+      music_generations.order(:iteration).last&.error_code].join(":")
   end
 
   # Predicates
   def guest_order?
     user.nil? || user.guest?
+  end
+
+  def soundtrack_order?
+    tier_config&.dig(:includes_soundtrack) && soundtrack_input.present?
   end
 
   private
@@ -173,29 +211,20 @@ class Order < ApplicationRecord
     GenerateMusicJob.perform_later(id)
   end
 
+  def enqueue_post_payment_generation
+    if soundtrack_order?
+      UploadSoundtrackInputToMurekaJob.perform_later(id)
+    else
+      GenerateLyricsJob.perform_later(id)
+    end
+  end
+
   def enqueue_lyrics_generation
     GenerateLyricsJob.perform_later(id)
   end
 
-  def enqueue_delivery
-    DeliverOrderJob.perform_later(id)
-  end
-
-  def send_lyrics_ready_email
-    OrderMailer.lyrics_ready(self).deliver_later
-  end
-
-  def send_preview_ready_email
-    OrderMailer.preview_ready(self).deliver_later
-  end
-
-  def send_delivered_email
-    OrderMailer.delivered(self).deliver_later
-  end
-
   def notify_admin
     Rails.logger.warn "[Order ##{id}] entered failed state: #{status}"
-    # Email real para admins virá na Seção 15
   end
 
   def record_cancellation_timestamp

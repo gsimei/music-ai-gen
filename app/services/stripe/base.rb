@@ -6,4 +6,6 @@
 # app/services/stripe/ safely share the gem's top-level namespace.
 module ::Stripe
   # Namespace anchor — do not add logic here.
+  class Base
+  end
 end

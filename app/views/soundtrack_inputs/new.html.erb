@@ -1,0 +1,14 @@
+<% content_for :title, "Carica file — #{@order.reference}" %>
+
+<div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+
+  <div class="orderhead reveal">
+    <div>
+      <div class="ref"><%= @order.reference %></div>
+      <div class="biz">Colonna sonora AI</div>
+    </div>
+  </div>
+
+  <%= render "orders/soundtrack_upload_form", order: @order %>
+
+</div>

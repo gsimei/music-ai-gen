@@ -1,6 +1,6 @@
 pending_refund:
-  order: b2c_delivered
-  user: customer_b2c
+  order: b2b_approved
+  user: customer_b2b
   status: "pending"
   reason: "A musica nao ficou como esperado"
   reason_category: "not_as_expected"
@@ -8,7 +8,7 @@ pending_refund:
   updated_at: "2026-01-05 00:00:00"
 
 approved_refund:
-  order: b2b_pending
+  order: b2b_pending_2
   user: customer_b2b
   resolved_by: admin_user
   status: "approved"
