@@ -1,83 +1,325 @@
 Spec Técnico — Plataforma de Geração de Música com AI
-1. Visão geral
-Plataforma web (Rails 8 + Hotwire) que permite a usuários encomendar músicas personalizadas geradas com AI. Cliente preenche briefing, paga via Stripe, revisa letra gerada por LLM, aprova e recebe duas variantes de música pra escolher, e baixa o arquivo final.
-Duas marcas independentes sob o mesmo backend:
 
-B2B (jingles para pequenos negócios) — ticket €79-149
-B2C (música como presente) — ticket €19-39
+> **Última atualização: 2026-05-29** — Plataforma B2B exclusiva. B2C removido.
+
+1. Visão geral
+Plataforma web (Rails 8 + Hotwire) para pequenos comerciantes europeus criarem música original para redes sociais (Reels, TikTok, Instagram, ads). Cliente descreve o negócio via chat conversacional, paga via Stripe, revisa a letra gerada por AI, aprova e recebe duas variantes de música para escolher. Tier Pro inclui geração de soundtrack sincronizado com vídeo/imagem e clonagem de voz.
 
 Mercado: Europa, com Itália como mercado principal. Multi-idioma desde o início (it, en, es, fr, de, pt).
-Arquitetura: Rails 8 monolito + Hotwire + Tailwind. Sem SPA, sem frontend separado. Preparado pra futuro app Hotwire Native (não desenvolver agora).
+Arquitetura: Rails 8 monolito + Hotwire + Tailwind. Sem SPA, sem frontend separado.
+
 2. Stack técnica
 
 Backend: Ruby on Rails 8, PostgreSQL 16+
 Frontend: Hotwire (Turbo + Stimulus), Tailwind CSS 4
 Auth: Devise + Pundit
 Background jobs: Solid Queue
-Pagamento: Stripe Checkout (não usar Stripe Elements customizado) + webhooks
-Storage: ActiveStorage com S3-compatible (Cloudflare R2 recomendado pra economizar bandwidth)
+Pagamento: Stripe Checkout + webhooks
+Storage: ActiveStorage com S3-compatible (Cloudflare R2)
 Email: Postmark ou Resend (transacional)
 Processamento áudio: FFmpeg (server-side, via shell)
 AI providers:
 
-Letras: Anthropic Claude (modelo claude-opus-4-7)
-Música: Mureka API oficial (platform.mureka.ai), tier inicial $30/mês 1 concurrent
+Letras: Mureka API (POST /v1/lyrics/generate) + Anthropic Claude (claude-opus-4-7) para refino
+Música: Mureka API (POST /v1/song/generate)
+Soundtrack: Mureka API (POST /v1/soundtrack/generate) — Pro only
+Voice cloning: Mureka API (POST /v1/files/upload com purpose: "voice") — Pro only
 
 
-Deploy: Kamal (mesmo padrão do Lare)
-Monitoring: Sentry (errors) + Mission Control Jobs (Sidekiq dashboard)
+Deploy: Kamal 2 (Docker)
+Monitoring: Sentry
 
 3. Modelo de negócio
-Tiers e preços por marca
-yamlB2C (musicaregalo.it / .com / .es / .fr / etc.):
-  standard: €19
-    - MP3 final
-    - 2 regenerações de letra
-    - 1 regeneração de música
-    - Vozes do catálogo standard
-  pro: €39
-    - MP3 + WAV + stems separados
-    - 3 regenerações de letra
-    - 2 regenerações de música
-    - Vozes premium
-    - PDF estilizado da letra
+Marca única: B2B — JinglePro (jinglepro.it / jinglepro.com)
 
-B2B (jinglepro.it / .com / .es / etc.):
-  starter: €79
-    - Jingle 30-60s, MP3
-    - 2 regenerações de letra
-    - 1 regeneração de música
-    - Uso comercial incluído
-  pro: €149
-    - Jingle 60-90s, MP3 + WAV + stems
-    - 3 regenerações de letra
-    - 2 regenerações de música
-    - 2 versões finais entregues
-    - Uso comercial + fatura formal
-Preços e limites devem ser configuráveis via YAML, NÃO hardcoded. Cada pedido cacheia os limites no DB no momento da compra.
-Fluxo do cliente (10 estados)
-1. pending           → cliente preencheu briefing, ainda não pagou
+Tiers e preços:
+yaml
+b2b:
+  tiers:
+    standard:
+      price_cents: 2900        # €29
+      description: "Jingle personalizado com letra para redes sociais"
+      lyrics_regen_limit: 2
+      music_regen_limit: 2
+      includes_stems: false
+      includes_soundtrack: false
+      includes_voice_clone: false
+      max_duration_seconds: 30
+
+    pro:
+      price_cents: 5900        # €59
+      description: "Jingle + soundtrack sincronizado com vídeo + voz clonada"
+      lyrics_regen_limit: 3
+      music_regen_limit: 3
+      includes_stems: true
+      includes_soundtrack: true    # POST /v1/soundtrack/generate
+      includes_voice_clone: true   # vocal_id via files/upload
+      max_duration_seconds: 60
+
+Preços e limites configuráveis via YAML, NÃO hardcoded. Cada pedido cacheia os limites no DB no momento da compra.
+Fluxo do cliente — Standard
+1. pending           → briefing conversacional preenchido, aguardando pagamento
 2. paid              → Stripe webhook confirmou pagamento
-3. lyrics_drafting   → LLM gerando primeira versão da letra
-4. lyrics_ready      → letra disponível pra cliente revisar
-5. lyrics_approved   → cliente aprovou letra (FICA TRAVADA daqui em diante)
-6. music_generating  → Mureka gerando música (2 variantes)
-7. preview_ready     → cliente pode ouvir os 2 previews (30s cada)
-8. approved          → cliente escolheu uma variante e aprovou
-9. delivered         → arquivo final disponível pra download
+3. lyrics_drafting   → AI gerando letra
+4. lyrics_ready      → letra disponível para revisão
+5. lyrics_approved   → cliente aprovou letra (TRAVADA)
+6. music_generating  → Mureka gerando 2 variantes de música
+7. preview_ready     → cliente pode ouvir os previews
+8. approved          → cliente escolheu uma variante
+9. delivered         → arquivo final disponível para download
+
+Fluxo do cliente — Pro com vídeo (soundtrack)
+Após paid: skip do fluxo de letra → UploadSoundtrackInputToMurekaJob → music_generating → preview_ready → approved → delivered
 
 Estados de falha: payment_failed, lyrics_failed, music_failed, cancelled, refunded
-4. Modelo de domínios
-Estratégia: domínios localizados pra Itália (mercado principal) + .com pra demais idiomas
-B2C:
-- musicaregalo.it    → b2c, locale it (forçado)
-- musicaregalo.com   → b2c, locale detectado por Accept-Language ou /locale path
 
+4. Modelo de domínios
 B2B:
 - jinglepro.it       → b2b, locale it (forçado)
-- jinglepro.com      → b2b, locale detectado por Accept-Language ou /locale path
-Nota: os nomes acima são placeholders, o usuário ainda vai escolher o nome final. Estruturar config pra ser facilmente trocável.
-Rails detecta host na requisição, seta @brand (b2b/b2c) e I18n.locale via before_action. Routes usam constraints por host.
+- jinglepro.com      → b2b, locale detectado por Accept-Language
+Rails seta I18n.locale via before_action. Brand sempre "b2b".
+
+---
+
+## A. Briefing conversacional
+
+Em vez do wizard multi-step, o cliente descreve o projeto via chat. Um assistente AI (Claude) extrai os campos do briefing naturalmente e retorna também sugestões de botões rápidos.
+
+### A.1 Schema
+
+```ruby
+create_table :briefing_messages do |t|
+  t.references :order, foreign_key: true, null: false
+  t.string :role, null: false          # "user" | "assistant"
+  t.text :content, null: false
+  t.jsonb :extracted_briefing          # snapshot dos campos extraídos neste turn
+  t.timestamps
+end
+```
+
+### A.2 ConversationalBriefingService
+
+```ruby
+# app/services/conversational_briefing_service.rb
+class ConversationalBriefingService < BaseService
+  SYSTEM_PROMPT = <<~PROMPT
+    You are a friendly music creation assistant for small business owners.
+    Extract briefing info from the conversation naturally.
+    Never ask more than one question per turn.
+    Keep replies short and warm, max 3 sentences.
+    Suggest 2-3 quick options as buttons when relevant.
+
+    Return ONLY valid JSON:
+    {
+      "reply": "friendly message to show user",
+      "suggestions": ["quick option 1", "quick option 2"],
+      "ready": false,
+      "briefing": {
+        "about": "...",
+        "recipient": "...",
+        "occasion": "...",
+        "keywords": "...",
+        "avoid": "...",
+        "music_style": "...",
+        "mood": "...",
+        "tempo": "...",
+        "language": "it",
+        "target_duration_seconds": 30
+      }
+    }
+
+    Set "ready": true only when you have: about, music_style, mood, language, target_duration_seconds.
+    Never expose technical field names to the user.
+  PROMPT
+
+  attribute :order
+  attribute :new_message, :string
+
+  def call
+    history = order.briefing_messages.map { |m| { role: m.role, content: m.content } }
+
+    response = LyricsGenerator::ClaudeClient.chat(
+      system: SYSTEM_PROMPT,
+      messages: history + [{ role: "user", content: new_message }]
+    )
+
+    parsed = JSON.parse(response[:content])
+
+    order.briefing_messages.create!(role: "user", content: new_message)
+    order.briefing_messages.create!(
+      role: "assistant",
+      content: parsed["reply"],
+      extracted_briefing: parsed["briefing"]
+    )
+    order.briefing.update!(parsed["briefing"].compact) if parsed["briefing"].present?
+
+    success_result(parsed)
+  end
+end
+```
+
+### A.3 Rotas e controller
+
+```ruby
+# config/routes.rb
+resources :orders do
+  resource :briefing_chat, only: [:show, :create]
+end
+
+# app/controllers/briefing_chats_controller.rb
+class BriefingChatsController < ApplicationController
+  before_action :authenticate_user!
+
+  def show
+    @order = current_user.orders.find(params[:order_id])
+    @messages = @order.briefing_messages
+    @briefing = @order.briefing
+  end
+
+  def create
+    @order = current_user.orders.find(params[:order_id])
+    result = ConversationalBriefingService.call(order: @order, new_message: params[:message])
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.append("messages", partial: "briefing_chats/message",
+            locals: { role: "user", content: params[:message] }),
+          turbo_stream.append("messages", partial: "briefing_chats/message",
+            locals: { role: "assistant", content: result.value["reply"] }),
+          turbo_stream.replace("suggestions", partial: "briefing_chats/suggestions",
+            locals: { suggestions: result.value["suggestions"] }),
+          turbo_stream.replace("cta", partial: "briefing_chats/cta",
+            locals: { ready: result.value["ready"], order: @order })
+        ]
+      end
+    end
+  end
+end
+```
+
+---
+
+## B. Soundtrack — feature Pro
+
+Cliente Pro faz upload de imagem ou vídeo do negócio. A Mureka gera a música sincronizada com o visual.
+
+### B.1 Schema
+
+```ruby
+create_table :soundtrack_inputs do |t|
+  t.references :order, foreign_key: true, null: false
+  t.string :input_type, null: false      # "image" | "video"
+  t.string :storage_key, null: false     # chave no bucket R2 privado
+  t.string :mureka_file_id               # retornado pelo POST /v1/files/upload
+  t.string :mureka_file_status           # "pending" | "ready" | "failed"
+  t.integer :file_size_bytes
+  t.string :mime_type
+  t.integer :duration_seconds            # só para vídeo
+  t.datetime :scheduled_deletion_at      # GDPR — 30 dias após entrega
+  t.datetime :deleted_at
+  t.timestamps
+end
+```
+
+### B.2 Jobs
+
+```ruby
+# 1. Upload do arquivo para Mureka (após pagamento Pro com vídeo/imagem)
+class UploadSoundtrackInputToMurekaJob < ApplicationJob
+  def perform(order_id)
+    order = Order.find(order_id)
+    input = order.soundtrack_input
+    # download do R2 → POST /v1/files/upload → salva mureka_file_id
+    # quando ready: enfileira GenerateSoundtrackJob
+  end
+end
+
+# 2. Geração do soundtrack
+class GenerateSoundtrackJob < ApplicationJob
+  def perform(order_id)
+    order = Order.find(order_id)
+    input = order.soundtrack_input
+    response = MusicGenerator::MurekaClient.call(
+      action: :soundtrack,
+      file_id: input.mureka_file_id,
+      input_type: input.input_type,
+      prompt: order.briefing.about,
+      n: 2
+    )
+    # cria MusicGeneration + enfileira PollMurekaStatusJob
+  end
+end
+```
+
+### B.3 Método MurekaClient
+
+```ruby
+# Novo método em app/services/music_generator/mureka_client.rb
+def generate_soundtrack(file_id:, input_type:, prompt:, n: 2)
+  post("/v1/soundtrack/generate", {
+    input_type => file_id,   # "image_id" ou "video_id"
+    prompt: prompt,
+    model: "auto",
+    n: n
+  })
+end
+```
+
+### B.4 Decisão de fluxo no Order model
+
+```ruby
+# Order model — após Stripe webhook confirmar pagamento:
+def start_generation_pipeline!
+  if tier == "pro" && soundtrack_input.present?
+    UploadSoundtrackInputToMurekaJob.perform_later(id)
+  else
+    GenerateLyricsJob.perform_later(id)
+  end
+end
+```
+
+---
+
+## C. Voice cloning — feature Pro
+
+Cliente Pro pode enviar gravação da própria voz. A música final usa essa voz em vez de uma do catálogo.
+
+### C.1 Schema
+
+```ruby
+create_table :voice_uploads do |t|
+  t.references :order, foreign_key: true, null: false
+  t.string :storage_key, null: false      # R2 privado
+  t.string :mureka_file_id               # retornado pelo POST /v1/files/upload com purpose: "voice"
+  t.string :status                        # "pending" | "processing" | "ready" | "failed"
+  t.boolean :consent_given, null: false, default: false
+  t.datetime :consent_given_at
+  t.string :consent_ip
+  t.datetime :scheduled_deletion_at      # GDPR — 30 dias após entrega
+  t.datetime :deleted_at
+  t.timestamps
+end
+```
+
+### C.2 Regras GDPR obrigatórias
+
+- Checkbox de consentimento explícito, não pré-marcado, com linguagem clara
+- `consent_given_at` e `consent_ip` gravados no DB
+- Deleção automática do arquivo R2 e do registro Mureka 30 dias após entrega
+- Job `DeleteVoiceUploadJob` agendado no momento do upload
+
+### C.3 Job
+
+```ruby
+class UploadVoiceToMurekaJob < ApplicationJob
+  def perform(voice_upload_id)
+    upload = VoiceUpload.find(voice_upload_id)
+    # download do R2 → POST /v1/files/upload com purpose: "voice"
+    # salva mureka_file_id → usado como vocal_id no MusicGenerator
+  end
+end
+```
 5. Schema do banco de dados
 Migration 1: Users (Devise)
 rubycreate_table :users do |t|

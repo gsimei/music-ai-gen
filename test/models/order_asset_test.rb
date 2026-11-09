@@ -113,4 +113,36 @@ class OrderAssetTest < ActiveSupport::TestCase
     asset.kind = "stems_zip"
     assert asset.stems?
   end
+
+  # ---------------------------------------------------------------------------
+  # soundtrack_video kind
+  # ---------------------------------------------------------------------------
+  test "soundtrack_video is a valid kind" do
+    asset = order_assets(:final_mp3)
+    asset.kind = "soundtrack_video"
+    asset.validate
+    assert_empty asset.errors[:kind]
+  end
+
+  test "soundtrack_video? returns true when kind is soundtrack_video" do
+    asset = order_assets(:final_mp3)
+    asset.kind = "soundtrack_video"
+    assert asset.soundtrack_video?
+  end
+
+  test "soundtrack_video? returns false when kind is music_variant" do
+    asset = order_assets(:final_mp3)
+    asset.kind = "music_variant"
+    assert_not asset.soundtrack_video?
+  end
+
+  test "storage_key not required for soundtrack_video kind" do
+    asset = OrderAsset.new(
+      order:    orders(:b2b_music_generating),
+      kind:     "soundtrack_video",
+      provider_url: "https://cdn.mureka.ai/video.mp4"
+    )
+    asset.validate
+    assert_empty asset.errors[:storage_key]
+  end
 end

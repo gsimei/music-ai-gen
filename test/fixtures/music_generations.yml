@@ -1,5 +1,6 @@
-generation_pending:
-  order: b2c_paid
+# Used by music_generation_test.rb uniqueness check — must be iteration 1 for b2b_paid
+generation_paid_iter1:
+  order: b2b_paid
   voice: standard_voice
   lyrics_draft: draft_v1
   iteration: 1
@@ -9,8 +10,20 @@ generation_pending:
   created_at: "2026-01-02 12:00:00"
   updated_at: "2026-01-02 12:00:00"
 
+# Used by poll_mureka_status_job_test.rb — must be associated with an order in music_generating state
+generation_pending:
+  order: b2b_music_generating
+  voice: standard_voice
+  lyrics_draft: draft_music_generating_v1
+  iteration: 1
+  provider: "mureka"
+  status: "pending"
+  music_style: "pop"
+  created_at: "2026-01-10 13:00:00"
+  updated_at: "2026-01-10 13:00:00"
+
 generation_completed:
-  order: b2c_delivered
+  order: b2b_approved
   voice: standard_voice
   lyrics_draft: draft_approved
   iteration: 1
@@ -23,3 +36,19 @@ generation_completed:
   variant_b_preview_url: "https://cdn.example.com/preview/b.mp3"
   created_at: "2026-01-04 09:00:00"
   updated_at: "2026-01-04 10:00:00"
+
+# Used by music_preview_controller_test and music_approver_test — preview_ready order
+generation_preview_ready:
+  order: b2b_preview_ready
+  voice: standard_voice
+  lyrics_draft: draft_preview_ready_v1
+  iteration: 1
+  provider: "mureka"
+  status: "completed"
+  music_style: "pop"
+  variant_a_full_url: "https://cdn.example.com/preview-ready/a.mp3"
+  variant_b_full_url: "https://cdn.example.com/preview-ready/b.mp3"
+  variant_a_preview_url: "https://cdn.example.com/preview-ready/preview_a.mp3"
+  variant_b_preview_url: "https://cdn.example.com/preview-ready/preview_b.mp3"
+  created_at: "2026-01-10 14:00:00"
+  updated_at: "2026-01-10 14:00:00"

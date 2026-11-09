@@ -1,0 +1,14 @@
+<% content_for :title, "JinglePro · Nova senha" %>
+<%= render layout: "users/shared/studio_auth" do %>
+  <p class="studio-kicker">SUA CONTA</p>
+  <h1>Uma nova<br><span>senha.</span></h1>
+  <p class="studio-form-intro">Escolha uma nova senha para sua conta.</p>
+  <%= form_for resource, as: resource_name, url: password_path(resource_name), html: { method: :put } do |f| %>
+    <%= render "users/shared/error_messages", resource: resource %>
+    <%= f.hidden_field :reset_password_token %>
+    <div class="studio-field"><%= f.label :password, "Nova senha" %><%= f.password_field :password, autofocus: true, autocomplete: "new-password", required: true, minlength: @minimum_password_length %></div>
+    <div class="studio-field"><%= f.label :password_confirmation, "Confirme a senha" %><%= f.password_field :password_confirmation, autocomplete: "new-password", required: true %></div>
+    <%= f.submit "Salvar senha", class: "studio-button studio-button-green studio-submit" %>
+  <% end %>
+  <p class="studio-form-switch"><%= link_to "Voltar para entrar", new_user_session_path %></p>
+<% end %>

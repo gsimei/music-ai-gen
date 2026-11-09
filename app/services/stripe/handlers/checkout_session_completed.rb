@@ -17,17 +17,10 @@ module ::Stripe
         order = find_order(session_id, session_obj)
         return failure_result("order_not_found") unless order
 
-        return success_result(:already_handled) if order.paid?
+        result = ::Stripe::CheckoutFulfillment.call(order: order, session_data: session_obj)
+        stripe_event.update!(order: order) if result.success?
+        result
 
-        ActiveRecord::Base.transaction do
-          order.stripe_payment_intent_id = session_obj["payment_intent"]
-          order.paid_at                  = Time.current
-          stripe_event.order             = order
-          order.mark_paid!
-          stripe_event.save!
-        end
-
-        success_result(order)
       rescue ActiveRecord::RecordInvalid => e
         Rails.logger.error "[CheckoutSessionCompleted] RecordInvalid for order #{order&.id}: #{e.message}"
         failure_result(e.message)

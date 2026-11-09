@@ -1,0 +1,25 @@
+<div id="chat-lyrics-panel" class="flex flex-col h-full">
+  <% if draft %>
+    <div class="px-5 py-4 border-b border-cant-line flex items-center justify-between">
+      <span class="text-xs font-semibold text-cant-muted uppercase tracking-wide"><%= t("order_chat.lyrics_panel_title") %></span>
+      <span class="text-xs text-cant-muted">v<%= draft.version %></span>
+    </div>
+    <div class="flex-1 overflow-y-auto px-5 py-4">
+      <pre class="text-sm text-cant-ink whitespace-pre-wrap font-sans leading-relaxed"><%= draft.content %></pre>
+    </div>
+    <div class="px-5 py-3 border-t border-cant-line">
+      <p class="text-xs text-cant-muted text-center"><%= t("order_chat.lyrics_panel_hint") %></p>
+    </div>
+  <% else %>
+    <div class="flex-1 flex items-center justify-center px-5">
+      <div class="text-center">
+        <div class="w-10 h-10 rounded-full bg-cant-line flex items-center justify-center mx-auto mb-3">
+          <svg class="w-5 h-5 text-cant-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+          </svg>
+        </div>
+        <p class="text-xs text-cant-muted"><%= t("order_chat.lyrics_panel_empty") %></p>
+      </div>
+    </div>
+  <% end %>
+</div>

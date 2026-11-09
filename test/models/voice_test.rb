@@ -13,7 +13,7 @@ class VoiceTest < ActiveSupport::TestCase
   end
 
   test "VALID_BRANDS constant contains expected values" do
-    assert_equal %w[b2b b2c], Voice::VALID_BRANDS
+    assert_equal %w[b2b], Voice::VALID_BRANDS
   end
 
   test "MIN_TIER_RANGE constant is 0..1" do
@@ -69,7 +69,7 @@ class VoiceTest < ActiveSupport::TestCase
       name: "Duplicate",
       slug: "sofia",  # already taken by standard_voice
       min_tier: 0,
-      allowed_brands: %w[b2b b2c]
+      allowed_brands: %w[b2b]
     )
     assert_not voice.valid?
     assert voice.errors[:slug].any?
@@ -215,10 +215,9 @@ class VoiceTest < ActiveSupport::TestCase
     assert_includes result, voices(:standard_voice)
   end
 
-  test "for_brand scope excludes voices not in allowed_brands" do
-    # b2b_only_voice has allowed_brands: [b2b] only
-    result = Voice.for_brand("b2c")
-    assert_not_includes result, voices(:b2b_only_voice)
+  test "for_brand scope excludes voices when brand does not match" do
+    result = Voice.for_brand("unknown_brand")
+    assert_empty result
   end
 
   test "for_tier scope returns voices with min_tier <= given integer" do

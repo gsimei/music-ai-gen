@@ -1,0 +1,22 @@
+# Soundtrack input for a paid pro order (file upload pending Mureka processing)
+soundtrack_pending:
+  order: b2b_paid
+  input_type: "video"
+  storage_key: "test_video.mp4"
+  mureka_file_status: "pending"
+  file_size_bytes: 10485760
+  mime_type: "video/mp4"
+  created_at: "2026-01-02 10:30:00"
+  updated_at: "2026-01-02 10:30:00"
+
+# Soundtrack input that has been successfully uploaded to Mureka
+soundtrack_ready:
+  order: b2b_music_generating
+  input_type: "video"
+  storage_key: "ready_video.mp4"
+  mureka_file_id: "mureka_file_001"
+  mureka_file_status: "ready"
+  file_size_bytes: 5242880
+  mime_type: "video/mp4"
+  created_at: "2026-01-10 13:00:00"
+  updated_at: "2026-01-10 13:05:00"

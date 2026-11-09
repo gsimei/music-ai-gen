@@ -39,7 +39,7 @@ class MusicGenerationTest < ActiveSupport::TestCase
   test "is invalid with duplicate iteration for same order" do
     # generation_pending is already iteration 1 for b2c_paid
     gen = MusicGeneration.new(
-      order: orders(:b2c_paid),
+      order: orders(:b2b_paid),
       voice: voices(:standard_voice),
       lyrics_draft: lyrics_drafts(:draft_v1),
       iteration: 1,
@@ -158,6 +158,80 @@ class MusicGenerationTest < ActiveSupport::TestCase
       gen.status = status
       assert gen.public_send(:"#{status}?")
     end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Constants — GENERATION_TYPES
+  # ---------------------------------------------------------------------------
+  test "GENERATION_TYPES constant contains expected values" do
+    assert_equal %w[song instrumental soundtrack], MusicGeneration::GENERATION_TYPES
+  end
+
+  # ---------------------------------------------------------------------------
+  # Validations — generation_type
+  # ---------------------------------------------------------------------------
+  test "is invalid with unrecognized generation_type" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "remix"
+    assert_not gen.valid?
+    assert gen.errors[:generation_type].any?
+  end
+
+  test "is valid with generation_type song" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "song"
+    assert gen.valid?
+  end
+
+  test "is valid with generation_type instrumental" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "instrumental"
+    assert gen.valid?
+  end
+
+  test "is valid with generation_type soundtrack" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "soundtrack"
+    assert gen.valid?
+  end
+
+  # ---------------------------------------------------------------------------
+  # Predicates — generation type
+  # ---------------------------------------------------------------------------
+  test "song? returns true when generation_type is song" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "song"
+    assert gen.song?
+  end
+
+  test "song? returns false when generation_type is instrumental" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "instrumental"
+    assert_not gen.song?
+  end
+
+  test "instrumental? returns true when generation_type is instrumental" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "instrumental"
+    assert gen.instrumental?
+  end
+
+  test "instrumental? returns false when generation_type is song" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "song"
+    assert_not gen.instrumental?
+  end
+
+  test "soundtrack? returns true when generation_type is soundtrack" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "soundtrack"
+    assert gen.soundtrack?
+  end
+
+  test "soundtrack? returns false when generation_type is song" do
+    gen = music_generations(:generation_pending)
+    gen.generation_type = "song"
+    assert_not gen.soundtrack?
   end
 
   # ---------------------------------------------------------------------------

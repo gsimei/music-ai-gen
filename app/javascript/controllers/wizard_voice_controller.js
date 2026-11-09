@@ -120,25 +120,14 @@ export default class extends Controller {
   }
 
   _applyCardStyle(card, isSelected) {
-    // We rely on Tailwind classes — add/remove a data attribute and let
-    // the inline class expression on the card handle visual state.
-    // Instead we directly toggle border/shadow classes.
-    const b2b = document.documentElement.dataset.brand === "b2b" ||
-                !document.documentElement.classList.contains("ser")
-
     if (isSelected) {
       card.setAttribute("data-selected", "true")
-      card.classList.remove("border-cant-line", "border-ser-line", "hover:border-cant-mute", "hover:border-ser-mute")
-      card.classList.add(
-        b2b ? "border-cant-ink" : "border-ser-ink",
-        "shadow-md"
-      )
+      card.classList.remove("border-cant-line", "hover:border-cant-mute")
+      card.classList.add("border-cant-ink", "shadow-md")
     } else {
       card.removeAttribute("data-selected")
-      card.classList.remove("border-cant-ink", "border-ser-ink", "shadow-md")
-      card.classList.add(
-        b2b ? "border-cant-line" : "border-ser-line"
-      )
+      card.classList.remove("border-cant-ink", "shadow-md")
+      card.classList.add("border-cant-line")
     }
 
     // Sync the sr-only radio

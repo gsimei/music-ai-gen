@@ -1,0 +1,182 @@
+<div id="lyrics_section">
+
+  <div id="lyrics_errors" role="alert" aria-live="assertive"></div>
+
+  <%# ── pending / payment_failed — payment CTA ── %>
+  <% if order.pending? || order.payment_failed? %>
+
+    <% if order.payment_failed? %>
+      <div class="callout show" role="alert" style="margin:20px 0;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg>
+        <div>
+          <strong>Il pagamento non è andato a buon fine.</strong>
+          <div style="font-size:12px;margin-top:3px;">Si è verificato un problema con il tuo pagamento. Riprova per continuare.</div>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="margin-top:20px;">
+      <%= button_to checkout_order_path(order),
+            method: :post,
+            form: { data: { turbo: false } },
+            class: "btn btn-primary btn-block" do %>
+        Paga e genera la tua musica
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <% end %>
+      <p style="font-size:11px;text-align:center;color:var(--mute);margin-top:10px;">Pagamento sicuro via Stripe</p>
+    </div>
+
+  <%# ── paid / lyrics_drafting — generating animation ── %>
+  <% elsif order.paid? || order.lyrics_drafting? %>
+
+    <div class="card-ink reveal" style="margin-top:30px;">
+      <div class="loadcard">
+        <div class="wavebars" aria-hidden="true">
+          <i style="animation-delay:0s"></i>
+          <i style="animation-delay:.12s"></i>
+          <i style="animation-delay:.24s"></i>
+          <i style="animation-delay:.36s"></i>
+          <i style="animation-delay:.48s"></i>
+        </div>
+        <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">
+          Stiamo scrivendo la tua letra&hellip;
+        </h3>
+        <p style="color:rgba(245,241,231,.6)">Ti avvisiamo via email quando è pronta.</p>
+      </div>
+    </div>
+
+    <div id="lyrics_generating_notice"></div>
+    <div id="lyrics_content"></div>
+
+    <div class="card reveal locked" style="margin-top:18px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+      <div style="font-size:13.5px;">La musica verrà generata dopo l'approvazione del testo.</div>
+    </div>
+
+  <%# ── lyrics_ready — review & approve ── %>
+  <% elsif order.lyrics_ready? %>
+
+    <div id="lyrics_generating_notice"></div>
+
+    <div id="lyrics_content">
+      <div class="card-ink reveal" style="margin-top:30px;padding:34px 34px 30px;">
+        <h3 class="display" style="font-size:30px;color:var(--paper);">La tua <em>letra</em> è pronta</h3>
+
+        <% if draft.present? %>
+          <div class="lyrics lyrics-ink" style="margin-top:22px;max-width:620px;">
+            <%= simple_format(draft.content,
+                  {},
+                  wrapper_tag: "div",
+                  class: "stanza") %>
+          </div>
+        <% end %>
+
+        <p style="font-size:10.5px;display:flex;align-items:center;gap:6px;color:rgba(245,241,231,.6);margin-top:18px;" aria-hidden="true">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="5.5" stroke="currentColor"/><path d="M6 3v3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="9" r="0.6" fill="currentColor"/></svg>
+          Una volta approvata, la letra non potrà più essere modificata.
+        </p>
+
+        <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;" data-controller="lyrics-review">
+          <span class="mag">
+            <%= button_to approve_lyrics_order_path(order),
+                  method: :post,
+                  params: { draft_id: draft&.id },
+                  data: { turbo: true },
+                  form: { "aria-label": "Approva la letra" },
+                  class: "btn btn-accent" do %>
+              Approva e continua
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <% end %>
+          </span>
+
+          <% if order.lyrics_regen_exhausted? %>
+            <button type="button" disabled aria-disabled="true" class="btn btn-paper-outline disabled">
+              Nessuna rigenerazione rimasta
+            </button>
+          <% else %>
+            <button type="button"
+                    data-lyrics-review-target="adjustButton"
+                    data-action="click->lyrics-review#showFeedback"
+                    class="btn btn-paper-outline">
+              <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg>
+              Rigenera testo
+            </button>
+          <% end %>
+        </div>
+
+        <% unless order.lyrics_regen_exhausted? %>
+          <div class="feedback" id="fb-lyrics" style="max-width:620px;"
+               data-lyrics-review-target="feedbackForm">
+            <%= form_with url: regenerate_lyrics_order_path(order),
+                  method: :post,
+                  data: { turbo: true, action: "submit->lyrics-review#submitRegen" },
+                  class: "space-y-3" do |f| %>
+              <label for="regenerate_feedback_lyrics" style="display:block;font-size:12px;font-weight:600;margin-bottom:7px;">Cosa vorresti cambiare?</label>
+              <%= f.text_area :feedback,
+                    id: "regenerate_feedback_lyrics",
+                    name: "regenerate[feedback]",
+                    rows: 3,
+                    placeholder: "Es: aggiungi il nome del prodotto, cambia il ritornello…",
+                    "aria-required": "true",
+                    class: "textarea",
+                    style: "background:rgba(245,241,231,.06);border-color:rgba(245,241,231,.2);color:var(--paper);" %>
+              <div style="display:flex;gap:10px;margin-top:10px;">
+                <%= f.submit "Rigenera",
+                      data: { lyrics_review_target: "submitBtn" },
+                      class: "btn btn-accent" %>
+                <button type="button"
+                        data-action="click->lyrics-review#hideFeedback"
+                        class="btn btn-paper-outline">
+                  Annulla
+                </button>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="regen-count" style="color:rgba(245,241,231,.5);margin-top:14px;">
+          Hai ancora <%= order.lyrics_regen_remaining %> <%= order.lyrics_regen_remaining == 1 ? "rigenerazione disponibile" : "rigenerazioni disponibili" %>.
+        </div>
+      </div>
+    </div>
+
+  <%# ── lyrics_approved / music_generating / preview_ready / approved — read-only ── %>
+  <% elsif order.lyrics_approved? || order.music_generating? || order.preview_ready? || order.approved? %>
+
+    <div id="lyrics_generating_notice"></div>
+
+    <div id="lyrics_content">
+      <% if draft.present? %>
+        <div class="card-ink reveal" style="margin-top:30px;padding:34px 34px 30px;">
+          <div class="badge badge-brass" style="margin-bottom:16px;">Lettera approvata</div>
+          <div class="lyrics lyrics-ink" style="max-width:620px;opacity:.85;"
+               aria-label="Testo della lettera approvata">
+            <%= simple_format(draft.content,
+                  {},
+                  wrapper_tag: "div",
+                  class: "stanza") %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  <%# ── lyrics_failed ── %>
+  <% elsif order.lyrics_failed? %>
+
+    <div id="lyrics_generating_notice"></div>
+    <div id="lyrics_content">
+      <div class="callout show" role="alert" style="margin-top:20px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg>
+        <div>
+          <strong>Errore nella generazione della letra</strong>
+          <div style="font-size:12px;margin-top:3px;">
+            Si è verificato un problema. Contatta il supporto indicando il riferimento:
+            <strong><%= order.reference %></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+
+</div>

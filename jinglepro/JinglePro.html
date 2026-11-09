@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JinglePro — Musica originale per i tuoi social</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="jp-styles.css" />
+</head>
+<body>
+
+<div class="grain"></div>
+
+<div class="app">
+  <!-- ═══════════ SIDEBAR ROUTER ═══════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+      <span class="name">JinglePro</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="label">Marketing</div>
+        <div class="nav-link" data-go="home"><span class="idx">·</span> Home</div>
+        <div class="nav-link" data-go="login"><span class="idx">·</span> Accedi</div>
+        <div class="nav-link" data-go="register"><span class="idx">·</span> Registrati</div>
+      </div>
+      <div class="nav-group">
+        <div class="label">Wizard ordine</div>
+        <div class="nav-link" data-go="wz1"><span class="idx">01</span> Informazioni</div>
+        <div class="nav-link" data-go="wz2"><span class="idx">02</span> Stile</div>
+        <div class="nav-link" data-go="wz3"><span class="idx">03</span> Dettagli</div>
+        <div class="nav-link" data-go="wz4"><span class="idx">04</span> Voce</div>
+        <div class="nav-link" data-go="wz5"><span class="idx">05</span> Revisione</div>
+      </div>
+      <div class="nav-group">
+        <div class="label">Ordine</div>
+        <div class="nav-link" data-go="order-pending"><span class="idx">·</span> Testo in lavorazione</div>
+        <div class="nav-link" data-go="order-ready"><span class="idx">·</span> Testo pronto</div>
+        <div class="nav-link" data-go="order-preview"><span class="idx">·</span> Anteprima musica</div>
+      </div>
+      <div class="nav-group">
+        <div class="label">Libreria</div>
+        <div class="nav-link" data-go="lib-empty"><span class="idx">·</span> Vuota</div>
+        <div class="nav-link" data-go="lib-full"><span class="idx">·</span> Con jingle</div>
+      </div>
+      <div class="nav-group">
+        <div class="label">Sistema</div>
+        <div class="nav-link" data-go="system"><span class="idx">·</span> Componenti &amp; stati</div>
+      </div>
+    </nav>
+    <div class="foot">JinglePro · Studio musicale AI<br>Milano — Italia</div>
+  </aside>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <!-- ═══════════ STAGE ═══════════ -->
+  <main class="stage">
+    <div class="mtopbar">
+      <button class="hamb" aria-label="Apri menu">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 5h14M2 9h14M2 13h14"/></svg>
+      </button>
+      <svg class="mt-mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+      <span class="mt-name">JinglePro</span>
+    </div>
+    <div class="scroller">
+      <div class="scroll-inner">
+
+      <!-- ══════════════════ HOME ══════════════════ -->
+      <section class="page" id="home">
+        <div class="wrap">
+          <!-- navbar -->
+          <div class="pagenav" style="display:flex;align-items:center;justify-content:space-between;padding:26px 0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg style="width:22px;height:24px;color:var(--ink)" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+              <span style="font-family:var(--display);font-size:21px;font-weight:500;letter-spacing:-.03em;">JinglePro</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="jpGo('login')">Accedi</button>
+          </div>
+
+          <!-- hero -->
+          <div class="hero">
+            <div class="hero-grid">
+              <div>
+                <div class="chips reveal">
+                  <span class="pill">Reels</span>
+                  <span class="pill">Ads</span>
+                  <span class="pill">Video di negozio</span>
+                </div>
+                <h1 class="display reveal">Musica <em>originale</em> per i tuoi social.</h1>
+                <p class="lede reveal">Crea musica su misura per Reels, ads e video del tuo shop. Generata dall'AI in pochi minuti, licenza commerciale inclusa. Da €79.</p>
+                <div class="cta-row reveal">
+                  <span class="mag"><button class="btn btn-primary" onclick="jpGo('wz1')">Crea la tua musica
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  </button></span>
+                  <button class="btn btn-secondary" onclick="document.getElementById('howto').scrollIntoView()">Scopri come funziona</button>
+                </div>
+              </div>
+
+              <div class="hero-player reveal">
+                <div class="hp-top">
+                  <span class="eyebrow">Stili musicali</span>
+                  <span class="hp-eq" aria-hidden="true"><i style="animation-delay:0s"></i><i style="animation-delay:.18s"></i><i style="animation-delay:.36s"></i><i style="animation-delay:.12s"></i></span>
+                </div>
+                <div class="hp-meta">
+                  <div class="hp-name" data-shop-name>Pop</div>
+                  <div class="hp-tag" data-shop-tag>124 BPM</div>
+                </div>
+                <canvas class="hp-wave" id="heroWave"></canvas>
+                <div class="hp-controls">
+                  <button class="hp-play" id="heroPlay" aria-label="Play"></button>
+                  <div class="hp-time"><span data-cur>0:00</span> <span class="sep">/</span> <span data-dur>0:30</span></div>
+                  <div class="hp-dots" id="heroDots"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADATTO PER -->
+          <div class="sec" id="adatto">
+            <div class="split">
+              <div class="sec-head reveal">
+                <div class="eyebrow">Adatto per</div>
+                <h2 class="display" style="margin-top:14px;">Musica che <em>vende</em></h2>
+              </div>
+              <div class="grid-3">
+                <div class="card feature reveal">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M10 8.5v7l6-3.5z" fill="currentColor" stroke="none"/></svg>
+                  <h3>Reels e TikTok</h3>
+                  <p>Tracce pensate per i primi 3 secondi. Hook musicali che fermano il pollice.</p>
+                </div>
+                <div class="card feature reveal">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10v4h4l5 4V6L7 10H3z"/><path d="M16 8a5 5 0 010 8"/></svg>
+                  <h3>Ads e campagne</h3>
+                  <p>Identità sonora coerente per spot e advertising. Memorabile, riconoscibile.</p>
+                </div>
+                <div class="card feature reveal">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16v12H4z"/><path d="M4 7l2-3h12l2 3"/><path d="M9 12h6"/></svg>
+                  <h3>Video di shop</h3>
+                  <p>La colonna sonora del tuo negozio. In vetrina, online e al banco.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COME FUNZIONA -->
+          <div class="sec" id="howto">
+            <div class="split">
+              <div class="sec-head reveal">
+                <div class="eyebrow">Il processo</div>
+                <h2 class="display" style="margin-top:14px;">Come <em>funziona</em></h2>
+              </div>
+              <div class="grid-4">
+                <div class="step reveal"><span class="stepnum" aria-hidden="true">01</span><h3>Descrivi il tuo brand</h3><p>Raccontaci attività, valori e dove userai la musica.</p></div>
+                <div class="step reveal"><span class="stepnum" aria-hidden="true">02</span><h3>Paghi in sicurezza</h3><p>Checkout protetto con Stripe. Una tantum, nessun abbonamento.</p></div>
+                <div class="step reveal"><span class="stepnum" aria-hidden="true">03</span><h3>L'AI compone per te</h3><p>Testo e musica su misura, pronti in 24 ore.</p></div>
+                <div class="step reveal"><span class="stepnum" aria-hidden="true">04</span><h3>Scarichi e pubblichi</h3><p>MP3, WAV e stems. Licenza commerciale inclusa.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TESTIMONIANZE -->
+          <div class="sec" id="testi">
+            <div class="sec-head reveal" style="margin-bottom:34px;">
+              <div class="eyebrow">Testimonianze</div>
+              <h2 class="display" style="margin-top:14px;">Chi ci ha già <em>dato voce</em></h2>
+            </div>
+            <div class="grid-3 testi-grid">
+              <div class="card testi reveal">
+                <div class="stars" aria-label="5 su 5">★★★★★</div>
+                <blockquote>“In un giorno avevo un jingle che i clienti canticchiano alla cassa. Ha dato un'identità al locale.”</blockquote>
+                <div class="who">
+                  <span class="av">E</span>
+                  <div><div class="nm">Elena R.</div><div class="role">caffetteria</div></div>
+                </div>
+              </div>
+              <div class="card-ink testi reveal">
+                <div class="stars" aria-label="5 su 5">★★★★★</div>
+                <blockquote>“Lo uso in ogni Reel. Più visualizzazioni, e il suono è solo mio — nessun problema di copyright.”</blockquote>
+                <div class="who">
+                  <span class="av">M</span>
+                  <div><div class="nm">Marco V.</div><div class="role">palestra</div></div>
+                </div>
+              </div>
+              <div class="card testi reveal">
+                <div class="stars" aria-label="5 su 5">★★★★★</div>
+                <blockquote>“Semplice e veloce. Sembra fatto da uno studio vero, a una frazione del prezzo.”</blockquote>
+                <div class="who">
+                  <span class="av">S</span>
+                  <div><div class="nm">Sofia L.</div><div class="role">ristorante</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PIANI -->
+          <div class="sec" id="piani">
+            <div class="sec-head reveal" style="margin-bottom:34px;">
+              <div class="eyebrow">Piani</div>
+              <h2 class="display" style="margin-top:14px;">Un prezzo, <em>una tantum</em></h2>
+            </div>
+            <div class="tiers reveal">
+              <!-- Starter -->
+              <div class="card tier">
+                <div class="top">
+                  <div class="plan">Starter</div>
+                  <div class="price">€79<small> / una tantum</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 60 secondi di musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 rigenerazioni del testo</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 1 rigenerazione della musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 varianti di anteprima</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Licenza commerciale</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Consegna in 24h</li>
+                </ul>
+                <button class="btn btn-secondary btn-block" onclick="jpGo('wz1')">Scegli Starter</button>
+              </div>
+              <!-- Pro -->
+              <div class="card-ink tier tier-ink">
+                <span class="striptop badge badge-brass">— Top —</span>
+                <div class="top">
+                  <div class="plan">Pro</div>
+                  <div class="price"><em>€149</em><small style="color:rgba(245,241,231,.55)"> / una tantum</small></div>
+                </div>
+                <ul>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 90 secondi di musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 3 rigenerazioni del testo</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 rigenerazioni della musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 varianti di anteprima</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Stems separati (voce + strumentale)</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Voci premium del catalogo</li>
+                </ul>
+                <span class="mag"><button class="btn btn-accent btn-block" onclick="jpGo('wz1')">Inizia adesso
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button></span>
+              </div>
+            </div>
+          </div>
+
+          <footer class="site">
+            <div class="lp">
+              <svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+              <span class="name">JinglePro</span>
+            </div>
+            <div class="cp">© 2026 JinglePro — Tutti i diritti riservati</div>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ══════════════════ LOGIN ══════════════════ -->
+      <section class="page" id="login">
+        <div class="auth">
+          <div class="left">
+            <div class="lp">
+              <svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+              <span class="name">JinglePro</span>
+            </div>
+            <div class="tagline">La tua musica, <em>pronta</em> in 24 ore.</div>
+            <div class="trust">
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Licenza commerciale inclusa</div>
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Musica 100% originale</div>
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Pagamento sicuro, una tantum</div>
+            </div>
+            <div class="glow"></div>
+          </div>
+          <div class="right">
+            <div class="form">
+              <h1 class="reveal">Accedi al tuo account</h1>
+              <p class="sub reveal">Bentornato. Continua da dove avevi lasciato.</p>
+              <div class="field reveal"><label>Email</label><input class="input" type="email" placeholder="nome@attivita.it" /></div>
+              <div class="field reveal"><label>Password</label><input class="input" type="password" placeholder="••••••••" /></div>
+              <button class="btn btn-primary btn-block reveal" style="margin-top:6px;" onclick="jpGo('wz1')">Accedi</button>
+              <div class="reveal" style="text-align:center;margin-top:16px;"><span class="link-mute">Password dimenticata?</span></div>
+              <div class="divider reveal">oppure</div>
+              <div class="reveal" style="text-align:center;font-size:13px;color:var(--mute);">Non hai un account? <span class="link" onclick="jpGo('register')">Registrati</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ REGISTER ══════════════════ -->
+      <section class="page" id="register">
+        <div class="auth">
+          <div class="left">
+            <div class="lp">
+              <svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+              <span class="name">JinglePro</span>
+            </div>
+            <div class="tagline">Dai una <em>voce</em> alla tua attività.</div>
+            <div class="trust">
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Prima musica in pochi minuti</div>
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Nessun abbonamento</div>
+              <div class="ti"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Anteprima gratuita del testo</div>
+            </div>
+            <div class="glow"></div>
+          </div>
+          <div class="right">
+            <div class="form">
+              <h1 class="reveal">Crea il tuo account</h1>
+              <p class="sub reveal">Bastano pochi secondi per iniziare.</p>
+              <div class="grid-2 reveal" style="gap:14px;">
+                <div class="field"><label>Nome</label><input class="input" type="text" placeholder="Marisa" /></div>
+                <div class="field"><label>Cognome</label><input class="input" type="text" placeholder="Bianchi" /></div>
+              </div>
+              <div class="field reveal"><label>Email</label><input class="input" type="email" placeholder="nome@attivita.it" /></div>
+              <div class="field reveal"><label>Password</label><input class="input" type="password" placeholder="Almeno 8 caratteri" /></div>
+              <button class="btn btn-primary btn-block reveal" style="margin-top:6px;" onclick="jpGo('wz1')">Crea account</button>
+              <div class="reveal" style="text-align:center;font-size:13px;color:var(--mute);margin-top:18px;">Hai già un account? <span class="link" onclick="jpGo('login')">Accedi</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ WIZARD STEP 1 — INFORMAZIONI ══════════════════ -->
+      <section class="page" id="wz1">
+        <div class="wrap">
+          <div class="wzbar">
+            <div class="lp"><svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg><span class="name">JinglePro</span></div>
+            <div class="meta">Passo 1 · 01 / 05</div>
+          </div>
+          <div class="progress">
+            <div class="pstep active"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>01</b>Info</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>02</b>Stile</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>03</b>Dettagli</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>04</b>Voce</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>05</b>Piano</span></div></div>
+          </div>
+          <div class="wzhead reveal"><div class="eyebrow">Passo 1</div><h2 class="display">Informazioni</h2><p>Più ci racconti, più la musica sarà su misura.</p></div>
+          <div class="wzbody">
+            <div class="field reveal"><label>Parlaci della tua attività</label><textarea class="textarea" placeholder="Pasticceria artigianale a Milano, valori famigliari, clienti affezionati da 30 anni…"></textarea><div class="counter">0 / 600</div></div>
+            <div class="field reveal"><label>Nome dell'attività</label><input class="input" type="text" placeholder="Pasticceria Marisa" /></div>
+            <div class="field reveal"><label>Per cosa userai la musica?</label><input class="input" type="text" placeholder="Reel Instagram, apertura nuovo punto vendita, spot radio…" /></div>
+            <div class="wzfoot"><span class="mag"><button class="btn btn-primary" onclick="jpGo('wz2')">Continua <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ WIZARD STEP 2 — STILE ══════════════════ -->
+      <section class="page" id="wz2">
+        <div class="wrap">
+          <div class="wzbar">
+            <div class="lp"><svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg><span class="name">JinglePro</span></div>
+            <div class="meta">Passo 2 · 02 / 05</div>
+          </div>
+          <div class="progress">
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>01</b>Info</span></div></div>
+            <div class="pstep active"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>02</b>Stile</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>03</b>Dettagli</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>04</b>Voce</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>05</b>Piano</span></div></div>
+          </div>
+          <div class="wzhead reveal"><div class="eyebrow">Passo 2</div><h2 class="display">Stile</h2><p>Scegli il carattere musicale del tuo jingle.</p></div>
+          <div class="wzbody">
+            <div class="group reveal"><div class="gl">Genere musicale</div>
+              <div class="pillrow" data-pillgroup>
+                <span class="pill on">Pop</span><span class="pill">Rock</span><span class="pill">Jazz</span><span class="pill">Classica</span><span class="pill">Folk</span><span class="pill">Elettronica</span><span class="pill">Hip-Hop</span><span class="pill">Country</span><span class="pill">R&amp;B</span><span class="pill">Altro</span>
+              </div>
+            </div>
+            <div class="group reveal"><div class="gl">Emozione / mood</div>
+              <div class="pillrow" data-pillgroup>
+                <span class="pill on">Allegro</span><span class="pill">Romantico</span><span class="pill">Energico</span><span class="pill">Malinconico</span><span class="pill">Intimo</span><span class="pill">Epico</span>
+              </div>
+            </div>
+            <div class="group reveal"><div class="gl">Tempo</div>
+              <div class="pillrow" data-pillgroup>
+                <span class="pill lg">Lento</span><span class="pill lg on">Medio</span><span class="pill lg">Veloce</span>
+              </div>
+            </div>
+            <div class="group reveal"><div class="gl">Durata</div>
+              <div class="pillrow" data-pillgroup>
+                <span class="pill lg">30 sec</span><span class="pill lg on">1 min</span><span class="pill lg">1 min 30</span><span class="pill lg">2 min</span>
+              </div>
+            </div>
+            <div class="group reveal"><div class="gl">Lingua della letra</div>
+              <div class="langrow">
+                <div class="lang on"><span class="fl">🇮🇹</span> Italiano</div>
+                <div class="lang"><span class="fl">🇬🇧</span> English</div>
+                <div class="lang"><span class="fl">🇧🇷</span> Português</div>
+                <div class="lang"><span class="fl">🇪🇸</span> Español</div>
+                <div class="lang"><span class="fl">🇫🇷</span> Français</div>
+                <div class="lang"><span class="fl">🇩🇪</span> Deutsch</div>
+              </div>
+            </div>
+            <div class="wzfoot between"><button class="btn btn-secondary" onclick="jpGo('wz1')">Indietro</button><span class="mag"><button class="btn btn-primary" onclick="jpGo('wz3')">Continua <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ WIZARD STEP 3 — DETTAGLI ══════════════════ -->
+      <section class="page" id="wz3">
+        <div class="wrap">
+          <div class="wzbar">
+            <div class="lp"><svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg><span class="name">JinglePro</span></div>
+            <div class="meta">Passo 3 · 03 / 05</div>
+          </div>
+          <div class="progress">
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>01</b>Info</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>02</b>Stile</span></div></div>
+            <div class="pstep active"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>03</b>Dettagli</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>04</b>Voce</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>05</b>Piano</span></div></div>
+          </div>
+          <div class="wzhead reveal"><div class="eyebrow">Passo 3 · Facoltativo</div><h2 class="display">Dettagli</h2><p>Passo facoltativo — puoi saltarlo.</p></div>
+          <div class="wzbody">
+            <div class="field reveal"><label>Parole chiave da includere</label><textarea class="textarea" placeholder='Es: "artigianale", "tradizione di famiglia", "Napoli"…'></textarea></div>
+            <div class="field reveal"><label>Restrizioni o cose da evitare</label><textarea class="textarea" placeholder="Es: nessun riferimento a concorrenti, no toni aggressivi…"></textarea></div>
+            <div class="field reveal"><label>Struttura preferita</label><textarea class="textarea" placeholder="es: strofa - ritornello - strofa - outro"></textarea></div>
+            <div class="wzfoot between"><button class="btn btn-secondary" onclick="jpGo('wz4')">Salta</button><span class="mag"><button class="btn btn-primary" onclick="jpGo('wz4')">Continua <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ WIZARD STEP 4 — VOCE ══════════════════ -->
+      <section class="page" id="wz4">
+        <div class="wrap">
+          <div class="wzbar">
+            <div class="lp"><svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg><span class="name">JinglePro</span></div>
+            <div class="meta">Passo 4 · 04 / 05</div>
+          </div>
+          <div class="progress">
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>01</b>Info</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>02</b>Stile</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>03</b>Dettagli</span></div></div>
+            <div class="pstep active"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>04</b>Voce</span></div></div>
+            <div class="pstep"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>05</b>Piano</span></div></div>
+          </div>
+          <div class="wzhead reveal"><div class="eyebrow">Passo 4</div><h2 class="display">Voce</h2><p>Ascolta un provino e scegli chi canterà.</p></div>
+          <div class="wzbody" style="max-width:none;">
+            <div class="grid-3">
+              <div class="card voice sel reveal" data-pro="0">
+                <div class="vtop"><div class="vname">Alessandro</div><button class="play" aria-label="Ascolta"></button></div>
+                <div class="vtags"><span class="vtag">Maschio</span><span class="vtag">IT</span><span class="vtag">Caldo</span></div>
+                <div class="vbars"><i style="height:40%"></i><i style="height:70%"></i><i style="height:50%"></i><i style="height:90%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:45%"></i><i style="height:75%"></i><i style="height:55%"></i><i style="height:85%"></i><i style="height:50%"></i><i style="height:65%"></i></div>
+              </div>
+              <div class="card voice reveal" data-pro="0">
+                <div class="vtop"><div class="vname">Giulia</div><button class="play" aria-label="Ascolta"></button></div>
+                <div class="vtags"><span class="vtag">Femmina</span><span class="vtag">IT</span><span class="vtag">Elegante</span></div>
+                <div class="vbars"><i style="height:50%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:70%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:45%"></i><i style="height:85%"></i><i style="height:50%"></i><i style="height:65%"></i><i style="height:78%"></i></div>
+              </div>
+              <div class="card voice reveal" data-pro="1">
+                <span class="pro badge badge-brass">Pro</span>
+                <div class="vtop"><div class="vname">Marco</div><button class="play" aria-label="Ascolta"></button></div>
+                <div class="vtags"><span class="vtag">Neutro</span><span class="vtag">IT</span><span class="vtag">Premium</span></div>
+                <div class="vbars"><i style="height:60%"></i><i style="height:45%"></i><i style="height:85%"></i><i style="height:55%"></i><i style="height:75%"></i><i style="height:90%"></i><i style="height:50%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:72%"></i></div>
+              </div>
+            </div>
+            <div class="callout" id="voicehint"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg> Questa voce è disponibile solo con il piano Pro.</div>
+            <div class="wzfoot between"><button class="btn btn-secondary" onclick="jpGo('wz3')">Indietro</button><span class="mag"><button class="btn btn-primary" onclick="jpGo('wz5')">Continua <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ WIZARD STEP 5 — REVISIONE / PIANO ══════════════════ -->
+      <section class="page" id="wz5">
+        <div class="wrap">
+          <div class="wzbar">
+            <div class="lp"><svg class="mark" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg><span class="name">JinglePro</span></div>
+            <div class="meta">Passo 5 · 05 / 05</div>
+          </div>
+          <div class="progress">
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>01</b>Info</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>02</b>Stile</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>03</b>Dettagli</span></div></div>
+            <div class="pstep done"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>04</b>Voce</span></div></div>
+            <div class="pstep active"><div class="bar"></div><div class="meta"><span class="dot"></span><span class="nm"><b>05</b>Piano</span></div></div>
+          </div>
+          <div class="wzhead reveal"><div class="eyebrow">Passo 5</div><h2 class="display">Revisione</h2><p>Controlla le tue scelte e scegli il piano.</p></div>
+          <div class="wzbody" style="max-width:none;">
+            <div class="card reveal" style="padding:20px 24px;margin-bottom:30px;">
+              <div class="summary-tags">
+                <span class="tag"><b style="color:var(--ink)">Attività:</b> Pasticceria Marisa</span><span class="tag">·</span>
+                <span class="tag"><b style="color:var(--ink)">Stile:</b> Pop · Allegro · Medio · 1 min</span><span class="tag">·</span>
+                <span class="tag"><b style="color:var(--ink)">Voce:</b> Alessandro</span><span class="tag">·</span>
+                <span class="tag"><b style="color:var(--ink)">Lingua:</b> 🇮🇹 Italiano</span>
+              </div>
+            </div>
+            <div class="tiers reveal">
+              <div class="card tier selectable sel">
+                <div class="top"><div class="plan">Starter</div><div class="price">€79<small> / una tantum</small></div></div>
+                <ul>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 60 secondi di musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 rigenerazioni del testo</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 1 rigenerazione della musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Licenza commerciale · 24h</li>
+                </ul>
+              </div>
+              <div class="card-ink tier tier-ink selectable">
+                <span class="striptop badge badge-brass">— Top —</span>
+                <div class="top"><div class="plan">Pro</div><div class="price"><em>€149</em><small style="color:rgba(245,241,231,.55)"> / una tantum</small></div></div>
+                <ul>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 90 secondi · stems separati</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 3 rigenerazioni del testo</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> 2 rigenerazioni della musica</li>
+                  <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg> Voci premium del catalogo</li>
+                </ul>
+              </div>
+            </div>
+            <div class="wzfoot between" style="align-items:center;">
+              <button class="btn btn-secondary" onclick="jpGo('wz4')">Indietro</button>
+              <div style="text-align:right;">
+                <span class="mag"><button class="btn btn-primary" id="finalize-cta" onclick="jpGo('order-pending')">Finalizza e paga <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span>
+                <div style="font-size:10px;letter-spacing:.04em;color:var(--mute);margin-top:8px;">Checkout sicuro con Stripe</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ ORDER — LYRICS PENDING ══════════════════ -->
+      <section class="page" id="order-pending">
+        <div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+          <div class="orderhead reveal">
+            <div>
+              <div class="ref">JLP-20260528-001</div>
+              <div class="biz">Pasticceria Marisa</div>
+              <div class="summary-tags"><span class="pill" style="cursor:default">Pop · Allegro</span><span class="pill" style="cursor:default">🇮🇹 Italiano</span><span class="pill" style="cursor:default">Voce · Alessandro</span></div>
+            </div>
+            <span class="badge badge-amber" style="padding:7px 14px;font-size:10px;">● Testo in lavorazione</span>
+          </div>
+
+          <div class="card-ink reveal" style="margin-top:30px;">
+            <div class="loadcard">
+              <div class="wavebars"><i style="animation-delay:0s"></i><i style="animation-delay:.12s"></i><i style="animation-delay:.24s"></i><i style="animation-delay:.36s"></i><i style="animation-delay:.48s"></i></div>
+              <h3 class="lyrics-ink" style="font-style:normal;">Stiamo scrivendo il tuo testo…</h3>
+              <p style="color:rgba(245,241,231,.6)">Riceverai un'email quando è pronto. Di solito bastano un paio di minuti.</p>
+            </div>
+          </div>
+
+          <div class="card reveal locked" style="margin-top:18px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+            <div style="font-size:13.5px;">La musica verrà generata dopo l'approvazione del testo.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ ORDER — LYRICS READY ══════════════════ -->
+      <section class="page" id="order-ready">
+        <div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+          <div class="orderhead reveal">
+            <div>
+              <div class="ref">JLP-20260528-001</div>
+              <div class="biz">Pasticceria Marisa</div>
+            </div>
+            <span class="badge badge-brass" style="padding:7px 14px;font-size:10px;">Testo pronto</span>
+          </div>
+
+          <div class="card-ink reveal" style="margin-top:30px;padding:34px 34px 30px;">
+            <h3 class="display" style="font-size:30px;color:var(--paper);">La tua <em>letra</em> è pronta</h3>
+            <div class="lyrics lyrics-ink" style="margin-top:22px;max-width:620px;">
+              <div class="stanza">Quando il giorno si sveglia in città,<br>c'è un profumo che chiama da là —<br>Pasticceria Marisa, vieni a vedere,<br>la dolcezza si fa da bere.</div>
+              <div class="stanza" style="color:var(--brass)">Da Marisa, da Marisa,<br>ogni mattina è una sorpresa.<br>Cornetti caldi, caffè e cantar —<br>la giornata può cominciar.</div>
+              <div class="stanza">Tra Largo Augusto e via Padova,<br>c'è una bontà che ti ritrova…</div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;">
+              <span class="mag"><button class="btn btn-accent" onclick="jpGo('order-preview')">Approva e continua <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span>
+              <button class="btn btn-paper-outline" data-regen data-toggle-feedback="fb-lyrics"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9.5 3.5A4 4 0 102 6"/><path d="M9.5 1v3h-3"/></svg> Rigenera testo</button>
+            </div>
+            <div class="feedback" id="fb-lyrics" style="max-width:620px;">
+              <textarea class="textarea" placeholder="Hai un feedback? Es: 'più emotivo', 'cita il quartiere'…" style="background:rgba(245,241,231,.06);border-color:rgba(245,241,231,.2);color:var(--paper);"></textarea>
+            </div>
+            <div class="regen-count" style="color:rgba(245,241,231,.5);margin-top:14px;">Hai ancora 2 rigenerazioni disponibili.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ ORDER — MUSIC PREVIEW ══════════════════ -->
+      <section class="page" id="order-preview">
+        <div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+          <div class="orderhead reveal" style="margin-bottom:6px;">
+            <div><div class="ref">JLP-20260528-001</div><div class="biz">Scegli la tua <em class="accent" style="font-family:var(--display)">variante</em></div></div>
+            <span class="badge badge-brass" style="padding:7px 14px;font-size:10px;">Anteprima pronta</span>
+          </div>
+          <p class="muted reveal" style="font-size:14px;margin-bottom:28px;max-width:520px;">Due arrangiamenti, 30 secondi ciascuno. Ascolta entrambi e scegli quello giusto per la tua bottega.</p>
+
+          <div class="grid-2 reveal">
+            <div class="card-ink on-ink" style="padding:24px;">
+              <div class="eyebrow">Variante A</div>
+              <div style="font-size:12px;color:rgba(245,241,231,.6);margin-top:8px;">Alessandro · pop · medio</div>
+              <div class="player on-ink" style="margin-top:14px;"><button class="pp" aria-label="Play"></button><svg class="wf" data-seed="17"></svg><span class="time">0:30</span></div>
+              <span class="mag" style="display:block;margin-top:18px;"><button class="btn btn-accent btn-block">Approva questa variante</button></span>
+              <div style="text-align:center;margin-top:12px;"><span class="link-mute" data-regen style="color:rgba(245,241,231,.6)">↻ Rigenera musica</span></div>
+            </div>
+            <div class="card-ink on-ink" style="padding:24px;">
+              <div class="eyebrow">Variante B</div>
+              <div style="font-size:12px;color:rgba(245,241,231,.6);margin-top:8px;">Alessandro · acustico · lento</div>
+              <div class="player on-ink" style="margin-top:14px;"><button class="pp" aria-label="Play"></button><svg class="wf" data-seed="53"></svg><span class="time">0:30</span></div>
+              <span class="mag" style="display:block;margin-top:18px;"><button class="btn btn-accent btn-block">Approva questa variante</button></span>
+              <div style="text-align:center;margin-top:12px;"><span class="link-mute" data-regen style="color:rgba(245,241,231,.6)">↻ Rigenera musica</span></div>
+            </div>
+          </div>
+
+          <div class="card reveal" style="margin-top:18px;padding:20px 24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+              <div style="font-size:13.5px;">Nessuna delle due convince? <span class="muted">Chiedi una nuova versione con un feedback.</span></div>
+              <button class="btn btn-secondary btn-sm" data-toggle-feedback="fb-music">Rigenera musica</button>
+            </div>
+            <div class="feedback" id="fb-music"><textarea class="textarea" placeholder="Es: 'più energico nel ritornello', 'meno chitarra'…"></textarea><div class="regen-count" style="margin-top:8px;">Hai ancora 1 rigenerazione disponibile.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ LIBRARY — EMPTY ══════════════════ -->
+      <section class="page" id="lib-empty">
+        <div class="wrap" style="padding-top:40px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 0 0;" class="reveal">
+            <svg style="width:20px;height:22px;color:var(--ink)" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+            <span class="eyebrow" style="color:var(--mute)">Libreria jingle</span>
+          </div>
+          <h2 class="display reveal" style="font-size:42px;margin-top:14px;">I tuoi jingle <em>approvati</em>.</h2>
+          <div class="card reveal" style="margin-top:24px;">
+            <div class="empty">
+              <svg class="eic" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="16" cy="34" r="5"/><circle cx="38" cy="29" r="5"/><path d="M21 34V14l22-4v19"/><path d="M21 18l22-4"/></svg>
+              <h3>Nessun jingle ancora</h3>
+              <p>I jingle approvati appariranno qui.</p>
+              <span class="mag"><button class="btn btn-primary" onclick="jpGo('wz1')">Crea il tuo primo jingle <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ LIBRARY — POPULATED ══════════════════ -->
+      <section class="page" id="lib-full">
+        <div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 0 0;" class="reveal">
+            <svg style="width:20px;height:22px;color:var(--ink)" viewBox="0 0 64 70" fill="none" stroke="currentColor" stroke-width="3"><path d="M52 12 C44 6, 36 4, 28 4 C14 4, 6 14, 6 32 C6 50, 14 60, 28 60 C36 60, 44 58, 52 52" stroke-linecap="square"/><path d="M22 32 H 48" stroke-linecap="square"/><circle cx="48" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg>
+            <span class="eyebrow" style="color:var(--mute)">Libreria jingle</span>
+          </div>
+          <h2 class="display reveal" style="font-size:42px;margin:14px 0 26px;">I tuoi jingle <em>approvati</em>.</h2>
+
+          <div class="card-ink on-ink lib-card reveal">
+            <div class="lrow"><span class="ref">JLP-20260528-001</span><span class="dur">1:02</span></div>
+            <div class="ttl">Pasticceria Marisa</div>
+            <div class="ltags"><span class="badge badge-brassline">Pop</span><span class="badge badge-line">🇮🇹 IT</span><span class="ldate">variante A · 28 mag 2026</span></div>
+            <div class="player on-ink" style="margin-top:10px;"><button class="pp" aria-label="Play"></button><svg class="wf" data-seed="31"></svg><span class="time">1:02</span></div>
+            <span class="mag" style="display:block;margin-top:14px;"><button class="btn btn-accent btn-block">Scarica MP3 <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8m0 0l-3-3m3 3l3-3M3 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
+          </div>
+
+          <div class="card-ink on-ink lib-card reveal">
+            <div class="lrow"><span class="ref">JLP-20260512-014</span><span class="dur">0:48</span></div>
+            <div class="ttl">Palestra NordFit</div>
+            <div class="ltags"><span class="badge badge-brassline">Elettronica</span><span class="badge badge-line">🇮🇹 IT</span><span class="ldate">variante B · 12 mag 2026</span></div>
+            <div class="player on-ink" style="margin-top:10px;"><button class="pp" aria-label="Play"></button><svg class="wf" data-seed="71"></svg><span class="time">0:48</span></div>
+            <span class="mag" style="display:block;margin-top:14px;"><button class="btn btn-accent btn-block">Scarica MP3 <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8m0 0l-3-3m3 3l3-3M3 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
+          </div>
+
+          <div class="card-ink on-ink lib-card reveal">
+            <div class="lrow"><span class="ref">JLP-20260430-009</span><span class="dur">1:30</span></div>
+            <div class="ttl">Osteria del Borgo</div>
+            <div class="ltags"><span class="badge badge-brassline">Folk</span><span class="badge badge-line">🇮🇹 IT</span><span class="ldate">variante A · 30 apr 2026</span></div>
+            <div class="player on-ink" style="margin-top:10px;"><button class="pp" aria-label="Play"></button><svg class="wf" data-seed="93"></svg><span class="time">1:30</span></div>
+            <span class="mag" style="display:block;margin-top:14px;"><button class="btn btn-accent btn-block">Scarica MP3 <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v8m0 0l-3-3m3 3l3-3M3 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════ SYSTEM — COMPONENTS & STATES ══════════════════ -->
+      <section class="page" id="system">
+        <div class="wrap" style="padding-top:40px;padding-bottom:80px;">
+          <div class="eyebrow reveal">Sistema</div>
+          <h2 class="display reveal" style="font-size:42px;margin:14px 0 6px;">Componenti &amp; <em>stati</em></h2>
+          <p class="muted reveal" style="margin-bottom:40px;">Token, tipografia e stati interattivi — la fonte di verità del design.</p>
+
+          <!-- colors -->
+          <div class="reveal" style="margin-bottom:44px;">
+            <div class="eyebrow" style="color:var(--mute);margin-bottom:16px;">Palette</div>
+            <div class="swrow">
+              <div><div class="swatch" style="background:var(--ink)"></div><div class="nm">Ink</div><div class="hx">oklch(.22 .04 155)</div></div>
+              <div><div class="swatch" style="background:var(--paper)"></div><div class="nm">Paper</div><div class="hx">oklch(.97 .012 80)</div></div>
+              <div><div class="swatch" style="background:var(--brass)"></div><div class="nm">Brass</div><div class="hx">oklch(.72 .13 75)</div></div>
+              <div><div class="swatch" style="background:var(--mute)"></div><div class="nm">Mute</div><div class="hx">oklch(.58 .02 145)</div></div>
+              <div><div class="swatch" style="background:var(--line)"></div><div class="nm">Line</div><div class="hx">oklch(.85 .012 80)</div></div>
+            </div>
+          </div>
+
+          <!-- type -->
+          <div class="reveal" style="margin-bottom:44px;">
+            <div class="eyebrow" style="color:var(--mute);margin-bottom:16px;">Tipografia</div>
+            <div class="grid-2">
+              <div class="card" style="padding:26px;"><div class="display" style="font-size:60px;">Aa <em>Aa</em></div><div style="margin-top:10px;font-family:var(--display);font-style:italic;font-size:18px;">Cormorant Garamond</div><div class="muted" style="font-size:12px;">500 · italic accent in brass</div></div>
+              <div class="card" style="padding:26px;"><div style="font-size:54px;font-weight:600;letter-spacing:-.03em;">Aa</div><div style="margin-top:10px;font-size:18px;font-weight:600;">Manrope</div><div class="muted" style="font-size:12px;">400 / 600 / 700</div></div>
+            </div>
+          </div>
+
+          <!-- button states -->
+          <div class="reveal" style="margin-bottom:24px;">
+            <div class="eyebrow" style="color:var(--mute);margin-bottom:6px;">Stati interattivi</div>
+          </div>
+          <div class="statestrip"><div class="lbl">Primary</div><button class="btn btn-primary">Default</button><button class="btn btn-primary" style="background:var(--ink-92);transform:translateY(-2px)">Hover</button><button class="btn btn-primary" style="box-shadow:0 0 0 3px color-mix(in oklch,var(--ink) 25%,transparent)">Focus</button><button class="btn btn-primary disabled" disabled>Disabled</button></div>
+          <div class="statestrip"><div class="lbl">Accent</div><button class="btn btn-accent">Default</button><button class="btn btn-accent" style="background:var(--brass-d);transform:translateY(-2px)">Hover</button><button class="btn btn-accent disabled" disabled>Disabled</button></div>
+          <div class="statestrip"><div class="lbl">Secondary</div><button class="btn btn-secondary">Default</button><button class="btn btn-secondary" style="border-color:var(--ink);transform:translateY(-2px)">Hover</button></div>
+          <div class="statestrip"><div class="lbl">Pill</div><span class="pill">Default</span><span class="pill" style="border-color:var(--ink)">Hover</span><span class="pill on">Selected</span></div>
+          <div class="statestrip"><div class="lbl">Input</div><input class="input" style="max-width:180px" placeholder="Default" /><input class="input" style="max-width:180px;border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in oklch,var(--ink) 12%,transparent)" placeholder="Focus" /></div>
+          <div class="statestrip"><div class="lbl">Badge</div><span class="badge badge-brass">Top</span><span class="badge badge-amber" style="padding:5px 10px;">In lavorazione</span><span class="badge badge-brassline">Pop</span></div>
+          <div class="statestrip" style="border-bottom:none;"><div class="lbl">Loading</div><div class="wavebars" style="height:32px;"><i></i><i style="animation-delay:.12s"></i><i style="animation-delay:.24s"></i><i style="animation-delay:.36s"></i><i style="animation-delay:.48s"></i></div><div class="spinner"></div></div>
+        </div>
+      </section>
+
+      </div><!-- /scroll-inner -->
+    </div><!-- /scroller -->
+  </main>
+</div>
+
+<!-- ═══════════ LIBS ═══════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script src="jp-waveform.js"></script>
+<script src="jp-motion.js"></script>
+</body>
+</html>

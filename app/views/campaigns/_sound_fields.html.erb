@@ -1,0 +1,19 @@
+<div class="campaign-sound-fields" data-controller="genre-preview" data-genre-preview-catalog-value="<%= Campaigns::GenreSamples.catalog.to_json %>" data-action="visibilitychange@document->genre-preview#visibilityChanged">
+  <div class="campaign-two-fields">
+    <div class="studio-field"><%= f.label :musical_genre, "Qual ritmo combina com seu negócio?" %><%= f.select :musical_genre, Campaign::GENRES.map { |key, value| [value[:label], key] }, {}, required: true, data: { sound_setting: "genre", genre_preview_target: "genre", action: "change->genre-preview#select" } %></div>
+    <div class="studio-field"><%= f.label :vocal_gender, "Como você imagina a voz?" %><%= f.select :vocal_gender, Campaign::VOCAL_GENDERS.map { |key, label| [label, key] }, {}, required: true, data: { sound_setting: "voice" } %></div>
+  </div>
+  <div class="campaign-genre-preview" data-genre-preview-target="panel" hidden>
+    <div><strong data-genre-preview-target="title">Ouvir um exemplo</strong><span>12 segundos · sem gastar uma rodada</span></div>
+    <audio controls preload="none" data-genre-preview-target="player" data-action="play->genre-preview#play error->genre-preview#error"></audio>
+    <p class="studio-field-hint">Exemplo do ritmo, com voz ilustrativa. Sua campanha terá letra e melodia próprias, seguindo suas escolhas.</p>
+    <p class="studio-field-hint" role="status" data-genre-preview-target="error" hidden>Não foi possível tocar o exemplo. <button type="button" class="studio-text-link" data-action="genre-preview#retry">Tentar ouvir novamente</button></p>
+  </div>
+  <p class="studio-field-hint" data-genre-preview-target="hint">Escolha um ritmo para ouvir um exemplo antes de decidir.</p>
+  <% if local_assigns[:climate] %><div class="studio-field"><%= f.label :style, "Qual é o clima?" %><%= f.select :style, Campaign::STYLES.map { |key, value| [value[:label], key] }, {}, required: true, data: { sound_setting: "climate" } %></div><% end %>
+  <p class="studio-field-hint">Não sabe qual escolher? Use “Escolher por mim”. A voz é uma preferência; você confere o resultado antes de aprovar.</p>
+  <details class="creative-details campaign-sound-details" <%= 'open' if f.object.music_notes.present? %>>
+    <summary>Quer dar mais uma direção? <span>Opcional</span></summary>
+    <div class="studio-field"><%= f.label :music_notes, "Detalhes do som" %><%= f.text_area :music_notes, rows: 3, maxlength: 240, placeholder: "Ex.: sanfona em destaque, voz suave, refrão fácil de cantar. Sem solos longos." %><p class="studio-field-hint">Descreva os instrumentos, a interpretação ou o que prefere evitar. Até 240 caracteres.</p></div>
+  </details>
+</div>

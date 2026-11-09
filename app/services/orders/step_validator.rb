@@ -2,7 +2,7 @@
 
 module Orders
   # Validates the fields submitted at a single wizard step.
-  # Accepts step (1-5), brand ("b2b"|"b2c"), and params (hash).
+  # Accepts step (1-5), brand ("b2b"), and params (hash).
   #
   # Returns an ActiveModel::Errors-compatible object via valid? / errors.
   # Tier compatibility with a chosen voice is NOT validated here —
@@ -17,8 +17,8 @@ module Orders
 
     # Declare all field names that can appear in errors so that
     # ActiveModel::Errors can introspect them via respond_to?.
-    attr_accessor :delivery_email, :about, :recipient, :occasion,
-                  :music_style, :mood, :tempo, :target_duration_seconds,
+    attr_accessor :about, :recipient, :occasion,
+                  :music_style, :language, :mood, :tempo, :target_duration_seconds,
                   :keywords, :avoid, :voice_id, :tier
 
     validate :validate_for_step
@@ -36,18 +36,10 @@ module Orders
     end
 
     # ---------------------------------------------------------------------------
-    # Step 1: delivery_email (required + format), about (required)
+    # Step 1: about (required)
     # ---------------------------------------------------------------------------
 
     def validate_step_1
-      email = params[:delivery_email].presence || params["delivery_email"].presence
-
-      if email.blank?
-        errors.add(:delivery_email, :blank)
-      elsif !email.match?(URI::MailTo::EMAIL_REGEXP)
-        errors.add(:delivery_email, :invalid)
-      end
-
       about = params[:about].presence || params["about"].presence
       errors.add(:about, :blank) if about.blank?
     end
@@ -56,9 +48,18 @@ module Orders
     # Step 2: music_style (required)
     # ---------------------------------------------------------------------------
 
+    SUPPORTED_LANGUAGES = %w[it en es fr de pt].freeze
+
     def validate_step_2
       music_style = params[:music_style].presence || params["music_style"].presence
       errors.add(:music_style, :blank) if music_style.blank?
+
+      language = params[:language].presence || params["language"].presence
+      if language.blank?
+        errors.add(:language, :blank)
+      elsif !SUPPORTED_LANGUAGES.include?(language)
+        errors.add(:language, :inclusion)
+      end
     end
 
     # ---------------------------------------------------------------------------

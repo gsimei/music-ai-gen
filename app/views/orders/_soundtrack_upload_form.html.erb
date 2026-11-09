@@ -1,0 +1,37 @@
+<div id="soundtrack-upload-section" class="card reveal" style="margin-top:30px;padding:28px;">
+  <div class="eyebrow">Carica il tuo file</div>
+  <div class="biz" style="font-size:22px;margin-top:6px;margin-bottom:6px;">
+    Aggiungi video o immagine per la colonna sonora
+  </div>
+  <p class="muted" style="font-size:14px;margin-bottom:20px;">
+    Carica un video MP4 o un'immagine (JPEG/PNG). La musica AI verrà sincronizzata automaticamente.
+    Dimensione massima: <strong>100 MB</strong>.
+  </p>
+
+  <%= form_with url: order_soundtrack_input_path(order_id: order.id),
+        method: :post,
+        multipart: true,
+        data: { turbo: true } do |f| %>
+
+    <div style="margin-bottom:16px;">
+      <label for="soundtrack_input_file"
+             style="display:block;font-size:12px;font-weight:600;margin-bottom:7px;">
+        File video o immagine
+      </label>
+      <%= f.file_field :file,
+            id: "soundtrack_input_file",
+            name: "soundtrack_input[file]",
+            accept: "video/mp4,video/quicktime,image/jpeg,image/png",
+            "aria-required": "true",
+            class: "input",
+            style: "padding:8px;" %>
+    </div>
+
+    <div style="font-size:11px;color:rgba(30,30,40,.5);margin-bottom:16px;">
+      Formati accettati: MP4, MOV, JPEG, PNG — max 100 MB
+    </div>
+
+    <%= f.submit "Carica e genera colonna sonora",
+          class: "btn btn-primary" %>
+  <% end %>
+</div>

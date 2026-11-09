@@ -1,0 +1,107 @@
+<div id="soundtrack-section">
+
+  <hr style="border:none;border-top:1px solid var(--line);margin:0;" aria-hidden="true">
+
+  <%# ── paid, no input uploaded yet ── %>
+  <% if order.paid? && soundtrack_input.nil? %>
+    <%= render "orders/soundtrack_upload_form", order: order %>
+
+  <%# ── paid, upload in progress ── %>
+  <% elsif order.paid? && soundtrack_input&.mureka_file_status == "pending" %>
+    <div id="soundtrack-upload-section" class="card-ink reveal" style="margin-top:30px;">
+      <div class="loadcard">
+        <div class="wavebars" aria-hidden="true">
+          <i style="animation-delay:0s"></i>
+          <i style="animation-delay:.12s"></i>
+          <i style="animation-delay:.24s"></i>
+          <i style="animation-delay:.36s"></i>
+          <i style="animation-delay:.48s"></i>
+        </div>
+        <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">
+          Caricamento file in corso&hellip;
+        </h3>
+        <p style="color:rgba(245,241,231,.6)">Stiamo elaborando il tuo file.</p>
+      </div>
+    </div>
+
+  <%# ── music_generating ── %>
+  <% elsif order.music_generating? %>
+    <div id="soundtrack-upload-section" class="card-ink reveal" style="margin-top:30px;">
+      <div class="loadcard">
+        <div class="wavebars" aria-hidden="true">
+          <i style="animation-delay:0s"></i>
+          <i style="animation-delay:.12s"></i>
+          <i style="animation-delay:.24s"></i>
+          <i style="animation-delay:.36s"></i>
+          <i style="animation-delay:.48s"></i>
+        </div>
+        <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">
+          Stiamo componendo la tua colonna sonora&hellip;
+        </h3>
+        <p style="color:rgba(245,241,231,.6)">Ti avvisiamo via email quando è pronta.</p>
+      </div>
+    </div>
+
+  <%# ── preview_ready — video player ── %>
+  <% elsif order.preview_ready? %>
+    <% soundtrack_asset = order.order_assets.find_by(kind: "soundtrack_video") %>
+    <% if soundtrack_asset %>
+      <div class="card-ink on-ink reveal" style="margin-top:30px;padding:24px;">
+        <div class="eyebrow">Colonna sonora pronta</div>
+        <div class="biz" style="font-size:22px;margin-top:6px;">
+          La tua <%= soundtrack_asset.variant_index == 0 ? "bozza" : "colonna sonora" %> con musica AI
+        </div>
+        <div style="margin-top:18px;">
+          <video controls style="width:100%;border-radius:8px;background:#000;"
+                 aria-label="Anteprima colonna sonora">
+            <source src="<%= soundtrack_asset.provider_url %>" type="video/mp4">
+            Il tuo browser non supporta il tag video.
+          </video>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;">
+          <%= button_to approve_music_order_path(order),
+                method: :post,
+                params: { variant: "a" },
+                form: { "aria-label": "Approva colonna sonora", data: { turbo: true } },
+                class: "btn btn-accent" do %>
+            Approva colonna sonora
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  <%# ── approved ── %>
+  <% elsif order.approved? %>
+    <% soundtrack_asset = order.order_assets.find_by(kind: "soundtrack_video") %>
+    <div class="card-ink on-ink reveal" style="margin-top:30px;padding:24px;">
+      <div class="eyebrow">Colonna sonora approvata</div>
+      <% if soundtrack_asset %>
+        <div style="margin-top:14px;">
+          <video controls style="width:100%;border-radius:8px;background:#000;"
+                 aria-label="Colonna sonora approvata">
+            <source src="<%= soundtrack_asset.provider_url %>" type="video/mp4">
+            Il tuo browser non supporta il tag video.
+          </video>
+        </div>
+      <% end %>
+      <div style="margin-top:16px;">
+        <span class="badge badge-brass">Colonna sonora approvata</span>
+      </div>
+    </div>
+
+  <%# ── music_failed ── %>
+  <% elsif order.music_failed? %>
+    <div class="callout show" role="alert" style="margin-top:30px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg>
+      <div>
+        <strong>Errore nella generazione della colonna sonora</strong>
+        <div style="font-size:12px;margin-top:3px;">
+          Si è verificato un problema. Contatta il supporto indicando il riferimento:
+          <strong><%= order.reference %></strong>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+
+</div>

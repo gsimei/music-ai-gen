@@ -1,0 +1,23 @@
+<div id="chat-music-card" class="flex justify-start">
+  <div class="bg-white border border-cant-line rounded-2xl rounded-bl-sm p-5 max-w-[85%] w-full">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-sm font-semibold text-cant-ink"><%= t("order_chat.music_ready_label") %></span>
+    </div>
+
+    <% approved_asset = approved_music_asset(order) %>
+    <% audio_url = approved_asset&.url.presence || approved_asset&.provider_url %>
+    <% if audio_url.present? %>
+      <audio controls class="w-full h-8 mb-4" preload="none">
+        <source src="<%= audio_url %>" type="audio/mpeg">
+      </audio>
+      <%= link_to t("order_chat.download_button"),
+                  audio_url,
+                  class: "flex items-center justify-center gap-2 w-full rounded-xl bg-cant-ink text-cant-paper py-2.5 text-sm font-medium hover:bg-cant-ink/90 transition",
+                  download: true,
+                  target: "_blank" %>
+    <% end %>
+  </div>
+</div>

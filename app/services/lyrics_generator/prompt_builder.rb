@@ -2,7 +2,7 @@
 
 module LyricsGenerator
   class PromptBuilder < BaseService
-    PROMPT_VERSION = "v1.0"
+    PROMPT_VERSION = "v2.1"
 
     attribute :mode
     attribute :briefing
@@ -31,48 +31,71 @@ module LyricsGenerator
       end
     end
 
+    def duration_seconds
+      briefing.target_duration_seconds.presence || 60
+    end
+
+    def short_form?
+      duration_seconds.to_i <= 60
+    end
+
+    def visual_context
+      briefing.extra_params&.dig("visual_context").presence ||
+        briefing.extra_params&.dig(:visual_context).presence
+    end
+
     def build_initial_prompt
-      parts = [
-        "You are an expert music lyrics writer.",
-        "Write song lyrics based on the following briefing:",
-        "Topic: #{briefing.about}",
-        "Music style: #{briefing.music_style}",
-        "Language: #{briefing.language}"
-      ]
+      business_name = briefing.recipient.presence || briefing.about.to_s.truncate(40)
+      use_case = briefing.occasion.presence || "social media"
 
-      parts << "Recipient: #{briefing.recipient}" if briefing.recipient.present?
-      parts << "Mood: #{briefing.mood}"           if briefing.mood.present?
-      parts << "Occasion: #{briefing.occasion}"   if briefing.occasion.present?
-      parts << "Tempo: #{briefing.tempo}"         if briefing.tempo.present?
-      parts << "Keywords: #{briefing.keywords}"   if briefing.keywords.present?
-      parts << "Avoid: #{briefing.avoid}"         if briefing.avoid.present?
+      lines = []
 
-      parts.join("\n")
+      if short_form?
+        lines << "Write a #{duration_seconds}-second commercial jingle. STRUCTURE: [Verse] (2 lines) + [Chorus] (2–3 lines). Maximum 30 words total. No intro, no bridge, no outro."
+      else
+        lines << "Write a #{duration_seconds}-second commercial jingle. STRUCTURE: [Verse] + [Chorus] + [Verse] + [Chorus]."
+        lines << (briefing.structure_hint.present? ? "Preferred structure: #{briefing.structure_hint}." : nil)
+      end
+
+      lines << "Business: #{business_name} — #{use_case}."
+      lines << "About: #{briefing.about}" if briefing.about.present?
+      lines << campaign_accuracy_rules
+      lines << "Language: #{briefing.language}. Style: #{briefing.music_style}."
+      lines << "Use natural Brazilian Portuguese. Preserve the exact business name and offer; never invent discounts, prices or claims." if briefing.language == "pt"
+      lines << "Mood: #{briefing.mood}." if briefing.mood.present?
+      lines << "Tempo: #{briefing.tempo}." if briefing.tempo.present?
+      lines << "Include keywords: #{briefing.keywords}." if briefing.keywords.present?
+      lines << "Avoid: #{briefing.avoid}." if briefing.avoid.present?
+      lines << "Visual context: #{visual_context}." if visual_context.present?
+      lines << "Rules: hook-first, repeat the business name at least twice, clear rhyme scheme, no generic filler."
+
+      lines.compact.join(" ").strip
     end
 
     def build_regen_prompt
-      parts = [
-        "You are an expert music lyrics writer.",
-        "Regenerate the following song lyrics based on user feedback:",
-        "",
-        "Current lyrics:",
-        current_lyrics,
-        "",
-        "Original briefing:",
-        "Topic: #{briefing.about}",
-        "Music style: #{briefing.music_style}",
-        "Language: #{briefing.language}"
-      ]
+      business_name = briefing.recipient.presence || briefing.about.to_s.truncate(40)
 
-      parts << "Recipient: #{briefing.recipient}" if briefing.recipient.present?
-      parts << "Mood: #{briefing.mood}"           if briefing.mood.present?
+      lines = []
 
-      if user_feedback.present?
-        parts << ""
-        parts << "User feedback: #{user_feedback}"
-      end
+      lines << "Rewrite the following jingle based on the feedback below."
+      lines << (short_form? ? "Keep it SHORT: #{duration_seconds}s, 1 verse + 1 chorus, 30 words total." : "Target duration: #{duration_seconds} seconds.")
+      lines << "Feedback: #{user_feedback.present? ? user_feedback : 'Make it more memorable and catchy.'}"
+      lines << "Business: #{business_name}. Style: #{briefing.music_style}. Language: #{briefing.language}."
+      lines << "Original business and offer: #{briefing.about}" if briefing.about.present?
+      lines << campaign_accuracy_rules
+      lines << "Structure: #{briefing.structure_hint}." if briefing.structure_hint.present?
+      lines << "Visual context: #{visual_context}." if visual_context.present?
+      lines << ""
+      lines << "Current lyrics:"
+      lines << current_lyrics
 
-      parts.join("\n")
+      lines.compact.join("\n").strip
+    end
+
+    def campaign_accuracy_rules
+      return unless briefing.extra_params&.dig("campaign")
+
+      "Offer accuracy takes priority over rhyme and repeated slogans. Preserve the discount, its meaning, eligible products, days, time limits and restrictions such as dine-in or pickup. Never turn a discount into a prize or reward. Keep these details near the beginning so they fit in the short video. Remove decorative phrases rather than offer conditions. Do not invent freshness, quality or other claims."
     end
   end
 end

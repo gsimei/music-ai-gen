@@ -1,0 +1,182 @@
+<% show_section = order.lyrics_approved? || order.music_generating? ||
+                order.preview_ready? || order.approved? || order.music_failed? %>
+
+<div id="music_section" class="<%= show_section ? '' : 'hidden' %>">
+
+  <div id="music_section_errors" role="alert" aria-live="assertive"></div>
+
+  <% if show_section %>
+    <hr style="border:none;border-top:1px solid var(--line);margin:0;" aria-hidden="true">
+  <% end %>
+
+  <%# ── lyrics_approved / music_generating — generating animation ── %>
+  <% if order.lyrics_approved? || order.music_generating? %>
+
+    <div class="card-ink reveal" style="margin-top:30px;">
+      <div class="loadcard">
+        <div class="wavebars" aria-hidden="true">
+          <i style="animation-delay:0s"></i>
+          <i style="animation-delay:.12s"></i>
+          <i style="animation-delay:.24s"></i>
+          <i style="animation-delay:.36s"></i>
+          <i style="animation-delay:.48s"></i>
+        </div>
+        <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">
+          Stiamo componendo la tua musica&hellip;
+        </h3>
+        <p style="color:rgba(245,241,231,.6)">Ti avvisiamo via email quando è pronta.</p>
+      </div>
+    </div>
+
+  <%# ── preview_ready — A/B variant selection ── %>
+  <% elsif order.preview_ready? %>
+
+    <div style="margin-top:30px;margin-bottom:6px;" class="reveal">
+      <div class="eyebrow">Scegli la tua variante</div>
+      <div class="orderhead" style="margin-top:6px;">
+        <div class="biz" style="font-size:26px;">Due arrangiamenti, scegli il <em class="accent">tuo</em></div>
+        <span class="badge badge-brass" style="padding:7px 14px;font-size:10px;">Anteprima pronta</span>
+      </div>
+      <p class="muted reveal" style="font-size:14px;margin-bottom:28px;max-width:520px;">
+        30 secondi ciascuno. Ascolta entrambi e scegli quello giusto per la tua bottega.
+      </p>
+    </div>
+
+    <div class="grid-2 reveal">
+      <% assets.each do |asset| %>
+        <% variant_letter = asset.variant_index == 0 ? "a" : "b" %>
+        <% label = asset.variant_index == 0 ? "Variante A" : "Variante B" %>
+        <% duration_secs = asset.duration_ms.present? ? asset.duration_ms / 1000 : nil %>
+        <% duration_str  = duration_secs ? "%d:%02d" % [duration_secs / 60, duration_secs % 60] : nil %>
+        <% seed = asset.id %>
+
+        <div class="card-ink on-ink" style="padding:24px;" aria-label="<%= label %>">
+          <div class="eyebrow"><%= label %></div>
+          <% if order.briefing&.music_style.present? %>
+            <div style="font-size:12px;color:rgba(245,241,231,.6);margin-top:8px;">
+              <%= order.briefing.music_style %><% if duration_str %> · <%= duration_str %><% end %>
+            </div>
+          <% end %>
+
+          <div class="player on-ink" style="margin-top:14px;"
+               data-src="<%= asset.provider_url %>">
+            <button class="pp" type="button" aria-label="Play / Pausa <%= label %>"></button>
+            <svg class="wf" data-seed="<%= seed %>"></svg>
+            <% if duration_str %><span class="time"><%= duration_str %></span><% end %>
+          </div>
+
+          <span class="mag" style="display:block;margin-top:18px;">
+            <%= button_to approve_music_order_path(order),
+                  method: :post,
+                  params: { variant: variant_letter },
+                  form: { "aria-label": "Approva #{label}", data: { turbo: true } },
+                  class: "btn btn-accent btn-block" do %>
+              Approva questa variante
+            <% end %>
+          </span>
+
+          <div style="text-align:center;margin-top:12px;">
+            <span class="link-mute" data-regen style="color:rgba(245,241,231,.6);">↻ Rigenera musica</span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if order.music_regen_remaining > 0 %>
+      <div class="card reveal" style="margin-top:18px;padding:20px 24px;" data-controller="music-regen">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div style="font-size:13.5px;">
+            Nessuna delle due convince?
+            <span class="muted">Hai ancora <strong><%= order.music_regen_remaining %></strong> <%= order.music_regen_remaining == 1 ? "rigenerazione disponibile" : "rigenerazioni disponibili" %>.</span>
+          </div>
+          <button type="button"
+                  data-music-regen-target="toggleButton"
+                  data-action="click->music-regen#showForm"
+                  class="btn btn-secondary btn-sm">
+            Rigenera musica
+          </button>
+        </div>
+        <div class="feedback" id="fb-music" data-music-regen-target="regenForm">
+          <%= form_with url: regenerate_music_order_path(order),
+                method: :post,
+                data: { turbo: true },
+                class: "space-y-3" do |f| %>
+            <label for="music_regen_feedback" style="display:block;font-size:12px;font-weight:600;margin-bottom:7px;margin-top:14px;">Cosa vorresti cambiare nella musica?</label>
+            <%= f.text_area :feedback,
+                  id: "music_regen_feedback",
+                  name: "regenerate[feedback]",
+                  rows: 3,
+                  placeholder: "Es: più ritmo, diverso strumento, più energico…",
+                  "aria-required": "true",
+                  class: "textarea" %>
+            <div class="regen-count" style="margin-top:8px;">
+              Hai ancora <%= order.music_regen_remaining %> <%= order.music_regen_remaining == 1 ? "rigenerazione disponibile" : "rigenerazioni disponibili" %>.
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;">
+              <%= f.submit "Rigenera musica", class: "btn btn-primary" %>
+              <button type="button"
+                      data-action="click->music-regen#hideForm"
+                      class="btn btn-secondary">
+                Annulla
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  <%# ── approved — confirmed choice with download CTA ── %>
+  <% elsif order.approved? %>
+
+    <% approved_asset = assets.find { |a| a.variant_index == (order.approved_variant == "a" ? 0 : 1) } %>
+    <% approved_asset ||= assets.first %>
+    <% if approved_asset %>
+      <% variant_letter = approved_asset.variant_index == 0 ? "a" : "b" %>
+      <% duration_secs = approved_asset.duration_ms.present? ? approved_asset.duration_ms / 1000 : nil %>
+      <% duration_str  = duration_secs ? "%d:%02d" % [duration_secs / 60, duration_secs % 60] : nil %>
+      <% seed = approved_asset.id %>
+
+      <div class="card-ink on-ink lib-card reveal" style="margin-top:30px;">
+        <div class="lrow">
+          <span class="ref">variante <%= variant_letter.upcase %> · approvata</span>
+          <% if duration_str %><span class="dur"><%= duration_str %></span><% end %>
+        </div>
+        <div class="ttl"><%= order.briefing&.recipient.presence || order.reference %></div>
+        <div class="player on-ink" style="margin-top:10px;"
+             data-src="<%= approved_asset.provider_url %>">
+          <button class="pp" type="button" aria-label="Play / Pausa variante approvata"></button>
+          <svg class="wf" data-seed="<%= seed %>"></svg>
+          <% if duration_str %><span class="time"><%= duration_str %></span><% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="margin-top:16px;margin-bottom:16px;">
+      <span class="badge badge-brass">Musica approvata</span>
+    </div>
+
+    <span class="mag" style="display:block;">
+      <%= link_to songs_path,
+            class: "btn btn-accent btn-block" do %>
+        Ascolta i tuoi jingle
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10m0 0L8 3m4 4L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <% end %>
+    </span>
+
+  <%# ── music_failed ── %>
+  <% elsif order.music_failed? %>
+
+    <div class="callout show" role="alert" style="margin-top:30px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg>
+      <div>
+        <strong>Errore nella generazione della musica</strong>
+        <div style="font-size:12px;margin-top:3px;">
+          Si è verificato un problema. Contatta il supporto indicando il riferimento:
+          <strong><%= order.reference %></strong>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+
+</div>

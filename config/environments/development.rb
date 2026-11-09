@@ -84,5 +84,4 @@ Rails.application.configure do
 
   # Allow multi-brand hosts in development
   config.hosts << "b2b.lvh.me"
-  config.hosts << "b2c.lvh.me"
 end

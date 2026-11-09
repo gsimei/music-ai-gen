@@ -1,0 +1,48 @@
+<section id="exemplos" class="studio-examples studio-width" aria-labelledby="examples-title">
+  <div class="studio-section-heading" data-landing-motion-target="reveal">
+    <p class="studio-kicker">OUÇA. VEJA. IMAGINE A SUA LOJA.</p>
+    <h2 id="examples-title">Pequeno negócio.<br>Presença de <em>marca.</em></h2>
+    <p>Estes vídeos e músicas foram gerados no app.<br>Assista com som ou ouça só o jingle. Sem cadastro.</p>
+  </div>
+  <div class="studio-example-grid">
+    <% [
+      { slug: "sabores-da-vila", name: "Sabores da Vila", category: "EM DESTAQUE / CAMPANHA COMPLETA", video: "sabores-da-vila-campanha", featured: true, format: "5 FOTOS / TRANSIÇÕES SUAVES / 30S", title: "5 fotos. Uma campanha completa.", offer: "Pizzas, cafés, sucos e sobremesas com 10% de desconto. De terça a quinta, para consumir no local." },
+      { slug: "pizzaria-forno-da-vila", name: "Pizzaria Forno da Vila", category: "PIZZARIA", format: "2 FOTOS / TRANSIÇÃO SUAVE / 30S", video: "pizzaria-forno-da-vila-slideshow", title: "A terça ganhou um refrão.", offer: "Duas pizzas grandes por R$ 79,90, às terças, para retirada." },
+      { slug: "cafe-aurora", name: "Café Aurora", category: "CAFETERIA", format: "30 SEGUNDOS / VERTICAL", video: "cafe-aurora-motion", title: "Um bom dia com a sua marca.", offer: "Café e pão de queijo por R$ 12, de segunda a sexta, até as 10h." }
+    ].each do |example| %>
+      <article class="studio-example <%= "studio-example-featured" if example[:featured] %>" aria-labelledby="<%= example[:slug] %>-title" data-demo-container data-landing-motion-target="reveal">
+        <div class="studio-example-video">
+          <video controls playsinline preload="none" width="720" height="1280" poster="/demos/<%= example[:video] %>.jpg" aria-label="Vídeo de exemplo: <%= example[:name] %>" data-demo-media-target="player" data-action="play->demo-media#play error->demo-media#error">
+            <source src="/demos/<%= example[:video] %>.mp4" type="video/mp4">
+            Seu navegador não reproduz este vídeo. <a href="/demos/<%= example[:video] %>.mp4">Abrir o vídeo</a>.
+          </video>
+          <span class="studio-example-format"><%= example[:format] %></span>
+        </div>
+        <div class="studio-example-copy">
+          <p class="studio-kicker"><%= example[:category] %></p>
+          <h3 id="<%= example[:slug] %>-title"><%= example[:title] %></h3>
+          <% if example[:featured] %><p class="studio-example-description">Você escolhe as fotos e a ordem. O vídeo junta tudo com movimento, transições e uma música feita para a sua promoção.</p><% end %>
+          <p class="studio-example-name"><%= example[:name] %></p>
+          <p class="studio-example-offer"><%= example[:offer] %></p>
+          <% if example[:featured] %>
+            <ol class="studio-example-sequence" aria-label="Ordem das cinco fotos no vídeo">
+              <% ["Sobremesa", "Café", "Pizzas", "Suco", "Fatia de pizza"].each_with_index do |label, index| %>
+                <li><img src="/demos/sabores-da-vila-foto-<%= index + 1 %>.jpg" alt="<%= label %>" width="180" height="220" loading="lazy"><span><%= index.zero? ? "1 · Abertura" : "#{index + 1} · #{label}" %></span></li>
+              <% end %>
+            </ol>
+          <% end %>
+          <div class="studio-example-audio">
+            <p id="<%= example[:slug] %>-audio-label">Só a música <span>· trecho de 30s</span></p>
+            <audio controls preload="none" aria-label="Música de exemplo: <%= example[:name] %>" data-demo-media-target="player" data-action="play->demo-media#play error->demo-media#error">
+              <source src="/demos/<%= example[:slug] %>.mp3" type="audio/mpeg">
+              <a href="/demos/<%= example[:slug] %>.mp3">Ouvir o trecho da música</a>.
+            </audio>
+          </div>
+          <p class="studio-example-error" role="status" hidden data-demo-error>Não foi possível tocar agora. Tente dar o play novamente.</p>
+          <%= link_to "Criar para o meu negócio ↗", new_order_path, class: "studio-text-link" %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+  <p class="studio-example-disclaimer">Negócios e ofertas fictícios. Fotos ilustrativas criadas com IA para estes exemplos. Música e montagem feitas no JinglePro. Na sua campanha, usamos as fotos e os dados do seu negócio.</p>
+</section>

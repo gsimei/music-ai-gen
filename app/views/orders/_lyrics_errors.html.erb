@@ -1,0 +1,15 @@
+<div id="lyrics_errors"
+     class="callout show"
+     role="alert"
+     aria-live="assertive"
+     style="margin-bottom:16px;">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--brass)" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v4M8 11h.01"/></svg>
+  <div>
+    <strong>Non è stato possibile rigenerare la letra</strong>
+    <% if errors.present? %>
+      <div style="font-size:12px;margin-top:3px;"><%= Array(errors).join(". ") %></div>
+    <% else %>
+      <div style="font-size:12px;margin-top:3px;">Si è verificato un errore. Riprova o contatta il supporto.</div>
+    <% end %>
+  </div>
+</div>

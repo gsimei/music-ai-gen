@@ -1,0 +1,19 @@
+<% if asset.excerpt_max_start.positive? %>
+  <% current_start = [asset.excerpt_start_seconds || asset.campaign_audio.blob.metadata.fetch("start_seconds", 0), asset.excerpt_max_start].min.to_f %>
+  <details class="creative-details excerpt-editor" data-controller="audio-excerpt" data-audio-excerpt-duration-value="<%= asset.track_duration_seconds %>">
+    <summary>Ajustar onde o vídeo começa</summary>
+    <p class="studio-field-hint">Leve o início até a parte que contém sua oferta. Depois, prepare e ouça o trecho antes de aprovar.</p>
+    <%= form_with url: order_chat_excerpt_settings_path(order_id: order.id), method: :patch,
+      data: { turbo_stream: true, action: "input->creative-editor#feedbackChanged" } do %>
+      <%= hidden_field_tag :asset_id, asset.id %>
+      <%= hidden_field_tag :preview_revision, asset.preview_revision %>
+      <%= label_tag "excerpt-range-#{asset.id}", "Início do trecho" %>
+      <%= range_field_tag nil, current_start, min: 0, max: asset.excerpt_max_start, step: 0.01, id: "excerpt-range-#{asset.id}", data: { audio_excerpt_target: "slider", action: "input->audio-excerpt#slide" } %>
+      <div class="excerpt-time-input"><%= label_tag "excerpt-seconds-#{asset.id}", "Segundo inicial" %><%= number_field_tag :start_seconds, current_start, min: 0, max: asset.excerpt_max_start, step: 0.01, required: true, id: "excerpt-seconds-#{asset.id}", data: { audio_excerpt_target: "seconds", action: "input->audio-excerpt#type" } %></div>
+      <p class="studio-field-hint" data-audio-excerpt-target="summary" role="status"></p>
+      <button type="submit" class="studio-button studio-button-outline">Preparar e ouvir este trecho</button>
+      <button type="submit" name="automatic" value="1" class="creative-favorite-button" formnovalidate>Voltar ao trecho sugerido</button>
+      <p class="studio-field-hint">Ajustar o corte não gasta uma rodada musical.</p>
+    <% end %>
+  </details>
+<% else %><p class="studio-field-hint">Esta música já cabe no vídeo de até 30 segundos.</p><% end %>

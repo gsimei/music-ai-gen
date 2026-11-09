@@ -11,7 +11,6 @@ require "test_helper"
 #     locale:   "it",             # from I18n.locale.to_s
 #     user_id:  user.id | nil,    # nil for guests
 #     wizard_data: {              # merged session hash from steps 1–5
-#       delivery_email: ...,
 #       about: ...,
 #       recipient: ...,
 #       occasion: ...,
@@ -31,23 +30,23 @@ require "test_helper"
 #   success? => false, errors: ActiveModel::Errors or symbol
 class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
-  # Happy path — b2c standard tier
+  # Happy path — b2b starter tier
   # ---------------------------------------------------------------------------
 
-  test "creates order and briefing in transaction for b2c standard" do
+  test "creates order and briefing in transaction for b2b starter" do
     voice = voices(:standard_voice)
 
     assert_difference -> { Order.count } => 1, -> { Briefing.count } => 1 do
       result = Orders::CreateDraftService.call(
-        brand: "b2c",
+        brand: "b2b",
         locale: "it",
         user_id: nil,
+        user_email: "new@example.com",
         wizard_data: {
-          delivery_email: "new@example.com",
           about: "Uma musica para o aniversario",
           music_style: "pop",
           voice_id: voice.id,
-          tier: "standard"
+          tier: "starter"
         }
       )
       assert result.success?, "Expected success but got: #{result.errors.inspect}"
@@ -57,15 +56,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "returns created order as result value" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica para o aniversario",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -80,15 +79,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "generated reference matches ORD-YYYY-XXXXX format" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica para o aniversario",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -98,15 +97,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "generated reference contains the current year" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica para o aniversario",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -118,27 +117,27 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     voice = voices(:standard_voice)
 
     result1 = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "first@example.com",
         about: "Primeira musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     result2 = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "second@example.com",
         about: "Segunda musica",
         music_style: "rock",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
 
@@ -151,54 +150,16 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   # Price and limits from BRANDS_CONFIG
   # ---------------------------------------------------------------------------
 
-  test "price_cents is resolved from BRANDS_CONFIG for b2c standard" do
-    voice = voices(:standard_voice)
-    result = Orders::CreateDraftService.call(
-      brand: "b2c",
-      locale: "it",
-      user_id: nil,
-      wizard_data: {
-        delivery_email: "new@example.com",
-        about: "Uma musica",
-        music_style: "pop",
-        voice_id: voice.id,
-        tier: "standard"
-      }
-    )
-    assert result.success?
-    expected = BRANDS_CONFIG.dig(:b2c, :tiers, :standard, :price_cents)
-    assert_equal expected, result.value.price_cents
-  end
-
-  test "price_cents is resolved from BRANDS_CONFIG for b2c pro" do
-    voice = voices(:pro_voice)
-    result = Orders::CreateDraftService.call(
-      brand: "b2c",
-      locale: "it",
-      user_id: nil,
-      wizard_data: {
-        delivery_email: "new@example.com",
-        about: "Uma musica",
-        music_style: "pop",
-        voice_id: voice.id,
-        tier: "pro"
-      }
-    )
-    assert result.success?
-    expected = BRANDS_CONFIG.dig(:b2c, :tiers, :pro, :price_cents)
-    assert_equal expected, result.value.price_cents
-  end
-
   test "price_cents is resolved from BRANDS_CONFIG for b2b starter" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
       brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "business@example.com",
-        about: "Jingle para restaurante",
-        music_style: "acoustic",
+        about: "Uma musica",
+        music_style: "pop",
         voice_id: voice.id,
         tier: "starter"
       }
@@ -208,41 +169,60 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     assert_equal expected, result.value.price_cents
   end
 
-  test "lyrics_regen_limit is resolved from BRANDS_CONFIG" do
-    voice = voices(:standard_voice)
+  test "price_cents is resolved from BRANDS_CONFIG for b2b pro" do
+    voice = voices(:pro_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "pro"
       }
     )
     assert result.success?
-    expected = BRANDS_CONFIG.dig(:b2c, :tiers, :standard, :lyrics_regen_limit)
+    expected = BRANDS_CONFIG.dig(:b2b, :tiers, :pro, :price_cents)
+    assert_equal expected, result.value.price_cents
+  end
+
+  test "lyrics_regen_limit is resolved from BRANDS_CONFIG" do
+    voice = voices(:standard_voice)
+    result = Orders::CreateDraftService.call(
+      brand: "b2b",
+      locale: "it",
+      user_id: nil,
+      user_email: "new@example.com",
+      wizard_data: {
+        about: "Uma musica",
+        music_style: "pop",
+        voice_id: voice.id,
+        tier: "starter"
+      }
+    )
+    assert result.success?
+    expected = BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :lyrics_regen_limit)
     assert_equal expected, result.value.lyrics_regen_limit
   end
 
   test "music_regen_limit is resolved from BRANDS_CONFIG" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
-    expected = BRANDS_CONFIG.dig(:b2c, :tiers, :standard, :music_regen_limit)
+    expected = BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :music_regen_limit)
     assert_equal expected, result.value.music_regen_limit
   end
 
@@ -253,19 +233,19 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "order.brand is taken from service brand argument" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
-    assert_equal "b2c", result.value.brand
+    assert_equal "b2b", result.value.brand
   end
 
   # ---------------------------------------------------------------------------
@@ -275,34 +255,52 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "briefing language is set to locale argument (not user-supplied)" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "en",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
     assert_equal "en", result.value.briefing.language
   end
 
-  test "briefing language ignores any language key in wizard_data" do
+  test "briefing language uses wizard_data language when provided" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard",
-        language: "fr"          # should be ignored
+        tier: "starter",
+        language: "fr"
+      }
+    )
+    assert result.success?
+    assert_equal "fr", result.value.briefing.language
+  end
+
+  test "briefing language falls back to locale when language absent from wizard_data" do
+    voice = voices(:standard_voice)
+    result = Orders::CreateDraftService.call(
+      brand: "b2b",
+      locale: "it",
+      user_id: nil,
+      user_email: "new@example.com",
+      wizard_data: {
+        about: "Uma musica",
+        music_style: "pop",
+        voice_id: voice.id,
+        tier: "starter"
       }
     )
     assert result.success?
@@ -316,15 +314,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "creates order without user when user_id is nil" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "guest@example.com",
         about: "Musica para presente",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -339,11 +337,11 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "briefing stores optional fields when provided" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica para o aniversario",
         recipient: "Maria",
         occasion: "birthday",
@@ -354,7 +352,7 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
         keywords: "love, family",
         avoid: "sad",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -363,7 +361,7 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     assert_equal "birthday", briefing.occasion
     assert_equal "happy", briefing.mood
     assert_equal "moderate", briefing.tempo
-    assert_equal 120, briefing.target_duration_seconds
+    assert_equal 60, briefing.target_duration_seconds
     assert_equal "love, family", briefing.keywords
     assert_equal "sad", briefing.avoid
   end
@@ -372,19 +370,19 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   # Failure — pro-only voice with standard tier
   # ---------------------------------------------------------------------------
 
-  test "returns failure when pro-only voice is used with standard tier for b2c" do
+  test "returns failure when pro-only voice is used with standard tier" do
     pro_voice = voices(:pro_voice)  # min_tier: 1
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: pro_voice.id,
-        tier: "standard"           # standard maps to min_tier=0 — pro voice requires min_tier=1
+        tier: "starter"           # standard maps to min_tier=0 — pro voice requires min_tier=1
       }
     )
     assert result.failure?
@@ -395,15 +393,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
 
     assert_no_difference [ "Order.count", "Briefing.count" ] do
       Orders::CreateDraftService.call(
-        brand: "b2c",
+        brand: "b2b",
         locale: "it",
         user_id: nil,
+        user_email: "new@example.com",
         wizard_data: {
-          delivery_email: "new@example.com",
           about: "Uma musica",
           music_style: "pop",
           voice_id: pro_voice.id,
-          tier: "standard"
+          tier: "starter"
         }
       )
     end
@@ -417,37 +415,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     inactive = voices(:inactive_voice)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: inactive.id,
-        tier: "standard"
-      }
-    )
-    assert result.failure?
-  end
-
-  # ---------------------------------------------------------------------------
-  # Failure — voice not allowed for brand
-  # ---------------------------------------------------------------------------
-
-  test "returns failure when voice is not allowed for the brand" do
-    b2b_voice = voices(:b2b_only_voice)  # allowed_brands: [b2b]
-
-    result = Orders::CreateDraftService.call(
-      brand: "b2c",
-      locale: "it",
-      user_id: nil,
-      wizard_data: {
-        delivery_email: "new@example.com",
-        about: "Uma musica",
-        music_style: "pop",
-        voice_id: b2b_voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.failure?
@@ -461,15 +437,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     voice = voices(:standard_voice)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "starter"   # starter is b2b-only
+        tier: "standard"   # standard does not exist for b2b
       }
     )
     assert result.failure?
@@ -480,15 +456,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
 
     assert_no_difference [ "Order.count", "Briefing.count" ] do
       Orders::CreateDraftService.call(
-        brand: "b2c",
+        brand: "b2b",
         locale: "it",
         user_id: nil,
+        user_email: "new@example.com",
         wizard_data: {
-          delivery_email: "new@example.com",
           about: "Uma musica",
           music_style: "pop",
           voice_id: voice.id,
-          tier: "starter"
+          tier: "standard"
         }
       )
     end
@@ -498,35 +474,18 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   # Failure — missing required wizard_data fields
   # ---------------------------------------------------------------------------
 
-  test "returns failure when delivery_email is missing" do
-    voice = voices(:standard_voice)
-
-    result = Orders::CreateDraftService.call(
-      brand: "b2c",
-      locale: "it",
-      user_id: nil,
-      wizard_data: {
-        about: "Uma musica",
-        music_style: "pop",
-        voice_id: voice.id,
-        tier: "standard"
-      }
-    )
-    assert result.failure?
-  end
-
   test "returns failure when about is missing" do
     voice = voices(:standard_voice)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.failure?
@@ -536,14 +495,14 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     voice = voices(:standard_voice)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.failure?
@@ -551,14 +510,14 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
 
   test "returns failure when voice_id is missing" do
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.failure?
@@ -568,11 +527,11 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
     voice = voices(:standard_voice)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id
@@ -591,15 +550,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
 
     assert_no_difference [ "Order.count", "Briefing.count" ] do
       Orders::CreateDraftService.call(
-        brand: "b2c",
+        brand: "b2b",
         locale: "it",
         user_id: nil,
+        user_email: "new@example.com",
         wizard_data: {
-          delivery_email: "new@example.com",
           about: "Uma musica",
           music_style: "pop",
           voice_id: voice.id,
-          tier: "standard"  # tier incompatible with pro voice
+          tier: "starter"  # tier incompatible with pro voice
         }
       )
     end
@@ -611,18 +570,18 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
 
   test "order is associated with user when user_id is provided" do
     voice = voices(:standard_voice)
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
 
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: user.id,
+      user_email: user.email,
       wizard_data: {
-        delivery_email: user.email,
         about: "Uma musica para o aniversario",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -636,15 +595,15 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "created order has status pending" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
@@ -658,18 +617,64 @@ class Orders::CreateDraftServiceTest < ActiveSupport::TestCase
   test "briefing is associated with the selected voice" do
     voice = voices(:standard_voice)
     result = Orders::CreateDraftService.call(
-      brand: "b2c",
+      brand: "b2b",
       locale: "it",
       user_id: nil,
+      user_email: "new@example.com",
       wizard_data: {
-        delivery_email: "new@example.com",
         about: "Uma musica",
         music_style: "pop",
         voice_id: voice.id,
-        tier: "standard"
+        tier: "starter"
       }
     )
     assert result.success?
     assert_equal voice.id, result.value.briefing.voice_id
+  end
+
+  # ---------------------------------------------------------------------------
+  # structure_hint — passed through from wizard_data to Briefing
+  # ---------------------------------------------------------------------------
+
+  test "created briefing has structure_hint when wizard_data includes it" do
+    voice = voices(:standard_voice)
+    hint  = "Verse - Chorus - Verse - Chorus - Bridge - Outro"
+
+    result = Orders::CreateDraftService.call(
+      brand: "b2b",
+      locale: "it",
+      user_id: nil,
+      user_email: "new@example.com",
+      wizard_data: {
+        about: "Uma musica para o aniversario",
+        music_style: "pop",
+        voice_id: voice.id,
+        tier: "starter",
+        structure_hint: hint
+      }
+    )
+
+    assert result.success?
+    assert_equal hint, result.value.briefing.structure_hint
+  end
+
+  test "created briefing has nil structure_hint when wizard_data does not include it" do
+    voice = voices(:standard_voice)
+
+    result = Orders::CreateDraftService.call(
+      brand: "b2b",
+      locale: "it",
+      user_id: nil,
+      user_email: "new@example.com",
+      wizard_data: {
+        about: "Uma musica",
+        music_style: "pop",
+        voice_id: voice.id,
+        tier: "starter"
+      }
+    )
+
+    assert result.success?
+    assert_nil result.value.briefing.structure_hint
   end
 end

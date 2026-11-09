@@ -16,6 +16,17 @@ module Orders
     attribute :draft_id
 
     def call
+      if order.campaign
+        return order.with_lock do
+          return failure_result(:invalid_state) unless order.lyrics_ready? && order.lyrics_revision_token.blank?
+          draft = order.current_draft
+          return failure_result(:stale_draft) unless draft && draft.id.to_s == draft_id.to_s
+          order.current_lyrics_draft_id = draft.id
+          order.approve_lyrics!
+          success_result(order)
+        end
+      end
+      return failure_result(:revision_pending) if order.lyrics_revision_token.present?
       unless order.lyrics_ready?
         return failure_result(:invalid_state)
       end

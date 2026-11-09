@@ -21,6 +21,7 @@ require "test_helper"
 #   (triggering Solid Queue retry). Use perform_now with perform_enqueued_jobs to observe behavior.
 # - After all retries exhausted: order.fail_lyrics! is called — tested via stub approach
 class GenerateLyricsJobTest < ActiveJob::TestCase
+  include ActionCable::TestHelper
   VALID_LYRICS_JSON = JSON.generate({
     "title"    => "Test Song",
     "sections" => [
@@ -58,7 +59,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode initial: order transitions to lyrics_ready after successful generation" do
-    order        = orders(:b2c_paid_with_stripe)
+    order        = orders(:b2b_paid_with_stripe)
     draft        = LyricsDraft.new(
       order:          order,
       version:        1,
@@ -76,7 +77,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode initial: order transitions from paid to lyrics_drafting before Generator call" do
-    order          = orders(:b2c_paid_with_stripe)
+    order          = orders(:b2b_paid_with_stripe)
     status_at_call = nil
 
     draft          = LyricsDraft.new(
@@ -100,7 +101,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode initial: Generator is called with mode :initial" do
-    order         = orders(:b2c_paid_with_stripe)
+    order         = orders(:b2b_paid_with_stripe)
     captured_mode = nil
 
     draft          = LyricsDraft.new(
@@ -123,7 +124,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode initial: Generator is called with the correct order" do
-    order          = orders(:b2c_paid_with_stripe)
+    order          = orders(:b2b_paid_with_stripe)
     captured_order = nil
 
     draft          = LyricsDraft.new(
@@ -147,7 +148,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode initial: Generator failure causes order to NOT be in lyrics_ready" do
-    order          = orders(:b2c_paid_with_stripe)
+    order          = orders(:b2b_paid_with_stripe)
     failure_result = ServiceResult.new(success: false, value: nil, errors: "claude_api_error")
 
     # The job should raise (for retry), so order never reaches lyrics_ready
@@ -164,7 +165,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode initial: Generator failure raises StandardError for retry" do
-    order          = orders(:b2c_paid_with_stripe)
+    order          = orders(:b2b_paid_with_stripe)
     failure_result = ServiceResult.new(success: false, value: nil, errors: "claude_api_error")
 
     raised = false
@@ -184,7 +185,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   # ---------------------------------------------------------------------------
 
   test "mode regen: Generator is called with mode :regen" do
-    order          = orders(:b2c_lyrics_ready)
+    order          = orders(:b2b_lyrics_ready)
     parent_draft   = lyrics_drafts(:draft_lyrics_ready_v1)
     captured_mode  = nil
 
@@ -213,7 +214,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode regen: order status does not change after successful generation" do
-    order          = orders(:b2c_lyrics_ready)
+    order          = orders(:b2b_lyrics_ready)
     parent_draft   = lyrics_drafts(:draft_lyrics_ready_v1)
     original_status = order.status
 
@@ -237,7 +238,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode regen: Generator is called with parent_draft_id from job args" do
-    order              = orders(:b2c_lyrics_ready)
+    order              = orders(:b2b_lyrics_ready)
     parent_draft       = lyrics_drafts(:draft_lyrics_ready_v1)
     captured_parent_id = nil
 
@@ -263,7 +264,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   end
 
   test "mode regen: user_feedback is forwarded to Generator" do
-    order              = orders(:b2c_lyrics_ready)
+    order              = orders(:b2b_lyrics_ready)
     parent_draft       = lyrics_drafts(:draft_lyrics_ready_v1)
     captured_feedback  = nil
 
@@ -298,5 +299,28 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
     # This test confirms the class-level declaration exists
     assert GenerateLyricsJob.respond_to?(:retry_on),
            "GenerateLyricsJob should respond to retry_on (inherited from ApplicationJob)"
+  end
+
+  # ---------------------------------------------------------------------------
+  # Turbo Stream broadcast after initial mode completes (lyrics_drafted!)
+  # ---------------------------------------------------------------------------
+
+  test "mode initial: broadcasts a Turbo Stream replacing lyrics_section on order's lyrics channel after lyrics_drafted!" do
+    order   = orders(:b2b_paid_with_stripe)
+    channel = "order_#{order.id}_lyrics"
+    draft   = LyricsDraft.new(
+      order:          order,
+      version:        1,
+      source:         "ai_generated",
+      content:        "Test lyrics",
+      prompt_version: "v1.0"
+    )
+    success_result = ServiceResult.new(success: true, value: draft, errors: nil)
+
+    LyricsGenerator::Generator.stub(:call, ->(**_args) { success_result }) do
+      assert_broadcasts(channel, 1) do
+        GenerateLyricsJob.perform_now(order.id, mode: "initial")
+      end
+    end
   end
 end

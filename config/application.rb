@@ -26,7 +26,7 @@ module MusicAiGen
 
     # I18n — todos os idiomas suportados pela plataforma
     config.i18n.available_locales = %i[it en es fr de pt]
-    config.i18n.default_locale = :it
+    config.i18n.default_locale = :pt
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.yml").to_s]
   end
 end

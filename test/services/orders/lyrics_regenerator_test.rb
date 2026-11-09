@@ -17,7 +17,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns success_result when order is lyrics_ready and limit not exhausted" do
-    order = orders(:b2c_lyrics_ready) # lyrics_regen_used: 0, limit: 2
+    order = orders(:b2b_lyrics_ready) # lyrics_regen_used: 0, limit: 2
 
     result = Orders::LyricsRegenerator.call(order: order, user_feedback: "Piu romantica")
 
@@ -25,7 +25,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob with mode regen on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     assert_enqueued_with(job: GenerateLyricsJob) do
@@ -34,7 +34,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob with correct order_id on success" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "Piu romantica")
@@ -42,7 +42,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob with mode regen keyword argument" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     assert_enqueued_with(job: GenerateLyricsJob, kwargs: hash_including(mode: "regen")) do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "Piu romantica")
@@ -50,7 +50,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob with parent_draft_id of the latest draft" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
     draft = lyrics_drafts(:draft_lyrics_ready_v1)
 
     assert_enqueued_with(job: GenerateLyricsJob, kwargs: hash_including(parent_draft_id: draft.id)) do
@@ -59,7 +59,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob with user_feedback passed through" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     assert_enqueued_with(job: GenerateLyricsJob, kwargs: hash_including(user_feedback: "Piu romantica")) do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "Piu romantica")
@@ -71,7 +71,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "succeeds when user_feedback is nil" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     result = Orders::LyricsRegenerator.call(order: order, user_feedback: nil)
 
@@ -79,7 +79,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "enqueues GenerateLyricsJob when user_feedback is nil" do
-    order = orders(:b2c_lyrics_ready)
+    order = orders(:b2b_lyrics_ready)
 
     assert_enqueued_with(job: GenerateLyricsJob, kwargs: hash_including(user_feedback: nil)) do
       Orders::LyricsRegenerator.call(order: order, user_feedback: nil)
@@ -91,7 +91,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result with :invalid_state when order is not lyrics_ready" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
 
     result = Orders::LyricsRegenerator.call(order: order, user_feedback: "anything")
 
@@ -100,7 +100,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "does not enqueue GenerateLyricsJob when order is not lyrics_ready" do
-    order = orders(:b2c_lyrics_drafting)
+    order = orders(:b2b_lyrics_drafting)
 
     assert_no_enqueued_jobs only: GenerateLyricsJob do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "anything")
@@ -108,7 +108,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "returns failure_result with :invalid_state when order is lyrics_approved" do
-    order = orders(:b2c_lyrics_approved)
+    order = orders(:b2b_lyrics_approved)
 
     result = Orders::LyricsRegenerator.call(order: order, user_feedback: "anything")
 
@@ -121,7 +121,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "returns failure_result with :regen_limit_reached when limit exhausted" do
-    order = orders(:b2c_lyrics_ready_at_limit) # lyrics_regen_used: 2, limit: 2
+    order = orders(:b2b_lyrics_ready_at_limit) # lyrics_regen_used: 2, limit: 2
 
     result = Orders::LyricsRegenerator.call(order: order, user_feedback: "terceira vez")
 
@@ -130,7 +130,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "does not enqueue GenerateLyricsJob when regen limit is exhausted" do
-    order = orders(:b2c_lyrics_ready_at_limit)
+    order = orders(:b2b_lyrics_ready_at_limit)
 
     assert_no_enqueued_jobs only: GenerateLyricsJob do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "terceira vez")
@@ -138,7 +138,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   end
 
   test "does not enqueue GenerateLyricsJob when order state is wrong, even if limit allows" do
-    order = orders(:b2c_paid) # paid state — regen_used: 0
+    order = orders(:b2b_paid) # paid state — regen_used: 0
 
     assert_no_enqueued_jobs only: GenerateLyricsJob do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "anything")

@@ -1,12 +1,8 @@
-<% b2b = current_brand == "b2b" %>
-
 <div role="status"
      aria-live="polite"
      aria-label="<%= t('lyrics.generating') %>"
      class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm my-3
-            <%= b2b ?
-              'bg-cant-paper border border-cant-line text-cant-mute' :
-              'bg-white border border-ser-line text-ser-mute rounded-xl' %>">
+            bg-cant-paper border border-cant-line text-cant-mute">
   <%# Animated spinner %>
   <svg class="shrink-0 animate-spin"
        width="16" height="16"

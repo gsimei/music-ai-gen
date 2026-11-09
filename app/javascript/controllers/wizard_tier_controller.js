@@ -41,16 +41,21 @@ export default class extends Controller {
   }
 
   /**
-   * Called when a tier radio changes (data-action="change->wizard-tier#selectTier").
+   * Called on card click or radio change.
+   * Uses currentTarget to reliably find the tier regardless of which child was clicked.
    */
   selectTier(event) {
-    const radio = event.target
-    if (radio.disabled) {
+    const tier = (event.currentTarget || event.target).dataset.tier
+    if (!tier) return
+
+    const radio = this.radioTargets.find((r) => r.dataset.tier === tier)
+    if (!radio || radio.disabled) {
       event.preventDefault()
       return
     }
 
-    this._updateHighlights(radio.dataset.tier)
+    radio.checked = true
+    this._updateHighlights(tier)
     this._updateSubmitState()
   }
 
@@ -115,27 +120,12 @@ export default class extends Controller {
       // The server renders initial state; JS mirrors the same classes.
       if (isSelected) {
         card.classList.remove(
-          "border-cant-line", "border-ser-line",
-          "bg-cant-paper", "bg-white", "text-cant-ink", "text-ser-ink",
-          "hover:border-cant-mute", "hover:border-ser-mute"
+          "border-cant-line", "bg-cant-paper", "text-cant-ink", "hover:border-cant-mute"
         )
-        // Detect brand by checking which color variable is present
-        const isCant = getComputedStyle(document.documentElement)
-          .getPropertyValue("--color-cant-ink")
-          .trim().length > 0
-
-        card.classList.add(
-          isCant ? "border-cant-ink" : "border-ser-ink",
-          isCant ? "bg-cant-ink"    : "bg-ser-ink",
-          isCant ? "text-cant-paper" : "text-ser-cream"
-        )
+        card.classList.add("border-cant-ink", "bg-cant-ink", "text-cant-paper")
       } else {
-        card.classList.remove(
-          "border-cant-ink", "border-ser-ink",
-          "bg-cant-ink", "bg-ser-ink",
-          "text-cant-paper", "text-ser-cream"
-        )
-        card.classList.add("border-cant-line", "border-ser-line")
+        card.classList.remove("border-cant-ink", "bg-cant-ink", "text-cant-paper")
+        card.classList.add("border-cant-line")
       }
     })
   }

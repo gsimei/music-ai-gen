@@ -13,10 +13,10 @@ require "test_helper"
 # - Returns success_result(:already_handled) when order is already payment_failed (idempotency)
 class Stripe::Handlers::PaymentIntentFailedTest < ActiveSupport::TestCase
   setup do
-    @pending_order = orders(:b2c_pending)
+    @pending_order = orders(:b2b_pending)
     @pending_order.update_columns(stripe_payment_intent_id: "pi_test_handler_pifail_001")
 
-    @failed_order = orders(:b2c_payment_failed)
+    @failed_order = orders(:b2b_payment_failed)
     # stripe_payment_intent_id: "pi_test_failed_intent_001" set in fixture
   end
 
@@ -37,7 +37,7 @@ class Stripe::Handlers::PaymentIntentFailedTest < ActiveSupport::TestCase
     # Verify the order is updated even from a state that AASM does not have
     # a direct payment_failed transition from (e.g. lyrics_drafting would be blocked
     # by AASM but update_columns bypasses it)
-    order_in_lyrics = orders(:b2c_lyrics_drafting)
+    order_in_lyrics = orders(:b2b_lyrics_drafting)
     order_in_lyrics.update_columns(stripe_payment_intent_id: "pi_test_bypass_aasm_001")
 
     event = build_stripe_event("evt_pifail_bypass_001", "pi_test_bypass_aasm_001")

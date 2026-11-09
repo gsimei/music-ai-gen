@@ -1,0 +1,118 @@
+<div id="chat-lyrics-panel" class="creative-studio" data-controller="creative-editor">
+  <div id="creative-errors" class="creative-errors" role="alert"><%= order.lyrics_revision_error %></div>
+  <% completed = order.completed_music_rounds %>
+  <% busy = order.paid? || order.lyrics_drafting? || order.music_generating? || order.lyrics_approved? || order.lyrics_revision_token.present? %>
+  <header class="creative-progress">
+    <p class="studio-kicker">EXPERIMENTE. ESCOLHA. PUBLIQUE.</p>
+    <strong><%= completed %> de 3 rodadas prontas</strong>
+    <p>Duas versões por rodada. Suas anteriores ficam salvas.</p>
+    <div class="creative-round-dots" aria-hidden="true"><% 3.times do |i| %><span class="<%= 'is-complete' if i < completed %>"></span><% end %></div>
+  </header>
+  <% if !order.approved? %>
+    <section class="creative-sound-direction">
+      <p class="studio-kicker"><%= completed.zero? ? "DIREÇÃO DA PRIMEIRA RODADA" : "DIREÇÃO DA PRÓXIMA RODADA" %></p>
+      <p><strong><%= order.campaign.sound_summary %></strong></p>
+      <% if order.lyrics_editable? && completed < 3 %>
+        <details class="creative-details" <%= 'open' if completed.zero? %>><summary>Ajustar ritmo, voz e clima</summary>
+          <%= form_with model: order.campaign, url: order_chat_sound_settings_path(order_id: order.id), method: :patch,
+            data: { turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged" } do |f| %>
+            <%= render "campaigns/sound_fields", f: f, climate: true %>
+            <button type="submit" class="studio-button studio-button-green">Salvar direção musical</button>
+            <p class="studio-field-hint">Salvar não gera música nem gasta uma rodada. As versões anteriores permanecem iguais.</p>
+          <% end %>
+        </details>
+      <% end %>
+    </section>
+  <% end %>
+  <% if busy %><p class="creative-working" role="status"><%= order.paid? || order.lyrics_drafting? ? 'Preparando sua letra…' : order.lyrics_revision_token.present? ? 'Reescrevendo sua letra…' : 'Criando duas novas versões…' %><% if completed.positive? %> Você pode ouvir as anteriores enquanto espera.<% end %></p><% end %>
+  <% if order.lyrics_failed? %><div class="campaign-note"><strong>Não conseguimos preparar a letra.</strong><p>Seus dados estão salvos. Tente novamente.</p><%= button_to "Tentar preparar a letra novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
+  <% latest_attempt = order.music_generations.order(:iteration).last %>
+  <% if busy && latest_attempt&.error_code == "rate_limited" %><p class="campaign-note" role="status">O serviço de música está ocupado. Vamos tentar novamente em instantes, com um limite de tentativas.</p><% end %>
+  <% if busy && latest_attempt&.error_code == "status_unavailable" %><p class="campaign-note" role="status">Sua música já foi solicitada. Estamos recuperando a resposta, sem gerar outra versão.</p><% end %>
+  <% if order.music_failed? %>
+    <% checking = %w[generation_delayed status_unavailable].include?(latest_attempt&.error_code) && latest_attempt&.mureka_job_id.present? %>
+    <div class="campaign-note"><strong><%= checking ? "Esta música está demorando mais que o esperado." : "Esta tentativa não ficou pronta." %></strong>
+      <p><%= checking ? "Podemos consultar a mesma tentativa sem gastar outra geração." : "Ela não consumiu uma rodada. Suas versões anteriores estão salvas." %></p>
+      <% if latest_attempt&.error_code == "submission_uncertain" %><p>Não conseguimos confirmar a resposta. Não repetimos automaticamente o pedido. Você pode tentar novamente dentro do limite de recuperação da campanha.</p><% end %>
+      <% if %w[quota_exhausted request_rejected technical_limit_reached].include?(latest_attempt&.error_code) || (!checking && order.generation_costs.where(operation: "music").where("estimated_usd > 0").count >= Campaigns::MusicRounds::MAX_PAID_ATTEMPTS) %>
+        <p>A campanha precisa de revisão antes de novas gerações. Você ainda pode escolher uma versão já pronta.</p>
+      <% else %><%= button_to checking ? "Verificar tentativa" : "Tentar novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %><% end %>
+    </div>
+  <% end %>
+
+  <% order.music_generations.completed.includes(:order_assets, :lyrics_draft).order(:iteration).each_with_index do |generation, index| %>
+    <section class="creative-round" aria-label="Rodada <%= index + 1 %>">
+      <div class="creative-round-heading"><h2>Rodada <%= index + 1 %></h2><span>Letra v<%= generation.lyrics_draft&.version %></span></div>
+      <% settings = generation.request_payload["sound_settings"] %>
+      <% if settings %><p class="studio-field-hint"><%= Campaign::GENRES.dig(settings["musical_genre"], :label) %> · <%= Campaign::VOCAL_GENDERS[settings["vocal_gender"]] %> · <%= Campaign::STYLES.dig(settings["style"], :label) %></p><% end %>
+      <% if generation.melody_hint.present? %><p class="creative-change">Seu pedido: <%= generation.melody_hint %></p><% end %>
+      <% generation.order_assets.select(&:music_variant?).sort_by(&:variant_index).each do |asset| %>
+        <% favorite = order.favorite_music_asset_id == asset.id %>
+        <% selected = order.approved? && order.approved_music_generation_id == generation.id && order.approved_variant == ("a".ord + asset.variant_index).chr %>
+        <article class="creative-version <%= 'is-favorite' if favorite %>" id="music-version-<%= asset.id %>">
+          <div class="creative-version-heading"><strong>Versão <%= ("A".ord + asset.variant_index).chr %></strong><% if favorite %><span class="creative-favorite-label">★ Sua favorita</span><% end %></div>
+          <% if asset.campaign_preview_ready? %>
+            <p class="studio-field-hint">Trecho do vídeo · <%= asset.campaign_audio.blob.metadata.fetch("duration_seconds").round %>s. Ouça até o fim e confira se a oferta ficou completa.</p>
+            <audio controls preload="none" data-action="play->creative-editor#play" aria-label="Ouvir trecho do vídeo, rodada <%= index + 1 %>, versão <%= ("A".ord + asset.variant_index).chr %>"><source src="<%= asset.campaign_playback_url %>" type="audio/mp4"></audio>
+            <p class="studio-field-hint">Seu vídeo usará exatamente este trecho, com o mesmo encerramento.</p>
+            <% if !busy && !order.approved? %><%= render "order_chat/excerpt_editor", order: order, asset: asset %><% end %>
+          <% elsif !order.approved? %>
+            <% if %w[pending failed].include?(asset.campaign_preview_status) %>
+              <p class="studio-field-hint"><%= asset.campaign_preview_status == "failed" ? "Não conseguimos preparar o trecho. Sua música está salva." : "Prepare o trecho de até 30 segundos para ouvir antes de aprovar." %></p>
+              <%= button_to "Preparar trecho do vídeo", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id }, class: "creative-favorite-button", data: { turbo_stream: true } %>
+            <% else %><p class="creative-working" role="status">Preparando o trecho do vídeo…</p><% end %>
+          <% end %>
+          <details class="creative-details"><summary>Ouvir música completa</summary><p class="studio-field-hint">A música original pode ser mais longa que o vídeo.</p><audio controls preload="none" data-action="play->creative-editor#play" aria-label="Ouvir música completa, rodada <%= index + 1 %>, versão <%= ("A".ord + asset.variant_index).chr %>"><source src="<%= asset.playback_url %>" type="audio/mpeg"></audio></details>
+          <% unless order.approved? %>
+            <div class="creative-version-actions">
+              <%= button_to favorite ? "★ Favorita salva" : "☆ Salvar favorita", order_chat_favorite_music_path(order_id: order.id), params: { asset_id: asset.id }, class: "creative-favorite-button", aria: { pressed: favorite }, data: { turbo_stream: true } %>
+              <% if !busy && asset.campaign_preview_ready? %><%= button_to "Aprovar este trecho e montar vídeo ↗", order_chat_approve_music_path(order_id: order.id), params: { asset_id: asset.id, preview_revision: asset.preview_revision }, class: "studio-button studio-button-green", data: { turbo_stream: true } %><% end %>
+            </div>
+          <% else %><% if selected %><p class="creative-selected">✓ Escolhida para seu vídeo</p><% end %><% end %>
+        </article>
+      <% end %>
+      <details class="creative-details"><summary>Ver a letra desta rodada</summary><pre><%= generation.lyrics_draft&.content %></pre></details>
+    </section>
+  <% end %>
+
+  <% if order.preview_ready? && !busy && completed < 3 %>
+    <section class="creative-revision">
+      <h2>O que vamos mudar?</h2><p>Uma nova interpretação, preservando o histórico. <%= 3 - completed %> rodada(s) disponível(is).</p>
+      <%= form_with url: order_chat_regenerate_music_path(order_id: order.id), data: { turbo_stream: true } do %>
+        <label for="revision-base">Usar como direção</label>
+        <select name="asset_id" id="revision-base"><% order.all_music_assets.includes(:music_generation).each do |asset| %><option value="<%= asset.id %>" <%= 'selected' if asset.id == order.favorite_music_asset_id %>>Tentativa <%= asset.music_generation.iteration %> · Versão <%= ("A".ord + asset.variant_index).chr %><%= ' · Favorita' if asset.id == order.favorite_music_asset_id %></option><% end %></select>
+        <div class="creative-feedback-chips"><% ["Quero um refrão mais marcante", "Quero uma interpretação mais suave", "Quero menos instrumentos", "Quero algo completamente diferente"].each do |hint| %><button type="button" data-action="creative-editor#suggest" data-feedback="<%= hint %>"><%= hint %></button><% end %></div>
+        <label for="music-change">Conte o que você quer diferente</label>
+        <textarea id="music-change" name="feedback" rows="3" maxlength="400" required placeholder="Ex.: refrão mais marcante e menos instrumentos" data-creative-editor-target="feedback" data-action="input->creative-editor#feedbackChanged"></textarea>
+        <p class="studio-field-hint">Para trocar ritmo ou voz, salve a direção musical acima. Usaremos a letra salva abaixo. A melodia pode mudar; esta opção não edita um trecho exato do áudio.</p>
+        <button class="studio-button studio-button-green" type="submit">Criar mais duas versões ↗</button>
+      <% end %>
+    </section>
+  <% elsif completed >= 3 && !order.approved? %><p class="campaign-note">Suas três rodadas estão prontas. Escolha qualquer versão acima para montar o vídeo.</p><% end %>
+
+  <% if draft %>
+    <details class="creative-details creative-lyrics" <%= 'open' if completed.zero? || (!order.approved? && order.music_generations.completed.maximum(:lyrics_draft_id) != draft.id) %>>
+      <summary><%= order.approved? ? "Histórico de letras" : "Letra para a próxima rodada" %> <span>v<%= draft.version %></span></summary>
+      <% if order.lyrics_editable? && completed < 3 %>
+        <%= form_with url: order_chat_edit_lyrics_path(order_id: order.id), method: :patch, data: { turbo_stream: true, action: "submit->creative-editor#saving turbo:submit-end->creative-editor#saved" }, class: "creative-lyrics-form" do %>
+          <%= hidden_field_tag :draft_id, draft.id %>
+          <label for="editable-lyrics">Edite o nome, preço ou qualquer palavra</label>
+          <p class="studio-field-hint">Prefira uma letra curta para o vídeo de até 30 segundos. Confira a oferta, o nome e as condições.</p>
+          <textarea id="editable-lyrics" name="content" rows="9" maxlength="5000" required data-action="input->creative-editor#changed"><%= draft.content %></textarea>
+          <p class="studio-field-hint" data-creative-editor-target="saveHint">Editar e salvar a letra não gasta uma rodada musical.</p>
+          <button type="submit" class="studio-button studio-button-green">Salvar letra</button>
+        <% end %>
+        <% unless order.lyrics_regen_exhausted? %>
+          <%= form_with url: order_chat_regenerate_lyrics_path(order_id: order.id), data: { turbo_stream: true }, class: "creative-rewrite" do %>
+            <label for="lyrics-change">Ou peça ajuda para reescrever</label>
+            <textarea name="feedback" id="lyrics-change" rows="2" required maxlength="1000" placeholder="Ex.: mantenha a oferta e deixe o refrão mais curto" data-action="input->creative-editor#feedbackChanged"></textarea>
+            <button class="creative-favorite-button" type="submit">Reescrever com IA · <%= order.lyrics_regen_remaining %> ajustes disponíveis</button>
+          <% end %>
+        <% end %>
+        <% if order.lyrics_ready? %><%= button_to "Aprovar letra e ouvir duas versões ↗", order_chat_approve_lyrics_path(order_id: order.id), params: { draft_id: draft.id }, class: "studio-button studio-button-green", data: { turbo_stream: true } %><% end %>
+      <% else %><pre><%= draft.content %></pre><% end %>
+      <% if order.lyrics_drafts.count > 1 %><details class="creative-details"><summary>Letras anteriores</summary><% order.lyrics_drafts.order(version: :desc).where.not(id: draft.id).each do |previous| %><div class="creative-old-lyrics"><strong>Letra v<%= previous.version %></strong><pre><%= previous.content %></pre></div><% end %></details><% end %>
+    </details>
+  <% end %>
+  <% if order.approved? %><%= link_to "Ver e baixar minha campanha ↗", campaign_path(order.campaign), class: "studio-button studio-button-green" %><% end %>
+</div>

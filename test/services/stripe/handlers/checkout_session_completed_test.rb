@@ -13,10 +13,10 @@ require "test_helper"
 # - Returns failure_result if the order cannot be found
 class Stripe::Handlers::CheckoutSessionCompletedTest < ActiveSupport::TestCase
   setup do
-    @pending_order = orders(:b2c_pending)
+    @pending_order = orders(:b2b_pending)
     @pending_order.update_columns(stripe_session_id: "cs_test_pending_session_001")
 
-    @paid_order = orders(:b2c_paid_with_stripe)
+    @paid_order = orders(:b2b_paid_with_stripe)
 
     @stripe_event = StripeEvent.create!(
       stripe_event_id: "evt_handler_cs_001",

@@ -2,8 +2,8 @@
 
 class Briefing < ApplicationRecord
   # Validations
-  validates :about, presence: true
-  validates :music_style, presence: true
+  validates :about,       presence: true, allow_nil: true
+  validates :music_style, presence: true, allow_nil: true
   validates :language, presence: true
   validates :target_duration_seconds,
             numericality: { greater_than_or_equal_to: 15, less_than_or_equal_to: 600 },

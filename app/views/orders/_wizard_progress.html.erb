@@ -1,5 +1,4 @@
 <%# locals: (current_step:) %>
-<% b2b = current_brand == "b2b" %>
 <%
   steps = [
     { num: 1, label: "Informazioni" },
@@ -18,11 +17,7 @@
         done    = step[:num] < current_step
         active  = step[:num] == current_step
         future  = step[:num] > current_step
-        segment_color = if b2b
-          done || active ? "bg-cant-brass" : "bg-cant-line"
-        else
-          done || active ? "bg-ser-shadow" : "bg-ser-line"
-        end
+        segment_color = done || active ? "bg-cant-brass" : "bg-cant-line"
       %>
 
       <li role="listitem" class="flex items-center flex-1 last:flex-none">
@@ -30,11 +25,11 @@
         <div
           class="relative flex-none w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors duration-200
                  <%= if done
-                       b2b ? 'bg-cant-brass text-cant-ink' : 'bg-ser-shadow text-ser-cream'
+                       'bg-cant-brass text-cant-ink'
                      elsif active
-                       b2b ? 'bg-cant-ink text-cant-paper ring-2 ring-offset-1 ring-cant-ink' : 'bg-ser-ink text-ser-cream ring-2 ring-offset-1 ring-ser-ink'
+                       'bg-cant-ink text-cant-paper ring-2 ring-offset-1 ring-cant-ink'
                      else
-                       b2b ? 'bg-cant-line text-cant-mute' : 'bg-ser-line text-ser-mute'
+                       'bg-cant-line text-cant-mute'
                      end %>"
           <% if active %>
             aria-current="step"
@@ -70,11 +65,11 @@
         done   = step[:num] < current_step
         active = step[:num] == current_step
         label_class = if active
-          b2b ? 'text-cant-ink font-semibold' : 'text-ser-ink font-semibold'
+          'text-cant-ink font-semibold'
         elsif done
-          b2b ? 'text-cant-brass' : 'text-ser-shadow'
+          'text-cant-brass'
         else
-          b2b ? 'text-cant-mute' : 'text-ser-mute'
+          'text-cant-mute'
         end
       %>
       <span class="text-[10px] tracking-wide uppercase <%= label_class %>"><%= step[:label] %></span>

@@ -37,3 +37,26 @@ Fonts: `--font-ser-display` (Instrument Serif), `--font-ser-body` (Geist)
 **Why:** The prototype (Plataforma - Vanilla.html) uses these exact OKLCH values. Replicated as CSS custom properties rather than arbitrary values to allow reuse across components.
 
 **How to apply:** Always detect brand with `current_brand == "b2b"` and branch classes accordingly. Never hardcode colors — always use the token variables.
+
+## Layout constraints
+- `application.html.erb` `<body>` is a transparent pass-through — no wrapping `<main>`, no padding/margin. Brand pages own the full viewport.
+- `html, body` have `margin: 0; padding: 0` reset in CSS to prevent browser defaults from breaking brand backgrounds.
+- `<html lang="<%= I18n.locale %>">` — locale set dynamically.
+
+## Shared partials for brand-split pages
+- `orders/_wizard_topbar.html.erb` — branded nav bar (logo + brand name), accepts `b2b:` local
+- `orders/_wizard_progress.html.erb` — 5-step progress dots with ARIA, accepts `current_step:`
+- These are used by all 5 wizard steps, lyrics page top bar is inline (different context — shows step count).
+
+## Status badge pattern (orders/show)
+Status colours mapped to brand tokens, not generic Tailwind grays. Pulse animation dot for in-progress states (lyrics_drafting, music_generating) via `animate-pulse`.
+
+## Animations in global CSS
+- `wave-rise` — vertical bar animation for music-generating state
+- `spin-slow` — used by decorative ring elements
+- `float-y` — floating note elements (B2C generating screen)
+- All in `app/assets/tailwind/application.css`
+
+## Card shapes
+- B2B: `rounded-sm` (near-square), `border border-cant-line`, bg `bg-cant-ink` (dark) or `bg-cant-paper` (light)
+- B2C: `rounded-[18px]` or `rounded-2xl`, blush shadow `box-shadow: 0 14px 40px rgba(122,42,46,.08)`, border `border border-ser-line`

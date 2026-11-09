@@ -4,3 +4,7 @@
 - [Brand/Locale Secao 5](brand_locale_secao5.md) — BrandLocaleResolver, I18n config, around_action, t_brand helper, 431 testes passando
 - [Wizard Briefing Secao 7](wizard_briefing_secao7.md) — ReferenceGenerator, WizardSession, StepValidator, CreateDraftService, OrdersController, 515 testes passando
 - [Lyrics Review Secao 10](lyrics_review_secao10.md) — LyricsApprover, LyricsRegenerator, LyricsController, kwargs patch, GenerateMusicJob stub, 693 testes passando
+- [Mureka Music Pipeline Secao 11](mureka_music_pipeline_secao11.md) — MurekaClient, MurekaStatusClient, Generator, GenerateMusicJob, PollMurekaStatusJob, climate_control gem, KINDS split pattern, 788 testes passando
+- [Single-page flow Secao 12](single_page_flow_secao12.md) — MusicRegenerator, spf/ route paths to avoid URL conflict, Warden test mode caveat, 821/825 tests passing (4 unfixable test bugs)
+- [B2B-only migration](b2b_only_migration.md) — b2c fully removed; customer_other fixture for auth tests; 813 tests passing
+- [Soundtrack feature](soundtrack_feature.md) — Pro-tier video/image upload with AI music merge, bypasses lyrics, generation_type routing, 889 tests passing

@@ -1,23 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
-/**
- * lyrics-review-controller
- *
- * Manages the show/hide of the regeneration feedback form.
- *
- * Targets
- *   - feedbackForm  : the hidden form containing the feedback textarea
- *   - adjustButton  : the "Voglio aggiustare" button
- *
- * Actions
- *   - showFeedback(event)  : reveals feedbackForm, hides adjustButton, focuses textarea
- *   - hideFeedback(event)  : hides feedbackForm, restores adjustButton
- *
- * Note: exhausted state is handled in ERB by disabling the adjust button entirely —
- * no JS logic needed for that case.
- */
 export default class extends Controller {
-  static targets = ["feedbackForm", "adjustButton"]
+  static targets = ["feedbackForm", "adjustButton", "submitBtn"]
 
   showFeedback(event) {
     event.preventDefault()
@@ -31,5 +15,16 @@ export default class extends Controller {
     event.preventDefault()
     this.feedbackFormTarget.classList.add("hidden")
     this.adjustButtonTarget.classList.remove("hidden")
+  }
+
+  // Called on form submit — disables the button and shows a spinner
+  // so the user gets immediate feedback that the request is in flight.
+  submitRegen(event) {
+    if (!this.hasSubmitBtnTarget) return
+    const btn = this.submitBtnTarget
+    btn.disabled = true
+    btn.dataset.originalText = btn.value || btn.textContent.trim()
+    btn.value = "Rigenerando…"
+    btn.classList.add("opacity-60", "cursor-not-allowed")
   }
 }

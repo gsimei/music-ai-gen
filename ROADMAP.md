@@ -223,9 +223,97 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 
 ---
 
+---
+
+## 19. Revisão de tiers e preços
+
+> Mudança de produto: Standard €29 / Pro €59. Atualizar config e stripe_price_ids.
+
+- [ ] Atualizar `config/brands.yml`: `standard.price_cents: 2900`, `pro.price_cents: 5900`
+- [ ] Renomear tier `starter` → `standard` em `brands.yml` (e em todos os fixtures e testes)
+- [ ] Adicionar campos ao `brands.yml`: `includes_soundtrack`, `includes_voice_clone` por tier
+- [ ] Atualizar fixtures de orders: `tier: "standard"`, `price_cents: 2900`
+- [ ] Atualizar seed de voices: `pro_only` agora significa tier `pro` a €59
+- [ ] Criar novos Stripe Price IDs para os novos valores (via Stripe dashboard)
+- [ ] Atualizar `Stripe::CheckoutBuilder` com os novos price IDs
+- [ ] Rodar `bin/rails test` — suite deve ficar verde
+
+---
+
+## 20. Briefing conversacional (substitui wizard)
+
+> Substituir o wizard multi-step por interface de chat. Ver SPEC seção A.
+
+- [ ] Migration: `briefing_messages` (role, content, extracted_briefing jsonb)
+- [ ] Model `BriefingMessage` com association `belongs_to :order`
+- [ ] Association `has_many :briefing_messages` no model `Order`
+- [ ] Service `ConversationalBriefingService < BaseService` (ver SPEC A.2)
+  - [ ] Integra com `LyricsGenerator::ClaudeClient` usando system prompt de extração
+  - [ ] Salva mensagens user + assistant a cada turn
+  - [ ] Faz `order.briefing.update!` com campos extraídos
+  - [ ] Retorna `{ reply, suggestions, ready, briefing }`
+- [ ] Rota `resource :briefing_chat, only: [:show, :create]` dentro de `resources :orders`
+- [ ] `BriefingChatsController` com `show` e `create` (turbo_stream)
+- [ ] Views:
+  - [ ] `app/views/briefing_chats/show.html.erb` — layout do chat
+  - [ ] `app/views/briefing_chats/_message.html.erb` — balão de mensagem (user / assistant)
+  - [ ] `app/views/briefing_chats/_suggestions.html.erb` — botões de ação rápida
+  - [ ] `app/views/briefing_chats/_cta.html.erb` — botão "Confirmar e pagar" (aparece quando ready: true)
+- [ ] Stimulus controller `briefing-chat` (submit do textarea com Enter, scroll automático)
+- [ ] Atualizar `OrdersController#new` para criar order + briefing vazios e redirecionar para o chat
+- [ ] Deprecar (mas não deletar ainda) as views `orders/wizard/step_*.html.erb`
+- [ ] Testes:
+  - [ ] Unit: `ConversationalBriefingService` com Claude stubado (WebMock)
+  - [ ] Integration: `BriefingChatsController` — turbo stream response
+
+---
+
+## 21. Soundtrack — feature Pro
+
+> Mureka POST /v1/soundtrack/generate. Ver SPEC seção B.
+
+- [ ] Migration: `soundtrack_inputs` (input_type, storage_key, mureka_file_id, mureka_file_status, GDPR fields)
+- [ ] Model `SoundtrackInput` com validações e association `belongs_to :order`
+- [ ] Association `has_one :soundtrack_input` no model `Order`
+- [ ] ActiveStorage attachment para upload do vídeo/imagem (bucket R2 privado)
+- [ ] Controller `SoundtrackInputsController` — upload do arquivo pelo cliente Pro
+- [ ] Job `UploadSoundtrackInputToMurekaJob` (R2 → POST /v1/files/upload → salva mureka_file_id)
+- [ ] Job `GenerateSoundtrackJob` (chama Mureka soundtrack → cria MusicGeneration → enfileira Poll)
+- [ ] Método `MurekaClient#generate_soundtrack` (ver SPEC B.3)
+- [ ] Lógica de decisão em `Order#start_generation_pipeline!` (ver SPEC B.4)
+  - [ ] Atualizar callback `after :pay` na state machine para chamar `start_generation_pipeline!`
+- [ ] UI de upload de vídeo/imagem no fluxo Pro (após pagamento confirmado)
+- [ ] Validações: tamanho máximo de arquivo, tipos MIME aceitos (image/jpeg, image/png, video/mp4)
+- [ ] Job `DeleteSoundtrackInputJob` agendado para `scheduled_deletion_at` (GDPR)
+- [ ] Testes:
+  - [ ] Unit: `UploadSoundtrackInputToMurekaJob` com WebMock
+  - [ ] Unit: `GenerateSoundtrackJob` com WebMock
+  - [ ] Unit: `MurekaClient#generate_soundtrack`
+
+---
+
+## 22. Voice cloning — feature Pro
+
+> GDPR-first. Ver SPEC seção C.
+
+- [ ] Migration: `voice_uploads` (storage_key, mureka_file_id, status, consent fields, GDPR fields)
+- [ ] Model `VoiceUpload` com validações GDPR obrigatórias
+- [ ] Association `has_one :voice_upload` no model `Order`
+- [ ] ActiveStorage attachment para o arquivo de voz (bucket R2 privado)
+- [ ] Controller `VoiceUploadsController` — upload + registro de consentimento
+- [ ] View de upload com checkbox de consentimento explícito (não pré-marcado)
+- [ ] Job `UploadVoiceToMurekaJob` (R2 → POST /v1/files/upload?purpose=voice → salva mureka_file_id)
+- [ ] Integrar `mureka_file_id` como `vocal_id` no payload do `MusicGenerator::Generator`
+- [ ] Job `DeleteVoiceUploadJob` agendado automaticamente para `scheduled_deletion_at` (30 dias após entrega)
+- [ ] Testes:
+  - [ ] Unit: `UploadVoiceToMurekaJob` com WebMock
+  - [ ] Verificar que consent fields são gravados corretamente
+  - [ ] Verificar que job de deleção é agendado
+
+---
+
 ## Itens fora do MVP (não implementar agora)
 
-- Voice cloning (GDPR/AI Act)
 - Assinatura recorrente
 - App nativo (Hotwire Native)
 - SSO/OAuth

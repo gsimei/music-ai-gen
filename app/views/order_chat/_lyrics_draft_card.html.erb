@@ -1,0 +1,40 @@
+<div id="chat-lyrics-card" class="flex justify-start">
+  <div class="bg-white border border-cant-line rounded-2xl rounded-bl-sm p-5 max-w-[85%] w-full">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold text-cant-muted uppercase tracking-wide"><%= t("order_chat.lyrics_draft_label") %></span>
+      <span class="text-xs text-cant-muted">v<%= draft.version %></span>
+    </div>
+
+    <pre class="text-sm text-cant-ink whitespace-pre-wrap font-sans leading-relaxed mb-4"><%= draft.content %></pre>
+
+    <% unless draft.is_locked %>
+      <div class="flex flex-col gap-2">
+        <%= form_with url: order_chat_approve_lyrics_path(order_id: order.id),
+                      data: { turbo_stream: true } do |f| %>
+          <%= hidden_field_tag :draft_id, draft.id %>
+          <button type="submit"
+                  class="w-full rounded-xl bg-cant-ink text-cant-paper py-2 text-sm font-medium hover:bg-cant-ink/90 transition">
+            <%= t("order_chat.approve_lyrics_button") %>
+          </button>
+        <% end %>
+
+        <% unless order.lyrics_regen_exhausted? %>
+          <div data-controller="regen-form">
+            <input type="text"
+                   placeholder="<%= t('order_chat.regen_feedback_placeholder') %>"
+                   class="w-full rounded-xl border border-cant-line px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-cant-ink/20 focus:border-cant-ink"
+                   data-regen-form-target="feedback">
+            <%= form_with url: order_chat_regenerate_lyrics_path(order_id: order.id),
+                          data: { turbo_stream: true, action: "submit->regen-form#injectFeedback" } do |f| %>
+              <input type="hidden" name="feedback" data-regen-form-target="hidden">
+              <button type="submit"
+                      class="w-full rounded-xl border border-cant-line text-cant-ink py-2 text-sm hover:bg-cant-ink/5 transition">
+                <%= t("order_chat.regen_lyrics_button", count: order.lyrics_regen_remaining, remaining: order.lyrics_regen_remaining) %>
+              </button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

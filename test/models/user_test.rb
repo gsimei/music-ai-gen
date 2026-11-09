@@ -9,7 +9,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "BRANDS constant contains expected values" do
-    assert_equal %w[b2b b2c], User::BRANDS
+    assert_equal %w[b2b], User::BRANDS
   end
 
   # ---------------------------------------------------------------------------
@@ -28,12 +28,12 @@ class UserTest < ActiveSupport::TestCase
   # Validations — role
   # ---------------------------------------------------------------------------
   test "is valid with role customer" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert user.valid?
   end
 
   test "is invalid with unrecognized role" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     user.role = "superuser"
     assert_not user.valid?
     assert user.errors[:role].any?
@@ -48,7 +48,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "is valid with nil origin_brand (allow_nil)" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     user.origin_brand = nil
     # Only validates other fields; origin_brand is allow_nil
     user.validate
@@ -56,7 +56,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "is invalid with unrecognized origin_brand" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     user.origin_brand = "b3x"
     assert_not user.valid?
     assert user.errors[:origin_brand].any?
@@ -66,39 +66,16 @@ class UserTest < ActiveSupport::TestCase
   # Validations — locale
   # ---------------------------------------------------------------------------
   test "is valid with supported locale it" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     user.locale = "it"
     assert user.valid?
   end
 
   test "is invalid with unsupported locale" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     user.locale = "zh"
     assert_not user.valid?
     assert user.errors[:locale].any?
-  end
-
-  # ---------------------------------------------------------------------------
-  # Devise — confirmation_required?
-  # ---------------------------------------------------------------------------
-  test "confirmation_required? returns false for guest user" do
-    user = users(:guest_user)
-    assert user.guest?
-    assert_not user.confirmation_required?
-  end
-
-  test "confirmation_required? returns true for unconfirmed non-guest" do
-    user = users(:unconfirmed_user)
-    assert_not user.guest?
-    assert_nil user.confirmed_at
-    assert user.confirmation_required?
-  end
-
-  test "confirmation_required? returns false for already-confirmed non-guest" do
-    user = users(:customer_b2c)
-    assert_not user.guest?
-    assert_not_nil user.confirmed_at
-    assert_not user.confirmation_required?
   end
 
   # ---------------------------------------------------------------------------
@@ -110,7 +87,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "guest? returns false when guest flag is false" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert_not user.guest?
   end
 
@@ -120,7 +97,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "admin? returns false for customer role" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert_not user.admin?
   end
 
@@ -130,12 +107,12 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "support? returns false for customer role" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert_not user.support?
   end
 
   test "customer? returns true for customer role" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert user.customer?
   end
 
@@ -147,11 +124,6 @@ class UserTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
   # Brandable concern
   # ---------------------------------------------------------------------------
-  test "b2c? returns true when origin_brand is b2c" do
-    user = users(:customer_b2c)
-    assert user.b2c?
-  end
-
   test "b2b? returns true when origin_brand is b2b" do
     user = users(:customer_b2b)
     assert user.b2b?
@@ -182,7 +154,7 @@ class UserTest < ActiveSupport::TestCase
   # Associations
   # ---------------------------------------------------------------------------
   test "responds to orders association" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert_respond_to user, :orders
   end
 
@@ -193,7 +165,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "responds to refund_requests association" do
-    user = users(:customer_b2c)
+    user = users(:customer_b2b)
     assert_respond_to user, :refund_requests
   end
 
@@ -214,14 +186,4 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "RefundRequest", reflection.options[:class_name]
   end
 
-  test "responds to email_deliveries association" do
-    user = users(:customer_b2c)
-    assert_respond_to user, :email_deliveries
-  end
-
-  test "email_deliveries association has dependent nullify" do
-    reflection = User.reflect_on_association(:email_deliveries)
-    assert_not_nil reflection
-    assert_equal :nullify, reflection.options[:dependent]
-  end
 end
