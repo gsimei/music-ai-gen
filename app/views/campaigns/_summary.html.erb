@@ -1,0 +1,8 @@
+<div class="jp-summary-card">
+  <p class="studio-kicker">SUA PROMOÇÃO</p>
+  <% if campaign.product_photos.first %><%= image_tag campaign.product_photos.first, alt: "Foto de abertura da campanha", class: "jp-summary-photo" %><% end %>
+  <h2><%= campaign.business_name %></h2><p><%= campaign.offer %></p>
+  <div class="jp-summary-contact"><strong><%= campaign.call_to_action %></strong><p><%= campaign.contact %></p></div>
+  <p class="studio-field-hint"><%= campaign.sound_summary %></p>
+  <p class="studio-field-hint">Vídeo vertical de até <%= Campaigns::AudioPreview::MAX_DURATION.to_i %>s · <%= campaign.product_photos.size %> fotos</p>
+</div>

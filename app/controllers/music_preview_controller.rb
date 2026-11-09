@@ -7,6 +7,8 @@ class MusicPreviewController < ApplicationController
   def show
     authorize @order, :music_preview?
 
+    return redirect_to order_chat_path(order_id: @order.id) if @order.campaign
+
     unless @order.preview_ready?
       redirect_to order_path(@order) and return
     end

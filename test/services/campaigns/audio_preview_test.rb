@@ -33,6 +33,8 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
       version_before = @order.creation_version
       PrepareCampaignAudioJob.perform_now(@asset.id)
       assert @asset.reload.campaign_preview_ready?
+      assert @asset.audition_ready?
+      refute_equal @asset.campaign_audio.blob.checksum, @asset.audition_audio.blob.checksum
       assert_not_equal version_before, @order.reload.creation_version
       assert_in_delta 2, @asset.campaign_audio.blob.metadata.fetch("duration_seconds"), 0.05
       event = @order.generation_costs.find_by!(operation: "audio_preview")
@@ -106,6 +108,51 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
       assert_equal preview_blob, @asset.campaign_audio.blob.id
       PrepareCampaignAudioJob.perform_now(@asset.id, 1)
       assert @asset.reload.campaign_preview_ready?
+    end
+  end
+
+  test "audition contains speech and moving the excerpt does not move the watermark on the source timeline" do
+    Dir.mktmpdir do |dir|
+      source = File.join(dir, "silence.wav")
+      Campaigns::MediaCommand.run!("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "12", source)
+      decoded = [0, 2].map do |start|
+        destination = File.join(dir, "marked-#{start}.m4a")
+        Campaigns::AudioAudition.render(source: source, destination: destination, start_seconds: start, duration_seconds: 12)
+        assert_in_delta 12, duration(destination), 0.05
+        Campaigns::MediaCommand.run!("ffmpeg", "-v", "error", "-i", destination, "-f", "f32le", "-ac", "1", "-ar", "8000", "-").unpack("e*")
+      end
+      energy = ->(samples, start, length) { samples.slice(start * 8000, length * 8000).sum(&:abs) / (length * 8000) }
+      assert_operator energy.call(decoded[0], 0, 2), :>, 0.01, "Watermark asset must contain actual audible speech"
+      assert_operator energy.call(decoded[0], 4, 2), :<, 0.001
+      assert_operator energy.call(decoded[1], 6, 2), :>, 0.01
+      first = decoded[0].slice(8 * 8000, 2 * 8000)
+      shifted = decoded[1].slice(6 * 8000, 2 * 8000)
+      error = first.zip(shifted).sum { |a, b| (a - b).abs } / first.size
+      assert_operator error, :<, 0.015, "The same source interval must carry the same watermark after a recut (allowing AAC frame differences)"
+    end
+  end
+
+  test "existing approved campaigns can gain protected auditions without changing the final excerpt" do
+    Dir.mktmpdir do |dir|
+      File.open(tone(dir, 2)) { |file| @asset.audio.attach(io: file, filename: "original.wav", content_type: "audio/wav") }
+      PrepareCampaignAudioJob.perform_now(@asset.id)
+      clean_blob = @asset.reload.campaign_audio.blob.id
+      assert Orders::MusicApprover.call(order: @order, asset_id: @asset.id).success?
+      @asset.audition_audio.purge
+      PrepareCampaignAudioJob.perform_now(@asset.id)
+      assert @asset.reload.audition_ready?
+      assert_equal clean_blob, @asset.campaign_audio.blob.id
+    end
+  end
+
+  test "an unchosen version can finish preparation after its sibling has been approved" do
+    Dir.mktmpdir do |dir|
+      File.open(tone(dir, 2)) { |file| @asset.audio.attach(io: file, filename: "original.wav", content_type: "audio/wav") }
+      @order.update!(status: "approved", approved_variant: "b", approved_music_generation_id: @asset.music_generation_id)
+      PrepareCampaignAudioJob.perform_now(@asset.id)
+      assert @asset.reload.audition_ready?
+      assert_nil @asset.playback_url
+      assert_equal "b", @order.reload.approved_variant
     end
   end
 

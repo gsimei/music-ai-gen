@@ -49,7 +49,7 @@
         <div class="px-5 py-4 space-y-3">
           <% if order.approved? %>
             <% approved_asset = approved_music_asset(order) %>
-            <% audio_url = approved_asset&.url.presence || approved_asset&.provider_url %>
+            <% audio_url = approved_asset&.playback_url %>
             <% if audio_url.present? %>
               <audio controls class="w-full" preload="none"
                      data-lyrics-sync-target="audio"
@@ -69,7 +69,7 @@
                 <audio controls class="w-full mb-2" preload="none"
                        data-lyrics-sync-target="audio"
                        data-lyrics-sections="<%= (asset.lyrics_sync&.dig("sections") || []).to_json %>">
-                  <source src="<%= asset.url.presence || asset.provider_url %>" type="audio/mpeg">
+                  <source src="<%= asset.listening_url %>" type="audio/mpeg">
                 </audio>
                 <%= form_with url: order_chat_approve_music_path(order_id: order.id), data: { turbo_stream: true } do |f| %>
                   <%= hidden_field_tag :variant, ("a".ord + asset.variant_index).chr %>

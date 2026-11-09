@@ -6,8 +6,8 @@ require "test_helper"
 #
 # Responsibilities:
 # - Finds order by stripe_payment_intent_id from the event payload
-# - Uses update_columns(status: "payment_failed") — NOT an AASM event
-#   (allows transition from any state, bypasses validations)
+# - Marks only unpaid orders as payment_failed under a lock
+# - Never rolls back a confirmed payment or an ongoing creation
 # - Returns success_result on update
 # - Returns success_result(:no_order_found) when no order matches the payment_intent_id
 # - Returns success_result(:already_handled) when order is already payment_failed (idempotency)
@@ -33,10 +33,8 @@ class Stripe::Handlers::PaymentIntentFailedTest < ActiveSupport::TestCase
     assert_equal "payment_failed", @pending_order.reload.status
   end
 
-  test "update uses update_columns bypassing AASM callbacks" do
-    # Verify the order is updated even from a state that AASM does not have
-    # a direct payment_failed transition from (e.g. lyrics_drafting would be blocked
-    # by AASM but update_columns bypasses it)
+  test "late failure never reverses a confirmed creation" do
+    # Stripe can deliver a delayed failure after a successful checkout.
     order_in_lyrics = orders(:b2b_lyrics_drafting)
     order_in_lyrics.update_columns(stripe_payment_intent_id: "pi_test_bypass_aasm_001")
 
@@ -45,7 +43,7 @@ class Stripe::Handlers::PaymentIntentFailedTest < ActiveSupport::TestCase
     result = Stripe::Handlers::PaymentIntentFailed.call(stripe_event: event)
 
     assert result.success?
-    assert_equal "payment_failed", order_in_lyrics.reload.status
+    assert_equal "lyrics_drafting", order_in_lyrics.reload.status
   end
 
   # ---------------------------------------------------------------------------

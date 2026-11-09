@@ -1,5 +1,5 @@
 <% if order.campaign && !order.approved? %>
-  <div class="campaign-note"><strong><%= order.current_draft ? "Sua criação está em Letra e música." : "Estamos preparando sua letra." %></strong><p>Edite a letra, compare as versões e guarde sua favorita. Você tem três rodadas com duas versões cada.</p><button type="button" class="studio-button studio-button-green" data-action="studio-panels#switch" data-panel="preview">Revisar letra e ouvir versões ↗</button></div>
+  <div class="campaign-note"><strong><%= order.current_draft ? "Sua criação está em Letra e música." : "Estamos preparando sua letra." %></strong><p>Edite a letra, compare as versões e guarde sua favorita. Você tem três rodadas com duas versões cada.</p><a href="#chat-lyrics-panel" class="studio-button studio-button-green" data-turbo="false">Revisar letra e ouvir versões</a></div>
   <% if order.lyrics_failed? %><%= button_to "Tentar preparar a letra novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %><% end %>
 <% else %>
 <% if order.lyrics_drafting? %>
@@ -9,12 +9,12 @@
 <% elsif order.lyrics_approved? || order.music_generating? %>
   <%= render "order_chat/generating_card", message: t("order_chat.generating_music"), dom_id: "chat-music-card" %>
 <% elsif order.preview_ready? %>
-  <div class="campaign-note"><strong>Suas duas opções estão prontas.</strong><p>Ouça as músicas e escolha a que combina com sua promoção.</p><button type="button" class="studio-button studio-button-green" data-action="studio-panels#switch" data-panel="preview">Ouvir e escolher ↗</button></div>
+  <div class="campaign-note"><strong>Suas duas opções estão prontas.</strong><p>Ouça as músicas e escolha a que combina com sua promoção.</p><button type="button" class="studio-button studio-button-green" data-action="studio-panels#switch" data-panel="preview">Ouvir e escolher</button></div>
 <% elsif order.lyrics_failed? || order.music_failed? %>
   <div class="studio-notice studio-error" role="alert"><%= t("order_chat.error_message") %></div>
   <% if order.campaign %><%= button_to "Tentar novamente, sem gastar ajuste", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %><% end %>
 <% end %>
 
-<% if order.approved? && order.campaign %><div class="campaign-note"><strong>Música escolhida! Agora, o seu vídeo.</strong><p>Montamos sua arte com a música aprovada.</p><%= link_to "Ver e baixar minha campanha ↗", campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
+<% if order.approved? && order.campaign %><div class="campaign-note"><strong>Música escolhida! Agora, o seu vídeo.</strong><p>Montamos sua arte com a música aprovada.</p><%= link_to "Ver e baixar minha campanha", campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
 
 <% end %>

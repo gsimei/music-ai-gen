@@ -24,6 +24,8 @@ Rails.application.routes.draw do
   get   "orders/wizard/:step", to: "orders#wizard_show", as: :wizard_order,  constraints: { step: /[1-5]/ }
   patch "orders/wizard/:step", to: "orders#wizard_update",                   constraints: { step: /[1-5]/ }
   resources :orders, only: [ :show ] do
+    get "audio/:asset_id/preview", to: "campaign_audio#preview", as: :audio_preview
+    get "audio/:asset_id/final", to: "campaign_audio#final", as: :audio_final
     post :checkout,          on: :member
     post :approve_lyrics,    on: :member, path: "spf/approve_lyrics"
     post :regenerate_lyrics, on: :member, path: "spf/regenerate_lyrics"

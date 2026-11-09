@@ -28,7 +28,7 @@ class CampaignsController < ApplicationController
   end
 
   def show
-    if @campaign.order.pending? && @campaign.order.stripe_session_id.present?
+    if (@campaign.order.pending? || @campaign.order.payment_failed?) && @campaign.order.stripe_session_id.present?
       result = Stripe::PaymentReconciler.call(order: @campaign.order)
       @payment_check_unavailable = result.errors == "payment_check_unavailable" if result.failure?
     end

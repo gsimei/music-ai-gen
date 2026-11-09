@@ -11,12 +11,13 @@ export default class extends Controller {
     this.playerTarget.pause()
     this.playerTarget.removeAttribute("src")
     this.errorTarget.hidden = true
-    const sample = this.catalogValue[this.genreTarget.value]
+    const genre = this.genreTargets.find(input => input.checked)?.value || this.genreTarget.value
+    const sample = this.catalogValue[genre]
     this.panelTarget.hidden = !sample
     this.hintTarget.hidden = !!sample
     if (!sample) {
       this.playerTarget.load()
-      this.hintTarget.textContent = this.genreTarget.value === "auto" ? "Escolha um ritmo para ouvir um exemplo antes de decidir." : "O exemplo deste ritmo ainda está sendo preparado. Você pode escolher normalmente."
+      this.hintTarget.textContent = genre === "auto" ? "Escolha um ritmo para ouvir um exemplo antes de decidir." : "O exemplo deste ritmo ainda está sendo preparado. Você pode escolher normalmente."
       return
     }
     this.titleTarget.textContent = `Ouça como soa: ${sample.label}`

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module ::Stripe
-  # Builds a Stripe Checkout Session for a pending Order.
+  # Builds a Stripe Checkout Session for an unpaid Order.
   #
   # Responsibilities:
-  # - Validates the order is in pending status before calling Stripe
+  # - Validates the order is pending or has a failed payment before calling Stripe
   # - Creates a Stripe::Checkout::Session with correct line items and metadata
   # - Persists the session ID on the order via update_columns (no callbacks)
   # - Returns success_result(session) or failure_result on API/validation error
@@ -13,10 +13,10 @@ module ::Stripe
     attribute :host, :string
 
     def call
-      return failure_result("order_not_pending") unless order.pending?
+      return failure_result("order_not_pending") unless order.pending? || order.payment_failed?
 
       order.with_lock do
-        return failure_result("order_not_pending") unless order.pending?
+        return failure_result("order_not_pending") unless order.pending? || order.payment_failed?
         if order.campaign && order.stripe_session_id.present?
           previous = ::Stripe::Checkout::Session.retrieve(order.stripe_session_id)
           if previous.payment_status == "paid"
@@ -25,6 +25,7 @@ module ::Stripe
             return success_result({ url: routes.campaign_url(order.campaign, payment: "processing", host: resolved_host, protocol: url_protocol), id: previous.id })
           end
           return success_result({ url: previous.url, id: previous.id }) if previous.status == "open"
+          return failure_result("payment_processing") unless previous.status == "expired"
         end
         session = create_stripe_session
         order.update_columns(stripe_session_id: session.id)
@@ -47,6 +48,7 @@ module ::Stripe
         success_url: success_url,
         cancel_url: cancel_url,
         locale: order.locale == "pt" ? "pt-BR" : order.locale,
+        payment_intent_data: { metadata: { order_id: order.id, reference: order.reference, brand: order.brand } },
         metadata: {
           order_id: order.id,
           reference: order.reference,

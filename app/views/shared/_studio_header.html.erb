@@ -2,7 +2,7 @@
   <%= render "shared/studio_logo" %>
   <nav aria-label="Sua campanha">
     <%= link_to "Minhas campanhas", songs_path, aria: { current: controller_name == "songs" ? "page" : nil } %>
-    <%= link_to "Criar promoção ↗", new_order_path, class: "studio-header-create" %>
+    <%= link_to "Criar promoção", new_order_path, class: "studio-header-create" %>
     <%= button_to "Sair", destroy_user_session_path, method: :delete, class: "studio-signout" %>
   </nav>
 </header>

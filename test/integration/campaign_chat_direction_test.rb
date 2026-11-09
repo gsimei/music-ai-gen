@@ -26,8 +26,8 @@ class CampaignChatDirectionTest < ActionDispatch::IntegrationTest
     assert_includes @order.briefing.reload.music_style, "pagode"
     refute @order.briefing.extra_params["instrumental"]
     get order_chat_path(order_id: @order.id)
-    assert_select 'select[name="campaign[musical_genre]"] option[selected][value="pagode"]'
-    assert_select 'select[name="campaign[vocal_gender]"] option[selected][value="male"]'
+    assert_select 'input[type="radio"][name="campaign[musical_genre]"][checked][value="pagode"]'
+    assert_select 'input[type="radio"][name="campaign[vocal_gender]"][checked][value="male"]'
     answer(reply: "Vamos gerar.", sound_settings: {}, generate_music: true) { ConversationalReplyJob.perform_now(@order.id, "Pode gerar") }
     GenerateMusicJob.perform_now(@order.id)
     generation = @order.music_generations.last

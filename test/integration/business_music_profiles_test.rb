@@ -26,8 +26,8 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
     get new_campaign_path(music_profile_id: profile.id)
     assert_response :success
     assert_select 'input[name="campaign[business_name]"][value="Pizzaria da Vila"]'
-    assert_select 'select[name="campaign[musical_genre]"] option[selected][value="forro"]'
-    assert_select 'select[name="campaign[vocal_gender]"] option[selected][value="female"]'
+    assert_select 'input[type="radio"][name="campaign[musical_genre]"][checked][value="forro"]'
+    assert_select 'input[type="radio"][name="campaign[vocal_gender]"][checked][value="female"]'
     assert_select 'textarea[name="campaign[offer]"]', text: ""
     assert_select 'input[name="campaign[contact]"][value]', count: 0
     get new_campaign_path

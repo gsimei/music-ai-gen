@@ -67,3 +67,58 @@ class Stripe::PaymentReconcilerTest < ActiveSupport::TestCase
     end
   end
 end
+
+class Stripe::PaymentReconcilerTest
+  test "failed payment reuses its open checkout and can settle exactly once" do
+    @order.update!(status: "payment_failed")
+    session = Stripe::Checkout::Session.construct_from(@session.merge(status: "open", payment_status: "unpaid", url: "https://checkout.stripe.com/retry"))
+    Stripe::Checkout::Session.stub(:retrieve, session) do
+      Stripe::Checkout::Session.stub(:create, ->(*) { flunk "must reuse existing checkout" }) do
+        assert_equal session.url, Stripe::CheckoutBuilder.call(order: @order, host: "b2b.lvh.me").value[:url]
+      end
+    end
+    Stripe::Checkout::Session.stub(:retrieve, Stripe::Checkout::Session.construct_from(@session)) do
+      assert_enqueued_jobs 1, only: GenerateLyricsJob do
+        assert Stripe::PaymentReconciler.call(order: @order).success?
+        assert Stripe::PaymentReconciler.call(order: @order.reload).success?
+      end
+    end
+    assert @order.reload.paid?
+  end
+
+  test "failed payment with settled checkout is reconciled before retrying" do
+    @order.update!(status: "payment_failed")
+    session = Stripe::Checkout::Session.construct_from(@session.merge(status: "complete"))
+    Stripe::Checkout::Session.stub(:retrieve, session) do
+      Stripe::Checkout::Session.stub(:create, ->(*) { flunk "already paid; must not create another charge" }) do
+        assert_enqueued_jobs 1, only: GenerateLyricsJob do
+          assert Stripe::CheckoutBuilder.call(order: @order, host: "b2b.lvh.me").success?
+        end
+      end
+    end
+    assert @order.reload.paid?
+  end
+
+  test "only an expired unpaid checkout may be replaced" do
+    @order.update!(status: "payment_failed")
+    old_session = Stripe::Checkout::Session.construct_from(@session.merge(status: "expired", payment_status: "unpaid"))
+    replacement = Stripe::Checkout::Session.construct_from(id: "cs_test_replacement", url: "https://checkout.stripe.com/replacement")
+    Stripe::Checkout::Session.stub(:retrieve, old_session) do
+      Stripe::Checkout::Session.stub(:create, replacement) do
+        assert Stripe::CheckoutBuilder.call(order: @order, host: "b2b.lvh.me").success?
+      end
+    end
+    assert_equal replacement.id, @order.reload.stripe_session_id
+  end
+
+  test "complete but unsettled session never starts a duplicate checkout" do
+    @order.update!(status: "payment_failed")
+    session = Stripe::Checkout::Session.construct_from(@session.merge(status: "complete", payment_status: "unpaid"))
+    Stripe::Checkout::Session.stub(:retrieve, session) do
+      Stripe::Checkout::Session.stub(:create, ->(*) { flunk "must wait for settlement" }) do
+        assert_equal "payment_processing", Stripe::CheckoutBuilder.call(order: @order, host: "b2b.lvh.me").errors
+      end
+    end
+    assert @order.reload.payment_failed?
+  end
+end

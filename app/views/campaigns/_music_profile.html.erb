@@ -9,6 +9,6 @@
     <p class="studio-field-hint"><%= Campaign.new(settings.slice("musical_genre", "vocal_gender", "style", "music_notes")).sound_summary %></p>
     <%= button_to profile ? "Atualizar o som salvo do negócio" : "Salvar o som do meu negócio", save_music_profile_campaign_path(campaign), class: "studio-button studio-button-outline" %>
   <% end %>
-  <% if profile %><%= link_to "Criar promoção com esse som ↗", new_campaign_path(music_profile_id: profile.id), class: "studio-text-link" %><% end %>
+  <% if profile %><%= link_to "Criar promoção com esse som", new_campaign_path(music_profile_id: profile.id), class: "studio-text-link" %><% end %>
 </section>
 <% end %>

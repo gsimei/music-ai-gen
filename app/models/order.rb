@@ -35,7 +35,7 @@ class Order < ApplicationRecord
     state :refunded
 
     event :mark_paid, after_commit: :enqueue_post_payment_generation do
-      transitions from: :pending, to: :paid
+      transitions from: %i[pending payment_failed], to: :paid
     end
 
     event :start_lyrics_generation do

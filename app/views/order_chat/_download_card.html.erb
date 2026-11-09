@@ -8,7 +8,7 @@
     </div>
 
     <% approved_asset = approved_music_asset(order) %>
-    <% audio_url = approved_asset&.url.presence || approved_asset&.provider_url %>
+    <% audio_url = approved_asset&.playback_url %>
     <% if audio_url.present? %>
       <audio controls class="w-full h-8 mb-4" preload="none">
         <source src="<%= audio_url %>" type="audio/mpeg">

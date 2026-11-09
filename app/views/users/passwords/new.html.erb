@@ -1,7 +1,7 @@
 <% content_for :title, "JinglePro · Recuperar senha" %>
 <%= render layout: "users/shared/studio_auth" do %>
   <p class="studio-kicker">RECUPERE SEU ACESSO</p>
-  <h1>Vamos recuperar<br>seu <span>acesso.</span></h1>
+  <h1>Recuperar acesso</h1>
   <p class="studio-form-intro">Informe seu e-mail para receber as instruções e criar uma nova senha.</p>
   <%= form_for resource, as: resource_name, url: password_path(resource_name), html: { method: :post } do |f| %>
     <%= render "users/shared/error_messages", resource: resource %>

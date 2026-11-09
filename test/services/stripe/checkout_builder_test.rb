@@ -101,15 +101,13 @@ class Stripe::CheckoutBuilderTest < ActiveSupport::TestCase
     assert result.failure?, "Expected failure_result for non-pending order"
   end
 
-  test "order in payment_failed status returns failure_result without calling Stripe" do
+  test "order in payment_failed status can create a new checkout" do
     failed_order = orders(:b2b_payment_failed)
 
-    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions")
-      .to_raise("Stripe should not be called for non-pending orders")
-
+    stub_stripe_checkout_session_create(session_id: "cs_test_retry", url: "https://checkout.stripe.com/pay/retry")
     result = Stripe::CheckoutBuilder.call(order: failed_order)
-
-    assert result.failure?
+    assert result.success?
+    assert_equal "cs_test_retry", failed_order.reload.stripe_session_id
   end
 
   # ---------------------------------------------------------------------------

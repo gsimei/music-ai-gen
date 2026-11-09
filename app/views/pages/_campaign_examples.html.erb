@@ -6,9 +6,9 @@
   </div>
   <div class="studio-example-grid">
     <% [
-      { slug: "sabores-da-vila", name: "Sabores da Vila", category: "EM DESTAQUE / CAMPANHA COMPLETA", video: "sabores-da-vila-campanha", featured: true, format: "5 FOTOS / TRANSIÇÕES SUAVES / 30S", title: "5 fotos. Uma campanha completa.", offer: "Pizzas, cafés, sucos e sobremesas com 10% de desconto. De terça a quinta, para consumir no local." },
-      { slug: "pizzaria-forno-da-vila", name: "Pizzaria Forno da Vila", category: "PIZZARIA", format: "2 FOTOS / TRANSIÇÃO SUAVE / 30S", video: "pizzaria-forno-da-vila-slideshow", title: "A terça ganhou um refrão.", offer: "Duas pizzas grandes por R$ 79,90, às terças, para retirada." },
-      { slug: "cafe-aurora", name: "Café Aurora", category: "CAFETERIA", format: "30 SEGUNDOS / VERTICAL", video: "cafe-aurora-motion", title: "Um bom dia com a sua marca.", offer: "Café e pão de queijo por R$ 12, de segunda a sexta, até as 10h." }
+      { slug: "sabores-da-vila", name: "Sabores da Vila", category: "EM DESTAQUE / CAMPANHA COMPLETA", video: "sabores-da-vila-campanha", featured: true, format: ["5 fotos com transições", "30 segundos"], title: "5 fotos. Uma campanha completa.", offer: "Pizzas, cafés, sucos e sobremesas com 10% de desconto. De terça a quinta, para consumir no local." },
+      { slug: "pizzaria-forno-da-vila", name: "Pizzaria Forno da Vila", category: "PIZZARIA", format: ["2 fotos com transição", "30 segundos"], video: "pizzaria-forno-da-vila-slideshow", title: "A terça ganhou um refrão.", offer: "Duas pizzas grandes por R$ 79,90, às terças, para retirada." },
+      { slug: "cafe-aurora", name: "Café Aurora", category: "CAFETERIA", format: ["Vídeo vertical", "30 segundos"], video: "cafe-aurora-motion", title: "Um bom dia com a sua marca.", offer: "Café e pão de queijo por R$ 12, de segunda a sexta, até as 10h." }
     ].each do |example| %>
       <article class="studio-example <%= "studio-example-featured" if example[:featured] %>" aria-labelledby="<%= example[:slug] %>-title" data-demo-container data-landing-motion-target="reveal">
         <div class="studio-example-video">
@@ -16,7 +16,7 @@
             <source src="/demos/<%= example[:video] %>.mp4" type="video/mp4">
             Seu navegador não reproduz este vídeo. <a href="/demos/<%= example[:video] %>.mp4">Abrir o vídeo</a>.
           </video>
-          <span class="studio-example-format"><%= example[:format] %></span>
+          <div class="studio-example-format"><% example[:format].each do |detail| %><span><%= detail %></span><% end %></div>
         </div>
         <div class="studio-example-copy">
           <p class="studio-kicker"><%= example[:category] %></p>
@@ -32,14 +32,14 @@
             </ol>
           <% end %>
           <div class="studio-example-audio">
-            <p id="<%= example[:slug] %>-audio-label">Só a música <span>· trecho de 30s</span></p>
+            <p id="<%= example[:slug] %>-audio-label">Só a música <span>· trecho de 30 segundos</span></p>
             <audio controls preload="none" aria-label="Música de exemplo: <%= example[:name] %>" data-demo-media-target="player" data-action="play->demo-media#play error->demo-media#error">
               <source src="/demos/<%= example[:slug] %>.mp3" type="audio/mpeg">
               <a href="/demos/<%= example[:slug] %>.mp3">Ouvir o trecho da música</a>.
             </audio>
           </div>
           <p class="studio-example-error" role="status" hidden data-demo-error>Não foi possível tocar agora. Tente dar o play novamente.</p>
-          <%= link_to "Criar para o meu negócio ↗", new_order_path, class: "studio-text-link" %>
+          <%= link_to "Criar para o meu negócio", new_order_path, class: "studio-text-link" %>
         </div>
       </article>
     <% end %>

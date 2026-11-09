@@ -121,11 +121,12 @@ class OrderChatController < ApplicationController
   end
 
   def prepare_audio
-    return head :conflict unless @order.campaign && !@order.approved?
+    return head :conflict unless @order.campaign
     asset = @order.all_music_assets.find(params[:asset_id])
     asset.with_lock do
-      unless asset.campaign_preview_ready? || asset.campaign_preview_status == "queued"
-        asset.update!(campaign_preview_status: "queued")
+      return head :conflict if asset.approved_for_delivery? && !asset.campaign_preview_ready?
+      unless asset.audition_ready? || asset.campaign_preview_status == "queued"
+        asset.update!(campaign_preview_status: "queued") unless asset.campaign_preview_ready?
         ArchiveCampaignAudioJob.perform_later(asset.id)
       end
     end
