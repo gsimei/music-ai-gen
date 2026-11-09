@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Criar campanha no celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F5ED}
+a{color:inherit;text-decoration:none}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #173E32;outline-offset:3px}
+input::placeholder,textarea::placeholder{color:#66796C}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+@keyframes jp-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes jp-pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .jp-in{animation:jp-rise .6s cubic-bezier(.2,.7,.2,1) both}
+  .jp-pop{animation:jp-pop .8s cubic-bezier(.2,.7,.2,1) both}
+  details>summary svg{transition:transform .25s ease}
+  details[open]>summary svg{transform:rotate(180deg)}
+}
+</style>
+</helmet>
+<div style="--lime: {{accent}}; position: relative; width: 390px; overflow: hidden; font-family: Manrope, system-ui, sans-serif; color: #173E32; background: #F6F5ED; font-size: 16px; line-height: 1.6">
+
+<header style="display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 12px 0 20px; box-sizing: border-box">
+  <a href="Landing-Mobile.dc.html" aria-label="jinglepro, início" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; letter-spacing: -0.04em; color: #173E32">
+    <svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><g fill="#173E32"><rect x="1" y="9" width="4" height="10" rx="2"/><rect x="8" y="2" width="4" height="24" rx="2"/><rect x="15" y="6" width="4" height="16" rx="2"/><rect x="22" y="11" width="4" height="7" rx="2"/></g></svg>jinglepro
+  </a>
+  <a href="Entrar.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 15px; font-weight: 600">Entrar</a>
+</header>
+
+<main style="padding: 4px 20px 0">
+  <nav aria-label="Etapas da campanha">
+    <p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Passo 1 de 3 · Sua promoção</p>
+    <div aria-hidden="true" style="display: flex; gap: 6px; margin-top: 10px"><span style="flex: 1; height: 6px; border-radius: 3px; background: #173E32"></span><span style="flex: 1; height: 6px; border-radius: 3px; background: #CFD8C9"></span><span style="flex: 1; height: 6px; border-radius: 3px; background: #CFD8C9"></span></div>
+  </nav>
+
+  <h1 class="jp-in" style="margin: 22px 0 0; font-size: 34px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">O que vamos divulgar?</h1>
+  <p style="margin: 10px 0 0; font-size: 16px; color: #4C6155">Conte a oferta. A gente transforma em música e vídeo.</p>
+
+  <div style="margin-top: 26px">
+    <label for="m-nome" style="display: block; font-size: 16px; font-weight: 700">Nome do seu negócio</label>
+    <input id="m-nome" type="text" value="Pizzaria Forno da Vila" autocomplete="organization" style="box-sizing: border-box; width: 100%; min-height: 56px; margin-top: 8px; padding: 0 16px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+    <p style="margin: 6px 0 0; font-size: 14px; color: #4C6155">Aparece no vídeo e é cantado na música.</p>
+  </div>
+
+  <div style="margin-top: 22px">
+    <label for="m-oferta" style="display: block; font-size: 16px; font-weight: 700">Qual é a oferta ou novidade?</label>
+    <textarea id="m-oferta" rows="4" style="box-sizing: border-box; width: 100%; margin-top: 8px; padding: 14px 16px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px/1.5 Manrope, system-ui, sans-serif; resize: vertical">Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça.</textarea>
+    <p style="margin: 6px 0 0; font-size: 14px; color: #4C6155">Inclua preço, condições e validade. 64/180 caracteres.</p>
+  </div>
+
+  <fieldset style="margin: 22px 0 0; padding: 0; border: 0; min-width: 0">
+    <legend style="padding: 0; font-size: 16px; font-weight: 700">Como convidar o cliente?</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px">
+      <button type="button" aria-pressed="true" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; border: 1.5px solid #173E32; border-radius: 999px; background: #173E32; color: #F6F5ED; font: 700 15px Manrope, system-ui, sans-serif; cursor: pointer">Peça pelo WhatsApp</button>
+      <button type="button" aria-pressed="false" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 999px; background: #FFFEF9; color: #173E32; font: 700 15px Manrope, system-ui, sans-serif; cursor: pointer">Venha nos visitar</button>
+      <button type="button" aria-pressed="false" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 999px; background: #FFFEF9; color: #173E32; font: 700 15px Manrope, system-ui, sans-serif; cursor: pointer">Reserve seu horário</button>
+      <button type="button" aria-pressed="false" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 999px; background: #FFFEF9; color: #173E32; font: 700 15px Manrope, system-ui, sans-serif; cursor: pointer">Saiba mais no Instagram</button>
+    </div>
+  </fieldset>
+
+  <div style="margin-top: 22px">
+    <label for="m-contato" style="display: block; font-size: 16px; font-weight: 700">WhatsApp, endereço ou @Instagram</label>
+    <input id="m-contato" type="text" value="(11) 99999-9999" inputmode="text" style="box-sizing: border-box; width: 100%; min-height: 56px; margin-top: 8px; padding: 0 16px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+  </div>
+
+  <div style="margin-top: 26px; padding: 18px; border: 1.5px dashed #6F8577; border-radius: 20px; background: #EDF0E5">
+    <p style="margin: 0; font-size: 16px; font-weight: 700">Fotos <span style="font-weight: 500; color: #4C6155">(opcional)</span></p>
+    <p style="margin: 4px 0 0; font-size: 14px; color: #4C6155">Até 5 fotos. A primeira abre o vídeo. Sem fotos, criamos uma arte com a oferta.</p>
+    <div style="display: flex; gap: 10px; margin-top: 14px">
+      <figure style="margin: 0; width: 96px">
+        <div style="position: relative; width: 96px; height: 128px; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 3px #173E32"><img src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="Foto 1: duas pizzas assadas" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></div>
+        <figcaption style="margin-top: 6px; font-size: 13px; font-weight: 700; color: #24593E">1 · Abre</figcaption>
+      </figure>
+      <button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 128px; border: 1.5px dashed #6F8577; border-radius: 12px; background: #FFFEF9; color: #173E32; font: 700 13px Manrope, system-ui, sans-serif; cursor: pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Adicionar</button>
+    </div>
+  </div>
+
+  <details open style="margin-top: 26px; border-top: 1px solid #CFD8C9; border-bottom: 1px solid #CFD8C9">
+    <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; font-size: 16px; font-weight: 700">Prévia do vídeo (9:16)<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="jp-pop" style="display: flex; justify-content: center; padding: 40px 16px 24px; margin-bottom: 16px; background: #E5EADC; border-radius: 150px 150px 24px 24px">
+      <div style="position: relative; width: 220px; height: 391px; border: 5px solid #173E32; border-radius: 28px; overflow: hidden; background: #173E32; box-shadow: 0 16px 32px rgba(23, 62, 50, 0.22)">
+        <img src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+        <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 20, 14, 0.65) 0%, rgba(8, 20, 14, 0) 26%, rgba(8, 20, 14, 0) 40%, rgba(8, 20, 14, 0.94) 100%)"></div>
+        <div style="position: absolute; top: 16px; left: 14px; right: 14px"><span aria-hidden="true" style="display: block; width: 28px; height: 4px; border-radius: 2px; background: var(--lime)"></span><p style="margin: 6px 0 0; font-size: 15px; line-height: 1.2; font-weight: 800; color: #FFFFFF">Pizzaria Forno da Vila</p></div>
+        <div style="position: absolute; left: 14px; right: 14px; bottom: 14px">
+          <p style="margin: 0; font-size: 17px; line-height: 1.2; font-weight: 800; color: #FFFFFF">Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça.</p>
+          <p style="display: inline-block; margin: 10px 0 0; padding: 6px 12px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 13px; font-weight: 800">Peça pelo WhatsApp</p>
+          <p style="margin: 6px 0 0; font-size: 13px; font-weight: 700; color: var(--lime)">(11) 99999-9999</p>
+        </div>
+      </div>
+    </div>
+  </details>
+  <p style="margin: 14px 0 0; font-size: 14px; color: #4C6155">A prévia mostra a ordem das informações. No vídeo, as fotos ganham movimento e os textos entram em sequência.</p>
+  <div style="height: 130px"></div>
+</main>
+
+<!-- Barra de ação fixa no rodapé -->
+<div style="position: absolute; left: 0; right: 0; top: 752px; box-sizing: border-box; padding: 14px 20px 24px; background: #F6F5ED; border-top: 1px solid #CFD8C9; box-shadow: 0 -10px 24px rgba(23, 62, 50, 0.1)">
+  <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; border: 0; border-radius: 999px; background: #173E32; color: #F6F5ED; font: 700 17px Manrope, system-ui, sans-serif; cursor: pointer">Continuar<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D6F36B","options":["#D6F36B","#FFD166","#FF9C76","#9BE7C4"]},"$preview":{"width":390,"height":1800}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#D6F36B' };
+}
+}
+</script>
+</body>
+</html>

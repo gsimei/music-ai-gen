@@ -1,0 +1,50 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-09T15:00:00Z" },
+  "title": "Music AI Gen Redesign",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Diagnostico.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 4400, "title": "0 · Diagnóstico do design atual" },
+    "Main.dc.html": { "x": 1560, "y": 0, "w": 1440, "h": 4000, "title": "1 · Landing", "expand": "fill", "is_interactive": true },
+    "Entrar.dc.html": { "x": 3120, "y": 0, "w": 1440, "h": 900, "title": "2 · Entrar", "expand": "fill", "is_interactive": true },
+    "Criar.dc.html": { "x": 4680, "y": 0, "w": 1440, "h": 1560, "title": "3 · Criar campanha (3 passos, com pagamento)", "expand": "fill", "is_interactive": true },
+    "Estudio.dc.html": { "x": 6240, "y": 0, "w": 1440, "h": 1380, "title": "4 · Estúdio (letra, músicas, vídeo)", "expand": "fill", "is_interactive": true },
+    "Estudio-Mobile.dc.html": { "x": 7800, "y": 0, "w": 390, "h": 844, "title": "4b · Estúdio no celular" },
+    "Entrega.dc.html": { "x": 8310, "y": 0, "w": 1440, "h": 1240, "title": "5 · Campanha pronta", "expand": "fill", "is_interactive": true },
+    "Biblioteca.dc.html": { "x": 9870, "y": 0, "w": 1440, "h": 900, "title": "6 · Minhas campanhas", "expand": "fill", "is_interactive": true },
+    "Landing-Mobile.dc.html": { "x": 0, "y": 4800, "w": 390, "h": 4500, "title": "1b · Landing no celular", "is_interactive": true },
+    "Criar-Mobile.dc.html": { "x": 510, "y": 4800, "w": 390, "h": 1950, "title": "3b · Criar campanha no celular" },
+    "Estados.dc.html": { "x": 1020, "y": 4800, "w": 1440, "h": 1500, "title": "7 · Estados: vazio, erro, carregando e falha" }
+  },
+  "order": [
+    "Diagnostico.dc.html",
+    "Main.dc.html",
+    "Entrar.dc.html",
+    "Criar.dc.html",
+    "Estudio.dc.html",
+    "Estudio-Mobile.dc.html",
+    "Entrega.dc.html",
+    "Biblioteca.dc.html",
+    "Landing-Mobile.dc.html",
+    "Criar-Mobile.dc.html",
+    "Estados.dc.html"
+  ],
+  "notes": {
+    "titulo": {
+      "x": 0,
+      "y": -300,
+      "text": "JinglePro · redesign proposto",
+      "kind": "title1",
+      "maxW": 11310
+    },
+    "titulo2": {
+      "x": 0,
+      "y": 4500,
+      "text": "Celular, estados e erros",
+      "kind": "title1",
+      "maxW": 2460
+    }
+  },
+  "designSystems": []
+}

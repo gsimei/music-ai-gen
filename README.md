@@ -1,7 +1,17 @@
 # JinglePro
 
-Plataforma de criação de jingles para negócios, com Rails 8.1, Ruby 4.0.5,
-PostgreSQL, Hotwire e Tailwind CSS 4.
+Plataforma que transforma a promoção de um negócio em uma **campanha** pronta
+para postar: música cantada, vídeo vertical 9:16 (MP4), MP3 e legenda. Produto
+único, em português (pt-BR) e BRL, por R$ 79 em pagamento único (o valor vem de
+`config/brands.yml` e de `campaign_price`). Rails 8.1, Ruby 4.0.5, PostgreSQL,
+Hotwire, CSS próprio e Tailwind CSS 4.
+
+Onde ler mais:
+
+- `SPEC.md`, seção 0: o produto atual, os limites e o mapeamento de estados (pedido → fase do estúdio → Biblioteca). As demais seções do SPEC são do app anterior e estão marcadas como LEGADO onde divergem do código.
+- `CLAUDE.md`: stack conferida, convenções e fluxo de trabalho com agentes.
+- `ROADMAP.md`: andamento, inclusive o redesign JinglePro (fatias 0 a 5).
+- `design/jinglepro/README.md`: referência de design (ver "Referência de design" abaixo).
 
 ## Desenvolvimento local
 
@@ -19,10 +29,20 @@ Abra [JinglePro local](http://127.0.0.1:3000). Para alterações nas classes
 Tailwind, rode `bin/rails tailwindcss:watch` em outro terminal. O `bin/dev`
 também inicia o Stripe CLI conforme `Procfile.dev`.
 
-O tema de estúdio usa `app/assets/stylesheets/studio.css` na home e
-`app/assets/stylesheets/studio_app.css` no login, cadastro, recuperação de senha,
-chat e biblioteca. Esses estilos são servidos pelo Propshaft sem compilação
-Tailwind. Os componentes compartilhados ficam em `app/views/shared/`.
+O layout carrega, em todas as páginas, todo CSS de `app/assets/` (`stylesheet_link_tag :app`):
+os estilos escritos à mão em `app/assets/stylesheets/` (`landing.css`, `studio.css`,
+`studio_app.css`, `studio_identity.css`, servidos pelo Propshaft sem compilação) e o
+Tailwind compilado em `app/assets/builds/tailwind.css`. Os componentes compartilhados
+ficam em `app/views/shared/`. A fatia 1 do redesign (ver ROADMAP) unifica o CSS.
+
+## Referência de design
+
+O design vive em `design/jinglepro/`, exportado de um canvas de design em 09/11/2026,
+e substitui o antigo `Plataforma - Vanilla.html`. São pranchas `*.dc.html` (HTML e CSS
+estáticos), `canvas.json` e um `README.md` com o mapa prancha → tela do app, os tokens
+(`--jp-*`), a tipografia, os componentes e as regras de movimento. As pranchas não abrem
+sozinhas no navegador: dependem do `support.js` do canvas e de imagens que não estão no
+repositório. Leia `design/jinglepro/README.md` antes de mexer em qualquer tela.
 
 ## Testes
 
@@ -42,11 +62,11 @@ Esse comando não valida a compilação do CSS. Os testes usam o banco
 
 ## Estado ao retomar
 
-- Preços e limites efetivos estão em `config/brands.yml`; a SPEC contém valores diferentes.
-- O fluxo atual cria pedidos no estado `paid`; o checkout Stripe está desativado no controller, sem restrição ao ambiente de desenvolvimento. Não está pronto para cobrança real.
+- Preços e limites efetivos estão em `config/brands.yml` (campanha: tier `starter`, R$ 79). Os valores em € das seções antigas do SPEC (1 a 4 e 18) são LEGADO; a seção 0 do SPEC está alinhada com o YAML.
+- O fluxo atual cria o pedido em `pending` (`POST /campaigns`) e cobra pelo Stripe Checkout (`POST /orders/:id/checkout`). O pagamento é confirmado pelo webhook `/stripe/webhook` ou pela reconciliação em `GET /campaigns/:id`. Cobrança real com chaves de produção não foi exercitada (a confirmar antes do primeiro deploy).
 - Em 08/11/2026, o fluxo vocal foi validado com APIs reais: chat → letra Mureka → aprovação → duas músicas → reprodução → escolha da variante B → biblioteca e download. Projeto local: `ORD-2026-JKCJF` (`/orders/46/chat`). As variantes tiveram 41,79 s e 35,75 s para um briefing de 30 s; a duração pedida ainda é uma orientação ao provedor.
-- A suíte Ruby passou com 907 testes e 1.700 assertions após as correções. Pagamentos, soundtrack e regeneração musical não foram exercitados com APIs reais nesta rodada.
-- Home, autenticação, chat e biblioteca compartilham o visual de estúdio. No celular, o chat alterna entre conversa e painel de texto/música.
+- A suíte Ruby passou com 907 testes e 1.700 assertions após as correções (registro de 08/11/2026; não reexecutado ao revisar a documentação, a confirmar). Pagamentos, soundtrack e regeneração musical não foram exercitados com APIs reais nesta rodada.
+- Home, autenticação, estúdio e biblioteca compartilham o visual de estúdio. O estúdio ainda é a tela `/orders/:id/chat` (herança do chat conversacional, hoje LEGADO); no celular ela alterna entre conversa e painel de texto/música. O redesign JinglePro o reorganiza em 3 fases (letra, músicas, vídeo): ver ROADMAP, fatias 3 e 5.
 
 ### Campanhas para o Brasil
 
@@ -84,7 +104,7 @@ Pedidos de ritmo, voz, clima e instrumentos no chat passam pela mesma validaçã
 
 `GenerateCampaignMusicJob` registra a submissão antes de chamar a Mureka. Uma tarefa com ID salvo é retomada somente por consulta, sem novo POST. Erros transitórios de consulta aguardam até 30 minutos; depois, “Verificar tentativa” consulta o mesmo ID e pode recuperar o resultado. Timeout de submissão ou resposta ambígua não autoriza reenvio automático. HTTP 429 por concorrência tem até três envios com espera; falta de créditos e requisições rejeitadas exigem revisão. Há um teto técnico de cinco pares potencialmente cobrados e doze envios por campanha, separado das três rodadas completas oferecidas ao cliente. Ao atingir o teto, as músicas anteriores continuam disponíveis, mas novas gerações exigem revisão operacional. Estimativas incertas continuam na conta; rejeições explícitas sem tarefa aceita são registradas com estimativa zero.
 
-`RecoverCampaignMusicJob` recupera tarefas interrompidas e está agendado a cada minuto em `config/recurring.yml`. Produção precisa executar o scheduler e os workers do Solid Queue. Em desenvolvimento, a consulta de status da página também solicita recuperação de tarefas paradas. Execute a migração `20261109160000` antes de iniciar os workers atualizados.
+`RecoverCampaignMusicJob` recupera tarefas interrompidas e está agendado a cada minuto em `config/recurring.yml` (somente no bloco `production`). Produção precisa executar o scheduler e os workers do Solid Queue. Em desenvolvimento, a consulta de status da página também solicita recuperação de tarefas paradas. Execute a migração `20261109160000` antes de iniciar os workers atualizados.
 
 Cada música preparada permite ajustar o início do vídeo por um controle deslizante ou pelo segundo inicial, e voltar à sugestão automática. “Preparar e ouvir este trecho” produz uma prévia local de até 30 segundos, com fade; não chama a Mureka nem consome rodada. O original permanece intacto. A aprovação inclui a revisão do corte, impedindo que uma aba antiga aprove um áudio que mudou. O MP4 copia os mesmos pacotes AAC da prévia aprovada, sem novo corte ou codificação. Cortes só podem mudar antes da aprovação.
 

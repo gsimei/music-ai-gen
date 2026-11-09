@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Criar campanha</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F5ED}
+a{color:inherit;text-decoration:none}
+a:hover{color:#24593E}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #173E32;outline-offset:3px}
+input::placeholder,textarea::placeholder{color:#66796C}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+
+/* ---- Movimento: o estado base já é o final, então sem animação nada some ---- */
+@keyframes jp-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes jp-pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@keyframes jp-pa{from{opacity:.3;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes jp-pb{from{opacity:.3;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes jp-q1a{0%,5%{opacity:0;transform:translateY(-12px)}22%,100%{opacity:1;transform:none}}
+@keyframes jp-q1b{0%,5%{opacity:0;transform:translateY(-12px)}22%,100%{opacity:1;transform:none}}
+@keyframes jp-q2a{0%,18%{opacity:0;transform:translateY(18px)}42%,100%{opacity:1;transform:none}}
+@keyframes jp-q2b{0%,18%{opacity:0;transform:translateY(18px)}42%,100%{opacity:1;transform:none}}
+@keyframes jp-q3a{0%,48%{opacity:0;transform:translateY(14px) scale(.96)}70%,100%{opacity:1;transform:none}}
+@keyframes jp-q3b{0%,48%{opacity:0;transform:translateY(14px) scale(.96)}70%,100%{opacity:1;transform:none}}
+@keyframes jp-za{from{transform:scale(1)}to{transform:scale(1.12)}}
+@keyframes jp-zb{from{transform:scale(1)}to{transform:scale(1.12)}}
+@keyframes jp-pra{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes jp-prb{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:no-preference){
+  .jp-step{animation:jp-rise .5s cubic-bezier(.2,.7,.2,1) both}
+  .jp-pop{animation:jp-pop .8s cubic-bezier(.2,.7,.2,1) both}
+  .jp-pa{animation:jp-pa .3s ease-out both}
+  .jp-pb{animation:jp-pb .3s ease-out both}
+  .jp-sa .jp-q1{animation:jp-q1a 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sb .jp-q1{animation:jp-q1b 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sa .jp-q2{animation:jp-q2a 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sb .jp-q2{animation:jp-q2b 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sa .jp-q3{animation:jp-q3a 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sb .jp-q3{animation:jp-q3b 4s cubic-bezier(.2,.7,.2,1) both}
+  .jp-sa .jp-z{animation:jp-za 4s ease-out both}
+  .jp-sb .jp-z{animation:jp-zb 4s ease-out both}
+  .jp-sa .jp-pr{animation:jp-pra 4s linear both}
+  .jp-sb .jp-pr{animation:jp-prb 4s linear both}
+  .jp-opt{transition:background-color .2s,border-color .2s,color .2s,box-shadow .2s}
+  .jp-btn,.jp-btn svg{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .jp-btn:hover{transform:translateY(-2px)}
+  .jp-btn:hover svg{transform:translateX(4px)}
+}
+</style>
+</helmet>
+<div style="--lime: {{accent}}; font-family: Manrope, system-ui, sans-serif; color: #173E32; background: #F6F5ED; font-size: 16px; line-height: 1.6">
+
+<!-- ============ HEADER ============ -->
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1280px; margin: 0 auto; padding: 0 48px; height: 88px; box-sizing: border-box">
+  <a href="Main.dc.html" aria-label="jinglepro, início" style="display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 26px; letter-spacing: -0.04em; color: #173E32">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><g fill="#173E32"><rect x="1" y="9" width="4" height="10" rx="2"/><rect x="8" y="2" width="4" height="24" rx="2"/><rect x="15" y="6" width="4" height="16" rx="2"/><rect x="22" y="11" width="4" height="7" rx="2"/></g></svg>jinglepro
+  </a>
+  <p style="margin: 0; font-size: 15px; color: #4C6155">Já tem conta? <a href="Entrar.dc.html" style="font-weight: 700; color: #173E32; text-decoration: underline; text-underline-offset: 4px">Entrar</a></p>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 8px 48px 96px; box-sizing: border-box">
+
+<!-- ============ PROGRESSO ============ -->
+<nav aria-label="Etapas da campanha" style="display: flex; flex-wrap: wrap; gap: 16px 40px; padding: 8px 0 44px">
+  <sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+    <div aria-current="{{s.ariaCurrent}}" style="display: flex; align-items: center; gap: 12px">
+      <span aria-hidden="true" style="{{s.dotStyle}}">{{s.dotText}}</span>
+      <span style="{{s.labelStyle}}">{{s.label}}</span>
+    </div>
+  </sc-for>
+</nav>
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 64px">
+
+<!-- ============ COLUNA DO FORMULÁRIO ============ -->
+<div style="flex: 1 1 600px; min-width: 0">
+
+<!-- ---------- PASSO 1 ---------- -->
+<sc-if value="{{isStep1}}" hint-placeholder-val="{{true}}">
+<section class="jp-step" aria-labelledby="t1">
+  <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Passo 1 de 3</p>
+  <h1 id="t1" style="margin: 12px 0 0; font-size: 48px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">O que vamos divulgar?</h1>
+  <p style="margin: 14px 0 0; font-size: 18px; color: #4C6155">Conte a oferta. A gente transforma em música e vídeo.</p>
+
+  <div style="margin-top: 36px">
+    <label for="f-nome" style="display: block; font-size: 16px; font-weight: 700">Nome do seu negócio</label>
+    <input id="f-nome" type="text" value="{{business}}" onInput="{{onBusiness}}" maxlength="60" autocomplete="organization" placeholder="Ex.: Pizzaria da Vila" style="box-sizing: border-box; width: 100%; min-height: 56px; margin-top: 10px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+    <p style="margin: 8px 0 0; font-size: 14px; color: #4C6155">Aparece no vídeo e é cantado na música.</p>
+  </div>
+
+  <div style="margin-top: 28px">
+    <label for="f-oferta" style="display: block; font-size: 16px; font-weight: 700">Qual é a oferta ou novidade?</label>
+    <textarea id="f-oferta" rows="3" maxlength="180" onInput="{{onOffer}}" placeholder="Ex.: Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça." style="box-sizing: border-box; width: 100%; margin-top: 10px; padding: 16px 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px/1.5 Manrope, system-ui, sans-serif; resize: vertical">{{offer}}</textarea>
+    <p style="margin: 8px 0 0; font-size: 14px; color: #4C6155">Inclua preço, condições e validade, se houver. {{offerCount}}/180 caracteres.</p>
+  </div>
+
+  <fieldset style="margin: 28px 0 0; padding: 0; border: 0; min-width: 0">
+    <legend style="padding: 0; font-size: 16px; font-weight: 700">Como convidar o cliente?</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px">
+      <sc-for list="{{ctas}}" as="c" hint-placeholder-count="4">
+        <button type="button" class="jp-opt" onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="{{c.style}}">{{c.label}}</button>
+      </sc-for>
+    </div>
+  </fieldset>
+
+  <div style="margin-top: 28px">
+    <label for="f-contato" style="display: block; font-size: 16px; font-weight: 700">WhatsApp, endereço ou @Instagram</label>
+    <input id="f-contato" type="text" value="{{contact}}" onInput="{{onContact}}" maxlength="70" placeholder="Ex.: (11) 99999-9999" style="box-sizing: border-box; width: 100%; min-height: 56px; margin-top: 10px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+  </div>
+
+  <div style="margin-top: 28px; padding: 24px; border: 1.5px dashed #6F8577; border-radius: 20px; background: #EDF0E5">
+    <p style="margin: 0; font-size: 16px; font-weight: 700">Fotos do produto ou do negócio <span style="font-weight: 500; color: #4C6155">(opcional)</span></p>
+    <p style="margin: 6px 0 0; font-size: 14px; color: #4C6155">Até 5 fotos, JPG, PNG ou WebP, com até 10 MB cada. A primeira abre o vídeo. Sem fotos? Criamos uma arte com a oferta.</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px">
+      <figure style="margin: 0; width: 132px">
+        <div style="position: relative; width: 132px; height: 176px; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 3px #173E32">
+          <img src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="Foto 1: duas pizzas assadas" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+        </div>
+        <figcaption style="margin-top: 8px; font-size: 13px; font-weight: 700; color: #24593E">1 · Abre o vídeo</figcaption>
+        <button type="button" style="min-height: 44px; padding: 0; border: 0; background: none; font: 600 14px Manrope, system-ui, sans-serif; color: #4C6155; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Remover foto</button>
+      </figure>
+      <button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 132px; height: 176px; border: 1.5px dashed #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 700 14px Manrope, system-ui, sans-serif; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Adicionar foto</button>
+    </div>
+  </div>
+
+  <div style="margin-top: 40px">
+    <button type="button" class="jp-btn" onClick="{{goNext}}" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 0 36px; border: 0; border-radius: 999px; background: #173E32; color: #F6F5ED; font: 700 17px Manrope, system-ui, sans-serif; cursor: pointer">Continuar<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+</section>
+</sc-if>
+
+<!-- ---------- PASSO 2 ---------- -->
+<sc-if value="{{isStep2}}" hint-placeholder-val="{{false}}">
+<section class="jp-step" aria-labelledby="t2">
+  <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Passo 2 de 3</p>
+  <h1 id="t2" style="margin: 12px 0 0; font-size: 48px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Como sua promoção deve soar?</h1>
+  <p style="margin: 14px 0 0; font-size: 18px; color: #4C6155">A música é cantada em português, com a sua oferta. Ouça um exemplo de 12 segundos antes de escolher.</p>
+
+  <fieldset style="margin: 36px 0 0; padding: 0; border: 0; min-width: 0">
+    <legend style="padding: 0; font-size: 16px; font-weight: 700">Qual ritmo combina com o seu negócio?</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px">
+      <sc-for list="{{genres}}" as="g" hint-placeholder-count="6">
+        <div style="position: relative; flex: 1 1 230px">
+          <button type="button" class="jp-opt" onClick="{{g.pick}}" aria-pressed="{{g.on}}" style="{{g.style}}">
+            <span style="display: block; font-size: 18px; font-weight: 800">{{g.label}}</span>
+            <span style="display: block; margin-top: 4px; font-size: 14px; color: #4C6155">{{g.desc}}</span>
+          </button>
+          <button type="button" aria-label="{{g.playLabel}}" style="position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--lime); color: #173E32; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></button>
+        </div>
+      </sc-for>
+    </div>
+  </fieldset>
+
+  <fieldset style="margin: 32px 0 0; padding: 0; border: 0; min-width: 0">
+    <legend style="padding: 0; font-size: 16px; font-weight: 700">Como você imagina a voz?</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px">
+      <sc-for list="{{voices}}" as="v" hint-placeholder-count="3">
+        <button type="button" class="jp-opt" onClick="{{v.pick}}" aria-pressed="{{v.on}}" style="{{v.style}}">{{v.label}}</button>
+      </sc-for>
+    </div>
+  </fieldset>
+
+  <fieldset style="margin: 32px 0 0; padding: 0; border: 0; min-width: 0">
+    <legend style="padding: 0; font-size: 16px; font-weight: 700">Qual é o clima?</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px">
+      <sc-for list="{{climates}}" as="m" hint-placeholder-count="3">
+        <button type="button" class="jp-opt" onClick="{{m.pick}}" aria-pressed="{{m.on}}" style="{{m.style}}">
+          <span style="display: block; font-size: 18px; font-weight: 800">{{m.label}}</span>
+          <span style="display: block; margin-top: 4px; font-size: 14px; color: #4C6155">{{m.desc}}</span>
+        </button>
+      </sc-for>
+    </div>
+  </fieldset>
+
+  <details style="margin-top: 28px; border-top: 1px solid #CFD8C9; border-bottom: 1px solid #CFD8C9">
+    <summary style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; font-size: 16px; font-weight: 700">Quer dar mais uma direção? <span style="font-size: 14px; font-weight: 500; color: #4C6155">Opcional</span></summary>
+    <div style="padding: 4px 0 20px">
+      <label for="f-notas" style="display: block; font-size: 15px; font-weight: 700">Detalhes do som</label>
+      <textarea id="f-notas" rows="3" maxlength="240" onInput="{{onNotes}}" placeholder="Ex.: sanfona em destaque, voz suave, refrão fácil de cantar. Sem solos longos." style="box-sizing: border-box; width: 100%; margin-top: 8px; padding: 14px 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 16px/1.5 Manrope, system-ui, sans-serif; resize: vertical">{{notes}}</textarea>
+      <p style="margin: 8px 0 0; font-size: 14px; color: #4C6155">Instrumentos, interpretação ou o que prefere evitar. Até 240 caracteres.</p>
+    </div>
+  </details>
+
+  <p style="margin: 24px 0 0; padding: 18px 20px; border-radius: 14px; background: #E5EADC; font-size: 15px">Você revisa a letra antes de gastar a primeira rodada. Depois ouve duas versões para comparar.</p>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px">
+    <button type="button" onClick="{{goBack}}" style="display: inline-flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 32px; border: 1.5px solid #173E32; border-radius: 999px; background: transparent; color: #173E32; font: 700 17px Manrope, system-ui, sans-serif; cursor: pointer">Voltar</button>
+    <button type="button" class="jp-btn" onClick="{{goNext}}" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 60px; padding: 0 36px; border: 0; border-radius: 999px; background: #173E32; color: #F6F5ED; font: 700 17px Manrope, system-ui, sans-serif; cursor: pointer">Continuar<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+</section>
+</sc-if>
+
+<!-- ---------- PASSO 3 ---------- -->
+<sc-if value="{{isStep3}}" hint-placeholder-val="{{false}}">
+<section class="jp-step" aria-labelledby="t3">
+  <p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #24593E">Passo 3 de 3</p>
+  <h1 id="t3" style="margin: 12px 0 0; font-size: 48px; line-height: 1.08; font-weight: 800; letter-spacing: -0.03em">Confira e comece.</h1>
+  <p style="margin: 14px 0 0; font-size: 18px; color: #4C6155">Tudo certo? Crie sua conta e pague para começarmos. Nenhuma cobrança antes de você confirmar.</p>
+
+  <div style="margin-top: 32px; border: 1px solid #CFD8C9; border-radius: 24px; background: #FFFEF9; overflow: hidden">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 28px">
+      <div style="min-width: 0">
+        <p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4C6155">Promoção</p>
+        <p style="margin: 8px 0 0; font-size: 19px; font-weight: 800">{{previewBusiness}}</p>
+        <p style="margin: 6px 0 0; font-size: 16px">{{previewOffer}}</p>
+        <p style="margin: 6px 0 0; font-size: 15px; color: #4C6155">{{cta}} · {{previewContact}}</p>
+      </div>
+      <button type="button" onClick="{{goStep1}}" style="flex: none; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 700 15px Manrope, system-ui, sans-serif; color: #173E32; text-decoration: underline; text-underline-offset: 4px; cursor: pointer">Editar</button>
+    </div>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 28px; border-top: 1px solid #CFD8C9">
+      <div style="min-width: 0">
+        <p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4C6155">Som</p>
+        <p style="margin: 8px 0 0; font-size: 16px; font-weight: 700">{{genreLabel}} · {{voiceLabel}} · {{climateLabel}}</p>
+        <p style="margin: 6px 0 0; font-size: 15px; color: #4C6155">Música cantada em português do Brasil.</p>
+      </div>
+      <button type="button" onClick="{{goStep2}}" style="flex: none; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 700 15px Manrope, system-ui, sans-serif; color: #173E32; text-decoration: underline; text-underline-offset: 4px; cursor: pointer">Editar</button>
+    </div>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 28px; border-top: 1px solid #CFD8C9">
+      <div style="min-width: 0">
+        <p style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4C6155">Fotos</p>
+        <p style="margin: 8px 0 0; font-size: 16px; font-weight: 700">1 foto · abre o vídeo</p>
+      </div>
+      <button type="button" onClick="{{goStep1}}" style="flex: none; min-height: 44px; padding: 0 4px; border: 0; background: none; font: 700 15px Manrope, system-ui, sans-serif; color: #173E32; text-decoration: underline; text-underline-offset: 4px; cursor: pointer">Editar</button>
+    </div>
+  </div>
+
+  <h2 style="margin: 40px 0 0; font-size: 28px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em">Sua conta</h2>
+  <p style="margin: 8px 0 0; font-size: 16px; color: #4C6155">Você usa a conta para voltar, ouvir as versões e baixar a campanha.</p>
+  <div style="margin-top: 20px">
+    <label for="f-email" style="display: block; font-size: 16px; font-weight: 700">E-mail</label>
+    <input id="f-email" type="email" autocomplete="email" placeholder="voce@seunegocio.com.br" style="box-sizing: border-box; width: 100%; min-height: 56px; margin-top: 10px; padding: 0 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+  </div>
+  <div style="margin-top: 20px">
+    <label for="f-senha" style="display: block; font-size: 16px; font-weight: 700">Senha</label>
+    <div style="position: relative; margin-top: 10px">
+      <input id="f-senha" type="{{passType}}" autocomplete="new-password" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 96px 0 18px; border: 1.5px solid #6F8577; border-radius: 14px; background: #FFFEF9; color: #173E32; font: 500 17px Manrope, system-ui, sans-serif">
+      <button type="button" onClick="{{togglePass}}" aria-pressed="{{showPass}}" style="position: absolute; top: 6px; right: 8px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: none; font: 700 14px Manrope, system-ui, sans-serif; color: #173E32; cursor: pointer">{{passLabel}}</button>
+    </div>
+  </div>
+
+  <section aria-labelledby="t-pay" style="margin-top: 40px; padding: 36px; border-radius: 28px; background: #173E32; color: #F6F5ED">
+    <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px">
+      <h2 id="t-pay" style="margin: 0; font-size: 22px; font-weight: 800">Campanha completa</h2>
+      <p style="margin: 0; font-size: 15px; color: #B9CFBF">Pagamento único · sem assinatura</p>
+    </div>
+    <p style="margin: 12px 0 0; font-size: 72px; line-height: 1; font-weight: 800; letter-spacing: -0.04em">R$ 79</p>
+    <ul style="margin: 24px 0 0; padding: 20px 0 0; list-style: none; border-top: 1px solid #3C5E4F; display: grid; gap: 10px; font-size: 16px">
+      <li style="display: flex; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Até 3 rodadas com 2 versões de música cada</li>
+      <li style="display: flex; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Letra editável, com ajustes por IA</li>
+      <li style="display: flex; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Vídeo vertical MP4, música em MP3 e legenda</li>
+    </ul>
+    <a class="jp-btn" href="Estudio.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 64px; margin-top: 28px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 18px; font-weight: 800">Pagar R$ 79 e criar campanha<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <p style="margin: 14px 0 0; text-align: center; font-size: 14px; color: #B9CFBF">Pagamento seguro pelo Stripe. A criação começa depois da confirmação.</p>
+  </section>
+
+  <div style="margin-top: 24px">
+    <button type="button" onClick="{{goBack}}" style="display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; border: 1.5px solid #173E32; border-radius: 999px; background: transparent; color: #173E32; font: 700 16px Manrope, system-ui, sans-serif; cursor: pointer">Voltar</button>
+  </div>
+</section>
+</sc-if>
+
+</div>
+
+<!-- ============ PRÉVIA 9:16 ============ -->
+<aside class="{{seqClass}}" aria-label="Prévia do vídeo" style="flex: 0 1 380px; min-width: 300px; position: sticky; top: 24px">
+  <p style="margin: 0 0 16px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4C6155">Prévia do vídeo · 9:16</p>
+  <div class="jp-pop" style="display: flex; justify-content: center; padding: 56px 28px 32px; background: #E5EADC; border-radius: 200px 200px 28px 28px">
+    <div style="position: relative; width: 272px; height: 484px; border: 6px solid #173E32; border-radius: 30px; overflow: hidden; background: #173E32; box-shadow: 0 20px 40px rgba(23, 62, 50, 0.22)">
+      <img class="jp-z" src="/_blob/2665ae46a3a73364109a1b4f7b9f15fb" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+      <div aria-hidden="true" style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 20, 14, 0.65) 0%, rgba(8, 20, 14, 0) 26%, rgba(8, 20, 14, 0) 40%, rgba(8, 20, 14, 0.94) 100%)"></div>
+      <div class="jp-q1" style="position: absolute; top: 20px; left: 18px; right: 18px">
+        <span aria-hidden="true" style="display: block; width: 32px; height: 4px; border-radius: 2px; background: var(--lime)"></span>
+        <p class="{{bizPulse}}" style="margin: 8px 0 0; font-size: 17px; line-height: 1.2; font-weight: 800; color: #FFFFFF">{{previewBusiness}}</p>
+      </div>
+      <div style="position: absolute; left: 18px; right: 18px; bottom: 18px">
+        <div class="jp-q2"><p class="{{offerPulse}}" style="display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; margin: 0; font-size: 20px; line-height: 1.2; font-weight: 800; letter-spacing: -0.01em; color: #FFFFFF">{{previewOffer}}</p></div>
+        <div class="jp-q3"><p class="{{ctaPulse}}" style="display: inline-block; margin: 12px 0 0; padding: 8px 14px; border-radius: 999px; background: var(--lime); color: #173E32; font-size: 13px; font-weight: 800">{{previewCta}}</p>
+        <p class="{{ctaPulse}}" style="margin: 8px 0 0; font-size: 14px; font-weight: 700; color: var(--lime)">{{previewContact}}</p></div>
+        <div aria-hidden="true" style="height: 4px; margin-top: 14px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); overflow: hidden"><div class="jp-pr" style="width: 100%; height: 4px; background: var(--lime); transform: scaleX(0.38); transform-origin: left"></div></div>
+      </div>
+    </div>
+  </div>
+  <div style="display: flex; justify-content: center; margin-top: 16px"><button type="button" class="jp-btn" onClick="{{replay}}" style="display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 24px; border: 1.5px solid #173E32; border-radius: 999px; background: transparent; color: #173E32; font: 700 15px Manrope, system-ui, sans-serif; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>Ver como fica no vídeo</button></div>
+  <p style="margin: 14px 0 0; text-align: center; font-size: 14px; color: #4C6155">A prévia mostra a ordem das informações. No vídeo, as fotos ganham movimento e os textos entram em sequência.</p>
+</aside>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D6F36B","options":["#D6F36B","#FFD166","#FF9C76","#9BE7C4"]},"$preview":{"width":1440,"height":1560}}'>
+class Component extends DCLogic {
+constructor(props) {
+  super(props);
+  this.state = {
+    step: 1,
+    business: 'Pizzaria Forno da Vila',
+    offer: 'Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça.',
+    cta: 'Peça pelo WhatsApp',
+    contact: '(11) 99999-9999',
+    genre: 'sertanejo',
+    voice: 'auto',
+    climate: 'animado',
+    notes: '',
+    showPass: false,
+    seq: null,
+    pb: null,
+    po: null,
+    pc: null
+  };
+}
+renderVals() {
+  const s = this.state;
+  const pill = (on) => on
+    ? 'display:inline-flex;align-items:center;min-height:52px;padding:0 22px;border:1.5px solid #173E32;border-radius:999px;background:#173E32;color:#F6F5ED;font:700 15px Manrope,system-ui,sans-serif;cursor:pointer'
+    : 'display:inline-flex;align-items:center;min-height:52px;padding:0 22px;border:1.5px solid #6F8577;border-radius:999px;background:#FFFEF9;color:#173E32;font:700 15px Manrope,system-ui,sans-serif;cursor:pointer';
+  const card = (on) => on
+    ? 'box-sizing:border-box;width:100%;height:100%;padding:18px 64px 18px 20px;border:1.5px solid #173E32;box-shadow:inset 0 0 0 1.5px #173E32;border-radius:18px;background:#E7EEDB;color:#173E32;text-align:left;font-family:Manrope,system-ui,sans-serif;cursor:pointer'
+    : 'box-sizing:border-box;width:100%;height:100%;padding:18px 64px 18px 20px;border:1.5px solid #6F8577;border-radius:18px;background:#FFFEF9;color:#173E32;text-align:left;font-family:Manrope,system-ui,sans-serif;cursor:pointer';
+  const cardPlain = (on) => on
+    ? 'box-sizing:border-box;flex:1 1 200px;padding:18px 20px;border:1.5px solid #173E32;box-shadow:inset 0 0 0 1.5px #173E32;border-radius:18px;background:#E7EEDB;color:#173E32;text-align:left;font-family:Manrope,system-ui,sans-serif;cursor:pointer'
+    : 'box-sizing:border-box;flex:1 1 200px;padding:18px 20px;border:1.5px solid #6F8577;border-radius:18px;background:#FFFEF9;color:#173E32;text-align:left;font-family:Manrope,system-ui,sans-serif;cursor:pointer';
+
+  const ctaList = ['Peça pelo WhatsApp', 'Venha nos visitar', 'Reserve seu horário', 'Saiba mais no Instagram'];
+  const genreList = [
+    { id: 'auto', label: 'Escolher por mim', desc: 'A gente sugere o ritmo ideal para a sua oferta.' },
+    { id: 'pop', label: 'Pop', desc: 'Alegre e versátil' },
+    { id: 'sertanejo', label: 'Sertanejo', desc: 'Violão e refrão forte' },
+    { id: 'forro', label: 'Forró', desc: 'Sanfona e alegria' },
+    { id: 'piseiro', label: 'Piseiro', desc: 'Teclado e batida dançante' },
+    { id: 'pagode', label: 'Pagode', desc: 'Cavaquinho e balanço' }
+  ];
+  const voiceList = [
+    { id: 'auto', label: 'Escolher por mim' },
+    { id: 'feminina', label: 'Voz feminina' },
+    { id: 'masculina', label: 'Voz masculina' }
+  ];
+  const climateList = [
+    { id: 'animado', label: 'Animado', desc: 'Alegre e convidativo para ofertas e novidades' },
+    { id: 'acolhedor', label: 'Acolhedor', desc: 'Suave e próximo, com um clima de bairro' },
+    { id: 'marcante', label: 'Marcante', desc: 'Energia e presença para chamar atenção' }
+  ];
+  const labelOf = (list, id) => (list.find((x) => x.id === id) || list[0]).label;
+
+  const stepNames = ['Sua promoção', 'Seu som', 'Conferir e pagar'];
+  const steps = stepNames.map((label, i) => {
+    const n = i + 1;
+    const done = n < s.step;
+    const current = n === s.step;
+    const base = 'display:grid;place-items:center;width:36px;height:36px;border-radius:50%;font-size:15px;font-weight:800;';
+    return {
+      label,
+      dotText: done ? '✓' : String(n),
+      ariaCurrent: current ? 'step' : undefined,
+      dotStyle: base + (done ? 'background:var(--lime);color:#173E32' : current ? 'background:#173E32;color:var(--lime)' : 'border:1.5px solid #6F8577;color:#4C6155'),
+      labelStyle: 'font-size:15px;' + (current ? 'font-weight:800;color:#173E32' : done ? 'font-weight:700;color:#173E32' : 'font-weight:600;color:#4C6155')
+    };
+  });
+
+  return {
+    accent: this.props.accent ?? '#D6F36B',
+    isStep1: s.step === 1,
+    isStep2: s.step === 2,
+    isStep3: s.step === 3,
+    steps,
+    business: s.business,
+    offer: s.offer,
+    contact: s.contact,
+    notes: s.notes,
+    cta: s.cta,
+    offerCount: s.offer.length,
+    previewBusiness: s.business.trim() || 'Seu negócio',
+    previewOffer: s.offer.trim() || 'Sua próxima grande oferta.',
+    previewCta: s.cta,
+    seqClass: s.seq === null ? '' : s.seq ? 'jp-sa' : 'jp-sb',
+    bizPulse: s.pb === null ? '' : s.pb ? 'jp-pa' : 'jp-pb',
+    offerPulse: s.po === null ? '' : s.po ? 'jp-pa' : 'jp-pb',
+    ctaPulse: s.pc === null ? '' : s.pc ? 'jp-pa' : 'jp-pb',
+    replay: () => this.setState({ seq: s.seq !== true }),
+    previewContact: s.contact.trim() || 'Seu contato aqui',
+    genreLabel: labelOf(genreList, s.genre),
+    voiceLabel: labelOf(voiceList, s.voice),
+    climateLabel: labelOf(climateList, s.climate),
+    onBusiness: (e) => this.setState({ business: e.target.value, pb: s.pb !== true }),
+    onOffer: (e) => this.setState({ offer: e.target.value, po: s.po !== true }),
+    onContact: (e) => this.setState({ contact: e.target.value, pc: s.pc !== true }),
+    onNotes: (e) => this.setState({ notes: e.target.value }),
+    ctas: ctaList.map((label) => ({ label, on: s.cta === label, style: pill(s.cta === label), pick: () => this.setState({ cta: label, pc: s.pc !== true }) })),
+    genres: genreList.map((g) => ({ ...g, on: s.genre === g.id, style: card(s.genre === g.id), playLabel: 'Ouvir exemplo de ' + g.label, pick: () => this.setState({ genre: g.id }) })),
+    voices: voiceList.map((v) => ({ ...v, on: s.voice === v.id, style: pill(s.voice === v.id), pick: () => this.setState({ voice: v.id }) })),
+    climates: climateList.map((m) => ({ ...m, on: s.climate === m.id, style: cardPlain(s.climate === m.id), pick: () => this.setState({ climate: m.id }) })),
+    goNext: () => this.setState({ step: Math.min(3, s.step + 1) }),
+    goBack: () => this.setState({ step: Math.max(1, s.step - 1) }),
+    goStep1: () => this.setState({ step: 1 }),
+    goStep2: () => this.setState({ step: 2 }),
+    showPass: s.showPass,
+    passType: s.showPass ? 'text' : 'password',
+    passLabel: s.showPass ? 'Ocultar' : 'Mostrar',
+    togglePass: () => this.setState({ showPass: !s.showPass })
+  };
+}
+}
+</script>
+</body>
+</html>
