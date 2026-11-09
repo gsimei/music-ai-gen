@@ -5,8 +5,8 @@ class OrdersController < ApplicationController
 
   skip_before_action :authenticate_user!, only: :new
 
-  before_action :set_order, only: %i[show approve_lyrics regenerate_lyrics approve_music regenerate_music]
   before_action :authenticate_user!, only: %i[wizard_show wizard_update approve_lyrics regenerate_lyrics approve_music regenerate_music]
+  before_action :set_order, only: %i[show approve_lyrics regenerate_lyrics approve_music regenerate_music]
 
   def new
     unless user_signed_in?
@@ -17,6 +17,7 @@ class OrdersController < ApplicationController
   end
 
   def show
+    return redirect_to order_chat_path(order_id: @order.id) if @order.campaign
     @draft            = @order.current_draft
     @assets           = @order.music_variant_assets
     @soundtrack_input = @order.soundtrack_input
@@ -25,13 +26,13 @@ class OrdersController < ApplicationController
   def checkout
     @order = current_user.orders.find(params[:id])
     destination = @order.campaign || @order
-    return redirect_to destination unless @order.pending?
+    return redirect_to destination unless @order.pending? || @order.payment_failed?
 
     result = ::Stripe::CheckoutBuilder.call(order: @order, host: request.host_with_port)
     if result.success?
       redirect_to result.value[:url], allow_other_host: true, status: :see_other
     else
-      redirect_to destination, alert: "Não foi possível abrir o pagamento. Nenhuma cobrança foi confirmada. Tente novamente."
+      redirect_to destination, alert: "Não conseguimos abrir ou confirmar o pagamento agora. Se você já pagou, aguarde a confirmação antes de tentar novamente."
     end
   end
 
@@ -182,7 +183,7 @@ class OrdersController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:id])
+    @order = current_user.orders.find(params[:id])
   end
 
   def load_step_resources(step)

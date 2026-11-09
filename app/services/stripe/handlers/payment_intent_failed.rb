@@ -4,11 +4,7 @@ module ::Stripe
   module Handlers
     # Handles payment_intent.payment_failed events.
     #
-    # Uses update_columns (bypasses AASM) so the order can be marked
-    # payment_failed from any state — Stripe may send this for orders
-    # that are mid-processing.
-    # Idempotent: returns :already_handled if order is already payment_failed.
-    # Returns :no_order_found if no matching order exists — not an error.
+    # Late failure notifications must never undo a confirmed payment.
     class PaymentIntentFailed < BaseService
       attribute :stripe_event
 
@@ -19,14 +15,13 @@ module ::Stripe
         order = find_order(pi_id, pi_obj)
         return success_result(:no_order_found) unless order
 
-        return success_result(:already_handled) if order.payment_failed?
+        order.with_lock do
+          return success_result(:already_handled) unless order.pending? || order.payment_failed?
+          return success_result(:already_handled) if order.paid_at.present? || order.payment_failed?
 
-        order.update_columns(
-          status:                    "payment_failed",
-          stripe_payment_intent_id:  pi_id
-        )
-        stripe_event.update!(order: order)
-
+          order.update!(status: "payment_failed", stripe_payment_intent_id: pi_id)
+          stripe_event.update!(order: order)
+        end
         success_result(order)
       end
 

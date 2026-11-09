@@ -26,8 +26,8 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_includes response.body, "Forró · Voz feminina · Animado"
     get edit_campaign_path(created)
-    assert_select 'select[name="campaign[musical_genre]"] option[selected][value="forro"]'
-    assert_select 'select[name="campaign[vocal_gender]"] option[selected][value="female"]'
+    assert_select 'input[type="radio"][name="campaign[musical_genre]"][checked][value="forro"]'
+    assert_select 'input[type="radio"][name="campaign[vocal_gender]"][checked][value="female"]'
     assert_select 'textarea[name="campaign[music_notes]"]', text: "Sanfona em destaque"
   end
 

@@ -49,7 +49,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_select ".creative-version", count: 6
     assert_select ".creative-favorite-label", text: /Sua favorita/
     assert_select 'audio source[type="audio/mp4"]', count: 6
-    assert_select 'audio source[type="audio/mpeg"]', count: 6
+    assert_select 'audio source[type="audio/mpeg"]', count: 0
     assert_select 'form[action=?]', order_chat_regenerate_music_path(order_id: @order.id), count: 0
     assert_no_difference "MusicGeneration.count" do
       post order_chat_regenerate_music_path(order_id: @order.id), params: { feedback: "Mais uma" }, headers: @headers
@@ -193,7 +193,9 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     end
     assert asset.reload.audio.attached?
     assert_equal "fake MP3", asset.audio.download
-    assert_includes asset.playback_url, "/rails/active_storage/"
+    assert_nil asset.playback_url
+    assert Orders::MusicApprover.call(order: @order, asset_id: asset.id).success?
+    assert_equal order_audio_final_path(@order, asset_id: asset.id), asset.reload.playback_url
     assert_no_difference "ActiveStorage::Blob.count" do
       ArchiveCampaignAudioJob.perform_now(asset.id)
     end
@@ -258,6 +260,8 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     generation.order_assets.each do |asset|
       asset.campaign_audio.attach(io: StringIO.new("preview"), filename: "preview.m4a", content_type: "audio/mp4",
         metadata: { duration_seconds: 30 })
+      asset.audition_audio.attach(io: StringIO.new("marked preview"), filename: "audition.m4a", content_type: "audio/mp4",
+        metadata: { source_blob_id: asset.campaign_audio.blob.id, preview_revision: 0, watermark_version: Campaigns::AudioAudition::VERSION })
       asset.update!(campaign_preview_status: "ready")
     end
     @order.reload

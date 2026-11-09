@@ -1,16 +1,10 @@
-<h2>Resend confirmation instructions</h2>
-
-<%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email", value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email) %></p>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Resend confirmation instructions" %>
-  </div>
+<% content_for :title, "Confirmar seu e-mail · JinglePro" %>
+<%= render layout: "users/shared/studio_auth" do %>
+  <h1>Confirmar seu e-mail</h1><p class="studio-form-intro">Receba novamente o link de confirmação.</p>
+  <%= form_for resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post } do |f| %>
+    <%= render "users/shared/error_messages", resource: resource %>
+    <div class="studio-field"><%= f.label :email, "E-mail" %><%= f.email_field :email, autofocus: true, autocomplete: "email", required: true %></div>
+    <%= f.submit "Enviar instruções", class: "studio-button studio-button-green studio-submit" %>
+  <% end %>
+  <p class="studio-form-switch"><%= link_to "Voltar para entrar", new_user_session_path %></p>
 <% end %>
-
-<%= render "users/shared/links" %>

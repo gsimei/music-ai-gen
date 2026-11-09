@@ -3,23 +3,15 @@
   <aside class="studio-auth-brand">
     <%= render "shared/studio_logo" %>
     <div class="studio-auth-pitch">
-      <p class="studio-kicker">Uma boa oferta merece ser ouvida.</p>
-      <h2>Seu negócio.<br>Sua próxima<br><span>campanha.</span></h2>
-      <p>Música e vídeo para divulgar sua promoção.<br>Do primeiro passo ao post pronto.</p>
-      <div class="studio-auth-photos" aria-label="Fotos de campanhas de exemplo">
-        <% [["sabores-da-vila-foto-1.jpg", "01 / suas fotos"], ["sabores-da-vila-foto-3.jpg", "02 / sua oferta"], ["sabores-da-vila-foto-2.jpg", "03 / seu próximo post"]].each do |file, label| %>
-          <figure><img src="/demos/<%= file %>" alt="Produto de uma campanha ilustrativa" width="180" height="220"><figcaption><%= label %></figcaption></figure>
-        <% end %>
-      </div>
+      <h2>Sua promoção, em <em>música</em> e vídeo.</h2>
+      <ul class="jp-checks"><li>Você aprova a letra antes da música</li><li>Duas versões de música por rodada</li><li>Vídeo vertical pronto para postar</li></ul>
+      <figure class="jp-auth-photo"><img src="/demos/photos/pizzaria-forno-da-vila.png" alt="Pizzas de uma campanha de exemplo"><figcaption>Terça da pizza,<br><strong>R$ 79,90.</strong></figcaption></figure>
     </div>
-    <p class="studio-auth-caption">JINGLEPRO / FEITO PARA O SEU NEGÓCIO <span>VOL. 001</span></p>
+    <p class="studio-auth-caption">Uma boa oferta merece ser ouvida.</p>
   </aside>
   <main class="studio-auth-main">
-    <%= link_to "← Voltar ao início", root_path, class: "studio-auth-back" %>
-    <div class="studio-auth-form">
-      <%= render "shared/studio_flash" %>
-      <%= yield %>
-    </div>
-    <p class="studio-auth-foot">Sua promoção. Com ritmo.</p>
+    <%= link_to "Voltar ao início", root_path, class: "studio-auth-back" %>
+    <div class="studio-auth-form"><%= render "shared/studio_flash" %><%= yield %></div>
+    <p class="studio-auth-foot">Feito para o comércio de verdade.</p>
   </main>
 </div>

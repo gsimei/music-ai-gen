@@ -12,7 +12,7 @@ module Stripe
       end
 
       order.with_lock do
-        return success_result(:already_handled) unless order.pending?
+        return success_result(:already_handled) unless order.pending? || order.payment_failed?
         order.stripe_payment_intent_id = session_data["payment_intent"]
         order.paid_at = Time.current
         order.mark_paid!

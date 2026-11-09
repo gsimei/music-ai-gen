@@ -8,7 +8,7 @@ class ArchiveCampaignAudioJob < ApplicationJob
     asset = OrderAsset.find(asset_id)
     return if !asset.order.campaign || !asset.music_variant?
     if archived?(asset)
-      PrepareCampaignAudioJob.perform_later(asset.id) unless asset.campaign_preview_ready?
+      PrepareCampaignAudioJob.perform_later(asset.id) unless asset.audition_ready?
       return
     end
     Tempfile.create(["jingle-version-", ".mp3"]) do |file|
@@ -18,11 +18,11 @@ class ArchiveCampaignAudioJob < ApplicationJob
       File.open(file.path) do |audio|
         asset.with_lock do
           return if archived?(asset)
-          asset.audio.attach(io: audio, filename: "#{asset.order.reference}-#{asset.music_generation.iteration}-#{asset.variant_index}.mp3", content_type: "audio/mpeg")
+          asset.audio.attach(io: audio, filename: "#{asset.order.reference}-#{asset.music_generation.iteration}-#{asset.variant_index}.mp3", content_type: "audio/mpeg", metadata: { private_order_audio: true })
         end
       end
     end
-    PrepareCampaignAudioJob.perform_later(asset.id) unless asset.campaign_preview_ready?
+    PrepareCampaignAudioJob.perform_later(asset.id) unless asset.audition_ready?
   rescue StandardError
     asset&.update!(campaign_preview_status: "failed") unless asset&.campaign_preview_ready?
     OrderChatBroadcaster.call(asset.order) if asset

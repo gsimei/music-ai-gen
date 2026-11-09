@@ -1,8 +1,7 @@
 <% content_for :title, "JinglePro · Entrar" %>
 <%= render layout: "users/shared/studio_auth" do %>
-  <p class="studio-kicker">BOM TER VOCÊ DE VOLTA</p>
-  <h1>Sua próxima<br><span>boa ideia.</span></h1>
-  <p class="studio-form-intro">Entre para acompanhar suas campanhas.</p>
+  <h1>Entrar na sua conta</h1>
+  <p class="studio-form-intro">Acompanhe suas campanhas e baixe os vídeos.</p>
   <%= render "users/shared/error_messages", resource: resource %>
   <%= form_for resource, as: resource_name, url: session_path(resource_name) do |f| %>
     <div class="studio-field">
@@ -11,9 +10,9 @@
     </div>
     <div class="studio-field">
       <div class="studio-label-row"><%= f.label :password, "Senha" %><%= link_to "Esqueceu a senha?", new_user_password_path %></div>
-      <%= f.password_field :password, autocomplete: "current-password", required: true %>
+      <div class="jp-password" data-controller="password-visibility"><%= f.password_field :password, autocomplete: "current-password", required: true %><button type="button" data-action="password-visibility#toggle" aria-pressed="false" aria-label="Mostrar senha">Mostrar</button></div>
     </div>
-    <%= f.button class: "studio-button studio-button-green studio-submit" do %>Entrar na minha conta <span aria-hidden="true">↗</span><% end %>
+    <%= f.button class: "studio-button studio-button-green studio-submit" do %>Entrar na minha conta <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg><% end %>
     <p class="studio-form-switch">Ainda não tem uma conta? <%= link_to "Criar conta", new_user_registration_path %></p>
   <% end %>
 <% end %>

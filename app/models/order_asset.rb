@@ -3,6 +3,20 @@
 class OrderAsset < ApplicationRecord
   has_one_attached :audio
   has_one_attached :campaign_audio
+  has_one_attached :audition_audio
+
+  def audition_ready?
+    campaign_preview_ready? && audition_audio.attached? &&
+      audition_audio.blob.metadata["source_blob_id"] == campaign_audio.blob.id &&
+      audition_audio.blob.metadata["preview_revision"] == preview_revision &&
+      audition_audio.blob.metadata["watermark_version"] == Campaigns::AudioAudition::VERSION
+  end
+
+  def approved_for_delivery?
+    music_variant? && music_generation_id.present? && variant_index.in?([0, 1]) &&
+      order.approved? && order.approved_music_generation_id == music_generation_id &&
+      order.approved_variant == ("a".ord + variant_index).chr
+  end
 
   def campaign_preview_ready?
     campaign_preview_status == "ready" && campaign_audio.attached? && campaign_audio.blob.metadata.fetch("preview_revision", 0) == preview_revision
@@ -18,11 +32,19 @@ class OrderAsset < ApplicationRecord
   end
 
   def campaign_playback_url
-    Rails.application.routes.url_helpers.rails_blob_path(campaign_audio, only_path: true) if campaign_preview_ready?
+    Rails.application.routes.url_helpers.order_audio_preview_path(order, asset_id: id) if audition_ready?
   end
 
   def playback_url
+    if order.campaign
+      return Rails.application.routes.url_helpers.order_audio_final_path(order, asset_id: id) if approved_for_delivery? && audio.attached?
+      return nil
+    end
     audio.attached? ? Rails.application.routes.url_helpers.rails_blob_path(audio, only_path: true) : url.presence || provider_url
+  end
+
+  def listening_url
+    order.campaign ? campaign_playback_url : playback_url
   end
 
   KINDS = %w[final_mp3 final_wav stems_zip lyrics_pdf].freeze

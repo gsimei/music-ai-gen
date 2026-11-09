@@ -1,0 +1,26 @@
+  <% if draft %>
+    <details class="creative-details creative-lyrics" <%= 'open' if completed.zero? || (!order.approved? && order.music_generations.completed.maximum(:lyrics_draft_id) != draft.id) %>>
+      <summary><%= order.approved? ? "Histórico de letras" : "Letra para a próxima rodada" %> <span>v<%= draft.version %></span></summary>
+      <% if order.lyrics_editable? && completed < Campaigns::MusicRounds::LIMIT %>
+        <%= form_with url: order_chat_edit_lyrics_path(order_id: order.id), method: :patch, data: { turbo_stream: true, action: "submit->creative-editor#saving turbo:submit-end->creative-editor#saved" }, class: "creative-lyrics-form" do %>
+          <%= hidden_field_tag :draft_id, draft.id %>
+          <label for="editable-lyrics">Edite o nome, preço ou qualquer palavra</label>
+          <p class="studio-field-hint">Prefira uma letra curta para o vídeo de até 30 segundos. Confira a oferta, o nome e as condições.</p>
+          <textarea id="editable-lyrics" name="content" rows="9" maxlength="5000" required data-action="input->creative-editor#changed"><%= draft.content %></textarea>
+          <p class="studio-field-hint" data-creative-editor-target="saveHint">Editar e salvar a letra não gasta uma rodada musical.</p>
+          <button type="submit" class="studio-button studio-button-green">Salvar letra</button>
+        <% end %>
+        <% unless order.lyrics_regen_exhausted? %>
+          <details class="creative-details"><summary>Prefere que a IA reescreva? · <%= order.lyrics_regen_remaining %> ajustes</summary>
+          <%= form_with url: order_chat_regenerate_lyrics_path(order_id: order.id), data: { turbo_stream: true }, class: "creative-rewrite" do %>
+            <label for="lyrics-change">Ou peça ajuda para reescrever</label>
+            <textarea name="feedback" id="lyrics-change" rows="2" required maxlength="1000" placeholder="Ex.: mantenha a oferta e deixe o refrão mais curto" data-action="input->creative-editor#feedbackChanged"></textarea>
+            <button class="creative-favorite-button" type="submit">Reescrever com IA · <%= order.lyrics_regen_remaining %> ajustes disponíveis</button>
+          <% end %>
+          </details>
+        <% end %>
+        <% if order.lyrics_ready? %><%= button_to "Aprovar letra e ouvir duas versões", order_chat_approve_lyrics_path(order_id: order.id), params: { draft_id: draft.id }, class: "studio-button studio-button-green", data: { turbo_stream: true } %><% end %>
+      <% else %><pre><%= draft.content %></pre><% end %>
+      <% if order.lyrics_drafts.count > 1 %><details class="creative-details"><summary>Letras anteriores</summary><% order.lyrics_drafts.order(version: :desc).where.not(id: draft.id).each do |previous| %><div class="creative-old-lyrics"><strong>Letra v<%= previous.version %></strong><pre><%= previous.content %></pre></div><% end %></details><% end %>
+    </details>
+  <% end %>

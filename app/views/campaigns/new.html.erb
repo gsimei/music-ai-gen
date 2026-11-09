@@ -4,7 +4,7 @@
 <div class="studio-home studio-app campaign-app">
   <%= render "shared/studio_header" %>
   <main class="campaign-main">
-    <div class="campaign-heading"><p class="studio-kicker">SUA PRÓXIMA PROMOÇÃO COMEÇA AQUI</p><h1>Seu negócio.<br><span>No ritmo certo.</span></h1><p>Conte o que você quer divulgar. A gente transforma em música e vídeo.</p></div>
+    <div class="campaign-heading jp-creation-heading"><h1>Sua próxima <em>campanha.</em></h1><p>Da oferta ao vídeo, um passo de cada vez.</p></div>
     <% if @music_profiles&.any? %>
       <section class="campaign-saved-sound">
         <p class="studio-kicker">COMECE COM O SOM DO SEU NEGÓCIO</p>
@@ -36,18 +36,18 @@
         <section data-campaign-form-target="step" class="campaign-step">
           <p class="studio-kicker">02 / DÊ O TOM DA SUA MÚSICA</p><h2>Como sua promoção deve soar?</h2><p>Escolha o ritmo e a voz. A música será cantada em português, com a sua oferta.</p>
           <%= render "campaigns/sound_fields", f: f %>
-          <h3>Qual é o clima?</h3>
+          <fieldset class="jp-fieldset"><legend>Qual é o clima?</legend>
           <div class="campaign-styles"><% Campaign::STYLES.each_with_index do |(key, style), index| %><label class="campaign-style"><%= f.radio_button :style, key, required: true %><span class="campaign-style-number">0<%= index + 1 %> /</span><strong><%= style[:label] %></strong><span><%= style[:description] %></span></label><% end %></div>
-          <div class="campaign-note">Você poderá revisar a letra e essas escolhas antes da primeira geração. Depois, ouvirá duas versões para comparar.</div>
+          </fieldset><div class="campaign-note">Você poderá revisar a letra e essas escolhas antes da primeira geração. Depois, ouvirá duas versões para comparar.</div>
         </section>
         <section data-campaign-form-target="step" class="campaign-step">
-          <p class="studio-kicker">03 / TUDO CERTO?</p><h2>Uma campanha. Tudo para postar.</h2><p>Confira a prévia e os dados da promoção. O vídeo final usa a música que você escolher.</p>
+          <p class="studio-kicker">03 / TUDO CERTO?</p><h2>Confira e comece.</h2><p>Confira a prévia e os dados da promoção. O vídeo final usa a música que você escolher.</p>
           <div class="campaign-note"><strong>Direção da sua música</strong><p data-campaign-form-target="soundSummary"><%= @campaign.sound_summary %></p></div>
           <ul class="campaign-included"><li>Até 3 rodadas com 2 versões musicais cada</li><li>Até <%= BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :lyrics_regen_limit) %> reescritas com IA, além de edição livre da letra</li><li>Um vídeo vertical com suas fotos, transições, oferta e contato</li><li>Música em MP3 e legenda para copiar</li></ul>
           <div class="campaign-total"><span>Pagamento único<br><small>Sem assinatura. Sem créditos.</small></span><strong><%= campaign_price %></strong></div>
           <p class="studio-field-hint">Na próxima tela você revisa o pedido e segue para o pagamento. Nenhuma cobrança nesta etapa.</p>
         </section>
-        <div class="campaign-form-actions"><button type="button" class="studio-button studio-button-outline" data-campaign-form-target="back" data-action="campaign-form#back" hidden>← Voltar</button><button type="button" class="studio-button studio-button-green" data-campaign-form-target="next" data-action="campaign-form#next" hidden>Continuar ↗</button><%= f.submit "Revisar minha campanha ↗", class: "studio-button studio-button-green", data: { campaign_form_target: "submit" } %></div>
+        <div class="campaign-form-actions"><button type="button" class="studio-button studio-button-outline" data-campaign-form-target="back" data-action="campaign-form#back" hidden>Voltar</button><button type="button" class="studio-button studio-button-green" data-campaign-form-target="next" data-action="campaign-form#next" hidden>Continuar</button><%= f.submit "Revisar minha campanha", class: "studio-button studio-button-green", data: { campaign_form_target: "submit" } %></div>
       </div>
       <aside class="campaign-preview-wrap"><p class="studio-kicker" data-campaign-form-target="previewPhotoTitle">FOTO DE ABERTURA / PRÉVIA 9:16</p><div class="campaign-poster"><span class="campaign-poster-business" data-campaign-form-target="previewBusiness">Seu negócio</span><div class="campaign-poster-image"><% first_photo = saved_photos.first %><img alt="Foto da campanha" data-campaign-form-target="previewPhoto" <% if first_photo %>src="<%= rails_blob_path(first_photo) %>"<% else %>hidden<% end %>><span aria-hidden="true">✳</span></div><strong data-campaign-form-target="previewOffer">Sua próxima<br>grande oferta.</strong><div class="campaign-poster-contact"><span data-campaign-form-target="previewCta">Peça pelo WhatsApp</span><b data-campaign-form-target="previewContact">Seu contato aqui</b></div></div><p class="studio-field-hint">Prévia estática: no vídeo, as fotos ganham movimento, alternam entre si e os textos entram em sequência. A música vem depois da aprovação da letra.</p></aside>
     <% end %>

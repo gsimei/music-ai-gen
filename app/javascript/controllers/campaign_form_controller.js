@@ -28,10 +28,10 @@ export default class extends Controller {
   show(focus = false) {
     this.element.querySelectorAll("audio").forEach(audio => audio.pause())
     if (this.hasSoundSummaryTarget) {
-      const genre = this.element.querySelector('[data-sound-setting="genre"]')
-      const voice = this.element.querySelector('[data-sound-setting="voice"]')
+      const genre = this.element.querySelector('[data-sound-setting="genre"]:checked')
+      const voice = this.element.querySelector('[data-sound-setting="voice"]:checked')
       const climate = this.element.querySelector('input[name="campaign[style]"]:checked')?.closest('label')?.querySelector('strong')?.textContent
-      this.soundSummaryTarget.textContent = [genre?.selectedOptions[0]?.textContent, voice?.selectedOptions[0]?.textContent, climate].filter(Boolean).join(' · ')
+      this.soundSummaryTarget.textContent = [genre?.dataset.soundLabel, voice?.dataset.soundLabel, climate].filter(Boolean).join(' · ')
     }
     this.stepTargets.forEach((step, index) => {
       step.hidden = index !== this.index
