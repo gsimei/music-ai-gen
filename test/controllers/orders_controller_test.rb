@@ -287,6 +287,28 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ---------------------------------------------------------------------------
+  # Visitante deslogado: ações fora de qualquer lista `only:` também exigem login
+  # ---------------------------------------------------------------------------
+
+  test "GET show: unauthenticated user is redirected to sign in" do
+    sign_out :user
+    host! "b2b.lvh.me"
+
+    get order_path(orders(:b2b_pending))
+
+    assert_redirected_to new_user_session_path
+  end
+
+  test "POST checkout: unauthenticated user is redirected to sign in" do
+    sign_out :user
+    host! "b2b.lvh.me"
+
+    post checkout_order_path(orders(:b2b_pending))
+
+    assert_redirected_to new_user_session_path
+  end
+
+  # ---------------------------------------------------------------------------
   # POST /orders/:id/approve_lyrics (new single-page flow action)
   # ---------------------------------------------------------------------------
 
