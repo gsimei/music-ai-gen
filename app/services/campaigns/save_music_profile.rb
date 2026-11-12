@@ -6,6 +6,7 @@ module Campaigns
       order = campaign.order
       user = order.user
       return failure_result(:invalid_state) unless user
+      return failure_result(:missing_business_name) if campaign.business_name.blank?
       # Approval can select an older favorite. Persist that version's sound,
       # rather than the last settings the merchant happened to experiment with.
       settings = if order.approved?

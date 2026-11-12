@@ -1,121 +1,15 @@
-<% content_for :title, "JinglePro · Sua campanha" %>
+<% content_for :title, "#{brand_name} · Sua campanha" %>
 <% content_for :body_class, "studio-page" %>
 <% if @order.campaign %>
   <%= turbo_stream_from "order_#{@order.id}_chat" %>
   <div class="studio-home studio-app jp-workspace" data-controller="creation-status" data-creation-status-url-value="<%= order_chat_status_path(order_id: @order.id) %>" data-creation-status-version-value="<%= @order.creation_version %>">
     <%= render "shared/studio_header" %>
     <main class="jp-workspace-main"><%= render "shared/studio_flash" %>
-      <div class="jp-project"><div><p class="studio-kicker">SUA CAMPANHA</p><strong><%= @order.campaign.business_name %></strong></div><%= link_to "Ver dados da campanha", campaign_path(@order.campaign), class: "studio-text-link" %></div>
-      <div class="jp-workspace-grid"><div class="jp-task">
+      <div class="jp-project"><div><p class="studio-kicker">SUA CAMPANHA</p><strong id="campaign-project-title-<%= @order.campaign.id %>"><%= @order.campaign.title %></strong></div><%= link_to "Ver dados da campanha", campaign_path(@order.campaign), class: "studio-text-link" %></div>
+      <div class="jp-workspace-grid jp-guided-workspace"><div class="jp-task">
         <%= render "order_chat/campaign_studio", order: @order, draft: @draft %>
-        <details class="jp-assistant"><summary>Precisa de ajuda para ajustar sua campanha?</summary>
-  <section id="studio-conversation" class="studio-conversation" aria-label="Conversa"
-       data-controller="chat-input chat-mode">
-
-    <%# Mode tabs (Pro only) %>
-    <%= render "order_chat/chat_tabs", order: @order %>
-
-    <%# Messages %>
-    <div id="chat-messages"
-         class="studio-messages space-y-3"
-         data-chat-input-target="messages">
-      <div id="chat-transcript" class="space-y-3">
-      <% if @messages.empty? && @order.campaign %>
-        <div class="campaign-note"><p class="studio-kicker">SEU PEDIDO JÁ ESTÁ AQUI</p><strong><%= @order.campaign.offer %></strong><p>Confira o nome, o preço e as condições na letra antes de aprovar. Você pode pedir ajustes abaixo.</p></div>
-      <% elsif @messages.empty? %>
-        <div class="studio-chat-welcome">
-          <p class="studio-kicker">VAMOS CRIAR SUA PROMOÇÃO</p>
-          <h1>Qual é a sua<br>próxima <span>oferta?</span></h1>
-          <p>Conte sobre o seu negócio e o que você quer divulgar.<br>Vamos encontrar as palavras e o ritmo certos.</p>
-          <div class="studio-starting-points">
-            <% ["Uma promoção para minha loja", "Música para divulgar uma oferta", "Uma campanha de inauguração"].each do |suggestion| %>
-              <button type="button" data-action="chat-input#fillSuggestion" data-suggestion="<%= suggestion %>"><%= suggestion %><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-      <% @messages.each do |msg| %>
-        <%= render "order_chat/message", role: msg.role, content: msg.content %>
-      <% end %>
-      </div>
-      <div id="chat-workflow"><%= render "order_chat/workflow", order: @order, draft: @draft %></div>
-      <%= render "order_chat/scroll_anchor" %>
-    </div>
-
-    <%# Suggestions %>
-    <div id="chat-suggestions" class="studio-suggestions">
-      <%= render "order_chat/suggestions", suggestions: [] %>
-    </div>
-
-    <%# Input %>
-    <div class="studio-composer">
-      <%= form_with url: order_chat_message_path(order_id: @order.id),
-                    html: { enctype: "multipart/form-data" },
-                    data: { turbo_stream: true, "chat-input-target": "form", action: "turbo:submit-end->chat-input#reset" },
-                    class: "flex flex-col gap-2" do |f| %>
-
-        <%# Hidden fields %>
-        <input type="hidden"
-               name="mode"
-               value="music"
-               data-chat-mode-target="modeField">
-
-        <%# File input (hidden; shown only in Soundtrack mode) %>
-        <input type="file"
-               id="soundtrack-file-input"
-               name="file"
-               accept="video/mp4,video/quicktime,image/jpeg,image/png"
-               data-chat-mode-target="fileInput"
-               data-action="change->chat-mode#fileSelected"
-               class="sr-only"
-               style="display:none"
-               aria-label="<%= t('order_chat.attach_file_label') %>">
-
-        <%# File preview (shown when a file is selected) %>
-        <p class="text-xs text-cant-muted pl-1"
-           aria-live="polite"
-           data-chat-mode-target="filePreview"></p>
-
-        <%# Textarea row + action buttons %>
-        <div class="flex items-end gap-2">
-
-          <%# Attach button (hidden; shown only in Soundtrack mode) %>
-          <label for="soundtrack-file-input"
-                 data-chat-mode-target="attachLabel"
-                 style="display:none"
-                 title="<%= t('order_chat.attach_file_label') %>"
-                 class="flex-shrink-0 flex items-center justify-center rounded-xl border border-cant-line bg-cant-paper text-cant-ink px-3 py-2.5 cursor-pointer hover:border-cant-ink hover:bg-cant-paper transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-            </svg>
-          </label>
-
-          <textarea name="message"
-                    aria-label="<%= t('order_chat.input_placeholder') %>"
-                    rows="1"
-                    placeholder="<%= t('order_chat.input_placeholder') %>"
-                    class="flex-1 resize-none rounded-xl border border-cant-line px-4 py-2.5 text-sm bg-cant-paper text-cant-ink placeholder-cant-muted focus:outline-none focus:ring-2 focus:ring-cant-ink/20 focus:border-cant-ink transition"
-                    data-chat-input-target="textarea"
-                    data-action="keydown->chat-input#submitOnEnter input->chat-input#autoResize"></textarea>
-
-          <button type="submit"
-                  class="flex-shrink-0 rounded-xl bg-cant-ink text-cant-paper px-4 py-2.5 hover:bg-cant-ink/90 transition"
-                  aria-label="<%= t('order_chat.send_button_label') %>"
-                  data-chat-input-target="submit">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-            </svg>
-          </button>
-
-        </div>
-      <% end %>
-      <p class="studio-composer-hint">Enter para enviar · Shift + Enter para pular linha</p>
-    </div>
-  </section>
-
-        </details>
-      </div><aside class="jp-campaign-context"><%= render "campaigns/summary", campaign: @order.campaign %></aside></div>
+        <details class="creative-campaign-context"><summary>Ver resumo da promoção</summary><%= render "campaigns/summary", campaign: @order.campaign %></details>
+      </div></div>
     </main>
   </div>
 <% else %><%= render "order_chat/legacy_workspace" %><% end %>

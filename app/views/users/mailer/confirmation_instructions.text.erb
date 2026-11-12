@@ -1,0 +1,7 @@
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
+Bem-vindo à <%= product_name %>!
+
+Confirme o endereço <%= @email %> para concluir seu cadastro e começar a criar suas campanhas:
+<%= confirmation_url(@resource, confirmation_token: @token) %>
+
+Se você não criou uma conta na <%= product_name %>, ignore esta mensagem.

@@ -1,4 +1,4 @@
-<% content_for :title, "Confirmar seu e-mail · JinglePro" %>
+<% content_for :title, "Confirmar seu e-mail · #{brand_name}" %>
 <%= render layout: "users/shared/studio_auth" do %>
   <h1>Confirmar seu e-mail</h1><p class="studio-form-intro">Receba novamente o link de confirmação.</p>
   <%= form_for resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post } do |f| %>

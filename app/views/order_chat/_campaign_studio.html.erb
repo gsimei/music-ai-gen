@@ -1,110 +1,58 @@
-<div id="chat-lyrics-panel" class="creative-studio" data-controller="creative-editor">
-  <div id="creative-errors" class="creative-errors" role="alert"><%= order.lyrics_revision_error %></div>
-  <% completed = order.completed_music_rounds %>
-  <% busy = order.paid? || order.lyrics_drafting? || order.music_generating? || order.lyrics_approved? || order.lyrics_revision_token.present? %>
-  <% phase = order.approved? ? 3 : completed.positive? || order.music_generating? || order.lyrics_approved? || order.music_failed? ? 2 : 1 %>
-  <nav class="jp-phases" aria-label="Fases da criação"><% ["Letra", "Músicas", "Vídeo"].each_with_index do |label, index| %><span aria-current="<%= phase == index + 1 ? 'step' : 'false' %>" class="<%= 'is-done' if phase > index + 1 %>"><b><%= index + 1 %></b><%= label %></span><% end %></nav>
+<% completed = order.completed_music_rounds %>
+<% busy = order.paid? || order.lyrics_drafting? || order.music_generating? || order.lyrics_approved? || order.lyrics_revision_token.present? %>
+<% selected = order.campaign.selected_music_asset unless order.approved? %>
+<% video_step = selected.present? || order.approved? %>
+<div id="chat-lyrics-panel" class="creative-studio" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= video_step ? 'video' : 'music' %>">
+  <nav class="jp-phases" aria-label="Etapas da criação">
+    <span aria-current="<%= video_step ? 'false' : 'step' %>" class="<%= 'is-done' if video_step %>"><b>1–2</b>Letra e música</span>
+    <span aria-current="<%= video_step ? 'step' : 'false' %>"><b>3</b>Vídeo</span>
+  </nav>
+  <div id="creative-errors" class="creative-errors" role="alert" tabindex="-1"><%= order.lyrics_revision_error %></div>
+  <% if @creation_notice.present? %><p class="creative-working" role="status"><%= @creation_notice %></p><% end %>
   <header class="creative-progress">
-    <p class="studio-kicker">FASE <%= phase %> DE 3</p>
-    <h1><%= phase == 1 ? "Revise a letra." : phase == 2 ? "Escolha a sua versão." : order.campaign.video_status == "ready" ? "Sua campanha, pronta para postar." : "Vamos concluir seu vídeo." %></h1>
-    <p><%= phase == 1 ? "Confira o nome, o preço e as condições. Edite à vontade antes de criar a música." : phase == 2 ? "Ouça até o fim. Escolha a que combina com seu negócio ou peça uma nova interpretação." : "Baixe no celular e compartilhe sua promoção." %></p>
-    <p class="jp-round-count"><strong><%= completed %> de <%= Campaigns::MusicRounds::LIMIT %> rodadas prontas</strong> · <%= order.lyrics_regen_remaining %> ajustes de letra disponíveis</p>
+    <h1 tabindex="-1"><%= if order.approved?
+      order.campaign.video_status == "ready" ? "Seu vídeo está pronto." : "Estamos montando seu vídeo."
+    elsif selected
+      "Vamos preparar seu vídeo."
+    elsif completed.positive?
+      "Ouça e escolha sua música."
+    else
+      "Vamos criar sua música."
+    end %></h1>
+    <p><%= video_step ? "Confira o resultado e ajuste o que quiser." : completed.positive? ? "Ouça as opções. Você pode ajustar a letra e o som antes de escolher." : "Confira o nome, o preço e as informações da sua oferta. Você pode ajustar a letra antes e depois de ouvir." %></p>
   </header>
-  <% if order.approved? %><%= render "campaigns/delivery", campaign: order.campaign %><details class="creative-details"><summary>Ver músicas e letras da campanha</summary><% end %>
-  <% if completed.zero? %>
-  <%= render "order_chat/campaign_lyrics", order: order, draft: draft, completed: completed %>
-  <% end %>
-  <% if !order.approved? %>
-    <section class="creative-sound-direction">
-      <p class="studio-kicker"><%= completed.zero? ? "DIREÇÃO DA PRIMEIRA RODADA" : "DIREÇÃO DA PRÓXIMA RODADA" %></p>
-      <p><strong><%= order.campaign.sound_summary %></strong></p>
-      <% if order.lyrics_editable? && completed < Campaigns::MusicRounds::LIMIT %>
-        <details class="creative-details" ><summary>Ajustar ritmo, voz e clima</summary>
-          <%= form_with model: order.campaign, url: order_chat_sound_settings_path(order_id: order.id), method: :patch,
-            data: { turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged" } do |f| %>
-            <%= render "campaigns/sound_fields", f: f, climate: true %>
-            <button type="submit" class="studio-button studio-button-green">Salvar direção musical</button>
-            <p class="studio-field-hint">Salvar não gera música nem gasta uma rodada. As versões anteriores permanecem iguais.</p>
-          <% end %>
+  <% if order.approved? %>
+    <%= render "campaigns/delivery", campaign: order.campaign %>
+  <% elsif selected %>
+    <%= render "order_chat/video_setup", order: order, asset: selected %>
+  <% else %>
+    <%= render "order_chat/creation_status", order: order, busy: busy, completed: completed %>
+    <% generations = order.music_generations.completed.includes(:order_assets, :lyrics_draft).order(iteration: :desc).to_a %>
+    <% if generations.any? %>
+      <%= render "order_chat/music_choices", order: order, generation: generations.first, number: completed, busy: busy %>
+    <% end %>
+    <% if draft && order.lyrics_editable? && completed < Campaigns::MusicRounds::LIMIT %>
+      <% if completed.positive? %>
+        <details id="creation-adjustments" class="creative-details creative-adjustments">
+          <summary>Quero ajustar a letra ou a música</summary>
+          <p>As alterações serão usadas nas próximas músicas. As anteriores continuam disponíveis.</p>
+          <%= render "order_chat/creation_form", order: order, draft: draft, completed: completed %>
         </details>
+      <% else %>
+        <%= render "order_chat/creation_form", order: order, draft: draft, completed: completed %>
       <% end %>
-    </section>
+    <% elsif completed >= Campaigns::MusicRounds::LIMIT %>
+      <p class="campaign-note">Você já criou todas as músicas incluídas. Ouça e escolha qualquer opção, inclusive as anteriores.</p>
+    <% elsif draft && busy %>
+      <details id="creation-lyrics" class="creative-details"><summary>Ver a letra</summary><pre><%= draft.content %></pre></details>
+    <% end %>
+    <% if generations.size > 1 %>
+      <details id="previous-music" class="creative-details jp-round-history">
+        <summary>Ouvir opções anteriores</summary>
+        <% generations.drop(1).each_with_index do |generation, index| %>
+          <%= render "order_chat/music_choices", order: order, generation: generation, number: completed - index - 1, busy: busy %>
+        <% end %>
+      </details>
+    <% end %>
   <% end %>
-  <% if busy %><p class="creative-working" role="status"><%= order.paid? || order.lyrics_drafting? ? 'Preparando sua letra…' : order.lyrics_revision_token.present? ? 'Reescrevendo sua letra…' : 'Criando duas novas versões…' %><% if completed.positive? %> Você pode ouvir as anteriores enquanto espera.<% end %></p><% end %>
-  <% if order.lyrics_failed? %><div class="campaign-note"><strong>Não conseguimos preparar a letra.</strong><p>Seus dados estão salvos. Tente novamente.</p><%= button_to "Tentar preparar a letra novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
-  <% latest_attempt = order.music_generations.order(:iteration).last %>
-  <% if busy && latest_attempt&.error_code == "rate_limited" %><p class="campaign-note" role="status">O serviço de música está ocupado. Vamos tentar novamente em instantes, com um limite de tentativas.</p><% end %>
-  <% if busy && latest_attempt&.error_code == "status_unavailable" %><p class="campaign-note" role="status">Sua música já foi solicitada. Estamos recuperando a resposta, sem gerar outra versão.</p><% end %>
-  <% if order.music_failed? %>
-    <% checking = %w[generation_delayed status_unavailable].include?(latest_attempt&.error_code) && latest_attempt&.mureka_job_id.present? %>
-    <div class="campaign-note"><strong><%= checking ? "Esta música está demorando mais que o esperado." : "Esta tentativa não ficou pronta." %></strong>
-      <p><%= checking ? "Podemos consultar a mesma tentativa sem gastar outra geração." : "Ela não consumiu uma rodada. Suas versões anteriores estão salvas." %></p>
-      <% if latest_attempt&.error_code == "submission_uncertain" %><p>Não conseguimos confirmar a resposta. Não repetimos automaticamente o pedido. Você pode tentar novamente dentro do limite de recuperação da campanha.</p><% end %>
-      <% if %w[quota_exhausted request_rejected technical_limit_reached].include?(latest_attempt&.error_code) || (!checking && order.generation_costs.where(operation: "music").where("estimated_usd > 0").count >= Campaigns::MusicRounds::MAX_PAID_ATTEMPTS) %>
-        <p>A campanha precisa de revisão antes de novas gerações. Você ainda pode escolher uma versão já pronta.</p>
-      <% else %><%= button_to checking ? "Verificar tentativa" : "Tentar novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %><% end %>
-    </div>
-  <% end %>
-
-  <% order.music_generations.completed.includes(:order_assets, :lyrics_draft).order(iteration: :desc).each_with_index do |generation, index| %>
-    <% round_number = completed - index %>
-    <% if index.positive? %><details class="creative-details jp-round-history"><summary>Rodada <%= round_number %> · versões anteriores<%= " · Favorita salva" if generation.order_assets.any? { |asset| asset.id == order.favorite_music_asset_id } %></summary><% end %>
-    <section class="creative-round" aria-label="Rodada <%= round_number %>">
-      <div class="creative-round-heading"><h2>Rodada <%= round_number %></h2><span>Letra v<%= generation.lyrics_draft&.version %></span></div>
-      <% settings = generation.request_payload["sound_settings"] %>
-      <% if settings %><p class="studio-field-hint"><%= Campaign::GENRES.dig(settings["musical_genre"], :label) %> · <%= Campaign::VOCAL_GENDERS[settings["vocal_gender"]] %> · <%= Campaign::STYLES.dig(settings["style"], :label) %></p><% end %>
-      <% if generation.melody_hint.present? %><p class="creative-change">Seu pedido: <%= generation.melody_hint %></p><% end %>
-      <div class="jp-versions">
-      <% generation.order_assets.select(&:music_variant?).sort_by(&:variant_index).each do |asset| %>
-        <% favorite = order.favorite_music_asset_id == asset.id %>
-        <% selected = order.approved? && order.approved_music_generation_id == generation.id && order.approved_variant == ("a".ord + asset.variant_index).chr %>
-        <article class="creative-version <%= 'is-favorite' if favorite %>" id="music-version-<%= asset.id %>">
-          <div class="creative-version-heading"><strong>Versão <%= ("A".ord + asset.variant_index).chr %></strong><% if favorite %><span class="creative-favorite-label">★ Sua favorita</span><% end %></div>
-          <% if asset.audition_ready? %>
-            <p class="studio-field-hint">Prévia com marca sonora · <%= asset.campaign_audio.blob.metadata.fetch("duration_seconds").round %>s. Ouça até o fim e confira se a oferta ficou completa.</p>
-            <audio controls controlslist="nodownload noplaybackrate" disableremoteplayback preload="none" data-action="play->creative-editor#play" aria-label="Ouvir trecho do vídeo, rodada <%= round_number %>, versão <%= ("A".ord + asset.variant_index).chr %>"><source src="<%= asset.campaign_playback_url %>" type="audio/mp4"></audio>
-            <p class="studio-field-hint"><%= order.approved? ? "A versão escolhida foi liberada sem marca sonora. As demais continuam aqui para comparação." : "Ao aprovar, você recebe este trecho sem a marca sonora no vídeo e a música escolhida para baixar." %></p>
-            <% if !busy && !order.approved? %><%= render "order_chat/excerpt_editor", order: order, asset: asset %><% end %>
-          <% else %>
-            <% if asset.campaign_preview_status != "queued" %>
-              <p class="studio-field-hint"><%= asset.campaign_preview_status == "failed" ? "Não conseguimos preparar o trecho. Sua música está salva." : "Prepare a prévia protegida para comparar esta versão." %></p>
-              <%= button_to "Preparar trecho do vídeo", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id }, class: "creative-favorite-button", data: { turbo_stream: true } %>
-            <% else %><p class="creative-working" role="status">Preparando o trecho do vídeo…</p><% end %>
-          <% end %>
-          <% if selected && asset.playback_url.present? %>
-          <details class="creative-details"><summary>Ouvir música completa</summary><p class="studio-field-hint">A música original pode ser mais longa que o vídeo.</p><audio controls controlslist="nodownload noplaybackrate" disableremoteplayback preload="none" data-action="play->creative-editor#play" aria-label="Ouvir música completa, rodada <%= round_number %>, versão <%= ("A".ord + asset.variant_index).chr %>"><source src="<%= asset.playback_url %>" type="audio/mpeg"></audio></details>
-          <% end %>
-          <% unless order.approved? %>
-            <div class="creative-version-actions">
-              <%= button_to favorite ? "★ Favorita salva" : "☆ Salvar favorita", order_chat_favorite_music_path(order_id: order.id), params: { asset_id: asset.id }, class: "creative-favorite-button", aria: { pressed: favorite }, data: { turbo_stream: true } %>
-              <% if !busy && asset.audition_ready? %><%= button_to "Aprovar este trecho e montar vídeo", order_chat_approve_music_path(order_id: order.id), params: { asset_id: asset.id, preview_revision: asset.preview_revision }, class: "studio-button studio-button-green", data: { turbo_stream: true } %><% end %>
-            </div>
-          <% else %><% if selected %><p class="creative-selected">✓ Escolhida para seu vídeo</p><% end %><% end %>
-        </article>
-      <% end %>
-      </div>
-      <details class="creative-details"><summary>Ver a letra desta rodada</summary><pre><%= generation.lyrics_draft&.content %></pre></details>
-    </section>
-    <% if index.positive? %></details><% end %>
-  <% end %>
-
-  <% if order.preview_ready? && !busy && completed < Campaigns::MusicRounds::LIMIT %>
-    <section class="creative-revision">
-      <h2>Quer algo diferente?</h2><p>Uma nova interpretação, preservando o histórico. <%= Campaigns::MusicRounds::LIMIT - completed %> rodada(s) disponível(is).</p>
-      <%= form_with url: order_chat_regenerate_music_path(order_id: order.id), data: { turbo_stream: true } do %>
-        <label for="revision-base">Usar como direção</label>
-        <select name="asset_id" id="revision-base"><% order.all_music_assets.includes(:music_generation).each do |asset| %><option value="<%= asset.id %>" <%= 'selected' if asset.id == order.favorite_music_asset_id %>>Tentativa <%= asset.music_generation.iteration %> · Versão <%= ("A".ord + asset.variant_index).chr %><%= ' · Favorita' if asset.id == order.favorite_music_asset_id %></option><% end %></select>
-        <div class="creative-feedback-chips"><% ["Quero um refrão mais marcante", "Quero uma interpretação mais suave", "Quero menos instrumentos", "Quero algo completamente diferente"].each do |hint| %><button type="button" data-action="creative-editor#suggest" data-feedback="<%= hint %>"><%= hint %></button><% end %></div>
-        <label for="music-change">Conte o que você quer diferente</label>
-        <textarea id="music-change" name="feedback" rows="3" maxlength="400" required placeholder="Ex.: refrão mais marcante e menos instrumentos" data-creative-editor-target="feedback" data-action="input->creative-editor#feedbackChanged"></textarea>
-        <p class="studio-field-hint">Para trocar ritmo ou voz, salve a direção musical acima. Usaremos a letra salva abaixo. A melodia pode mudar; esta opção não edita um trecho exato do áudio.</p>
-        <button class="studio-button studio-button-green" type="submit">Criar mais duas versões</button>
-      <% end %>
-    </section>
-  <% elsif completed >= Campaigns::MusicRounds::LIMIT && !order.approved? %><p class="campaign-note">Suas três rodadas estão prontas. Escolha qualquer versão acima para montar o vídeo.</p><% end %>
-
-  <% if completed.positive? %>
-  <%= render "order_chat/campaign_lyrics", order: order, draft: draft, completed: completed %>
-  <% end %>
-  <% if order.approved? %></details><% end %>
 </div>

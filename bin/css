@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/environment"
+require "json"
+require "tailwindcss/commands"
+require "tailwindcss/engines"
+
+Dir.chdir(Rails.root)
+build = ARGV.delete("--build")
+
+if ENV["TAILWINDCSS_INSTALL_DIR"].to_s.empty?
+  # The native executable can be killed by macOS before it emits an error.
+  # Keep a matching official Node CLI locally as a fallback, outside Git.
+  version = Tailwindcss::Ruby::VERSION
+  directory = Rails.root.join("tmp/tailwindcss-cli")
+  modules = directory.join("node_modules")
+  cli = modules.join(".bin/tailwindcss")
+  package = modules.join("@tailwindcss/cli/package.json")
+  installed = cli.executable? && package.file? && JSON.parse(package.read)["version"] == version
+
+  native_available = unless installed
+    begin
+      system(Tailwindcss::Ruby.executable, "--help", out: File::NULL, err: File::NULL)
+    rescue Tailwindcss::Ruby::UnsupportedPlatformException, Tailwindcss::Ruby::ExecutableNotFoundException
+      false
+    end
+  end
+
+  unless native_available
+    unless installed
+      warn "Preparando o compilador de estilos alternativo para este computador..."
+      success = system({ "npm_config_cache" => Rails.root.join("tmp/npm-cache").to_s },
+        "npm", "install", "--prefix", directory.to_s, "--no-save", "--no-audit", "--no-fund", "--package-lock=false",
+        "@tailwindcss/cli@#{version}", "tailwindcss@#{version}")
+      abort "Não foi possível preparar os estilos. Confira se Node.js e npm estão instalados." unless success
+    end
+    ENV["TAILWINDCSS_INSTALL_DIR"] = cli.dirname.to_s
+    ENV["NODE_PATH"] = [ modules.to_s, ENV["NODE_PATH"] ].compact.reject(&:empty?).join(File::PATH_SEPARATOR)
+    warn "Estilos: usando o compilador Node (Tailwind #{version})."
+  end
+end
+
+Tailwindcss::Engines.bundle
+command = build ? Tailwindcss::Commands.compile_command : Tailwindcss::Commands.watch_command(always: true)
+# Exec preserves the compiler's exit status instead of a watch task masking it.
+exec(*command)

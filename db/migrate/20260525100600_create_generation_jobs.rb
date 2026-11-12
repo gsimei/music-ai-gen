@@ -31,7 +31,7 @@ class CreateGenerationJobs < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :generation_jobs, [:order_id, :step]
+    add_index :generation_jobs, [ :order_id, :step ]
     add_index :generation_jobs, :status
     add_index :generation_jobs, :created_at
   end

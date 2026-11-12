@@ -6,6 +6,16 @@ on:
     branches: [ master ]
 
 jobs:
+  production-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Build production image
+        run: docker build -t music_ai_gen:ci .
+      - name: Boot app and render a synthetic campaign in the production image
+        run: docker run --rm --entrypoint /rails/bin/rails -e SECRET_KEY_BASE_DUMMY=1 music_ai_gen:ci runner script/production_smoke.rb
+
   scan_ruby:
     runs-on: ubuntu-latest
 
@@ -86,7 +96,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips ffmpeg imagemagick librsvg2-bin fonts-dejavu-core
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -99,7 +109,7 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/music_ai_gen_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
@@ -125,7 +135,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips ffmpeg imagemagick librsvg2-bin fonts-dejavu-core
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -138,7 +148,7 @@ jobs:
       - name: Run System Tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/music_ai_gen_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system

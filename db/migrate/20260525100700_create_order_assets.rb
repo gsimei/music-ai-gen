@@ -22,6 +22,6 @@ class CreateOrderAssets < ActiveRecord::Migration[8.1]
     end
 
     # NÃO único: um order pode ter mp3 + wav + stems + pdf (múltiplos por kind)
-    add_index :order_assets, [:order_id, :kind]
+    add_index :order_assets, [ :order_id, :kind ]
   end
 end

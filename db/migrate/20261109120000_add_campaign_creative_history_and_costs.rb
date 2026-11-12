@@ -18,7 +18,7 @@ class AddCampaignCreativeHistoryAndCosts < ActiveRecord::Migration[8.1]
       t.string :provider_request_id
       t.timestamps
     end
-    add_index :generation_costs, [:music_generation_id, :operation], unique: true, where: "music_generation_id IS NOT NULL"
+    add_index :generation_costs, [ :music_generation_id, :operation ], unique: true, where: "music_generation_id IS NOT NULL"
     reversible do |dir|
       dir.up do
         execute "UPDATE orders SET music_regen_limit = GREATEST(music_regen_limit, 2), lyrics_regen_limit = GREATEST(lyrics_regen_limit, 20) WHERE id IN (SELECT order_id FROM campaigns)"

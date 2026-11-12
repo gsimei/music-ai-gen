@@ -22,7 +22,7 @@ class CreateEmailDeliveries < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :email_deliveries, [:order_id, :template]
+    add_index :email_deliveries, [ :order_id, :template ]
     add_index :email_deliveries, :status
   end
 end

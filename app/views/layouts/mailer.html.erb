@@ -1,13 +1,41 @@
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title><%= message.subject %></title>
   </head>
-
-  <body>
-    <%= yield %>
+  <body style="margin:0;padding:0;background-color:#f6f5ed;color:#173e32;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
+    <div style="display:none;font-size:1px;color:#f6f5ed;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;"><%= content_for(:preheader) %></div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f6f5ed;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+            <tr>
+              <td style="padding:8px 24px 28px;">
+                <% if attachments["virajingle-logo.png"] %>
+                  <%= image_tag attachments["virajingle-logo.png"].url, alt: product_name, width: 180, height: 43, style: "display:block;width:180px;max-width:100%;height:auto;border:0;" %>
+                <% else %>
+                  <strong style="font-size:24px;letter-spacing:-1px;"><%= product_name %></strong>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 28px;background-color:#fffef9;border:1px solid #cfd8c9;border-radius:24px;">
+                <%= yield %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 28px 8px;font-size:12px;line-height:20px;color:#4c6155;">
+                <p style="margin:0;"><strong><%= product_name %></strong> · Sua promoção vira música e vídeo.</p>
+                <p style="margin:8px 0 0;">Esta é uma mensagem automática sobre sua conta.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

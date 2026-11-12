@@ -1,0 +1,5 @@
+<div class="campaign-poster-brand">
+  <% logo_url = campaign_logo_url(campaign) %>
+  <img class="campaign-poster-logo" alt="Logo da empresa" data-campaign-form-target="previewLogo" <% if logo_url %>src="<%= logo_url %>"<% else %>hidden<% end %>>
+  <span class="campaign-poster-business" data-campaign-form-target="previewBusiness" <%= "hidden" if campaign.business_name.blank? %>><%= campaign.business_name %></span>
+</div>

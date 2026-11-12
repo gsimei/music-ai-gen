@@ -28,6 +28,23 @@ class Stripe::WebhookHandlerTest < ActiveSupport::TestCase
     ENV.delete("STRIPE_WEBHOOK_SECRET")
   end
 
+  test "a redelivery cannot reset an event processed after its initial read" do
+    event = stripe_events(:payment_failed_event)
+    stale = StripeEvent.find(event.id)
+    event.update!(status: "processed", processed_at: Time.current)
+    payload = build_payload(event.stripe_event_id, event.event_type)
+    timestamp = Time.now.to_i
+    signature = compute_stripe_signature(timestamp, payload)
+    StripeEvent.stub(:find_by, stale) do
+      assert_no_enqueued_jobs(only: StripeWebhookProcessorJob) do
+        result = Stripe::WebhookHandler.call(payload: payload, signature_header: "t=#{timestamp},v1=#{signature}")
+        assert result.success?
+        assert_equal :already_processed, result.value
+      end
+    end
+    assert event.reload.processed?
+  end
+
   # ---------------------------------------------------------------------------
   # Valid signature — new handled event → StripeEvent created, job enqueued
   # ---------------------------------------------------------------------------

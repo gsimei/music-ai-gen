@@ -40,7 +40,7 @@ module MusicGenerator
       message = body.is_a?(Hash) ? body["error"].to_s.downcase : ""
       kind = if status == 429
         message.match?(/quota|credit|balance|billing|insufficient/) ? "quota_exhausted" : "rate_limited"
-      elsif [400, 401, 403, 422].include?(status)
+      elsif [ 400, 401, 403, 422 ].include?(status)
         "request_rejected"
       else
         "submission_uncertain"

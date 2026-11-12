@@ -13,7 +13,7 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
     Dir.mktmpdir do |dir|
       source = tone(dir, 40)
       destination = File.join(dir, "preview.m4a")
-      sync = { "sections" => [{ "section_type" => "chorus", "lines" => [{ "start" => 6000, "end" => 25000 }] }] }
+      sync = { "sections" => [ { "section_type" => "chorus", "lines" => [ { "start" => 6000, "end" => 25000 } ] } ] }
       metadata = Campaigns::AudioPreview.render(source: source, destination: destination, lyrics_sync: sync)
       assert_in_delta 5.75, metadata.fetch("start_seconds"), 0.001
       assert_equal 30, metadata.fetch("duration_seconds")
@@ -24,11 +24,65 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
     end
   end
 
+  test "chosen lengths and the full recording produce real audio with the requested duration" do
+    Dir.mktmpdir do |dir|
+      source = tone(dir, 120.25)
+      [ [ 60, 10 ], [ 90, 30.25 ], [ 72.75, 2.5 ], [ nil, nil ] ].each_with_index do |(length, start), index|
+        destination = File.join(dir, "length-#{index}.m4a")
+        metadata = Campaigns::AudioPreview.render(source: source, destination: destination, lyrics_sync: nil,
+          duration_seconds: length, start_seconds: start)
+        expected = length || 120.25
+        assert_in_delta expected, metadata.fetch("duration_seconds"), 0.001
+        assert_in_delta expected, duration(destination), 0.05
+        assert_in_delta start || 0, metadata.fetch("start_seconds"), 0.001
+      end
+      [ 0, -1, "NaN", "Infinity", "bad" ].each do |invalid|
+        assert_raises(ArgumentError) do
+          Campaigns::AudioPreview.render(source: source, destination: File.join(dir, "invalid.m4a"), lyrics_sync: nil, duration_seconds: invalid)
+        end
+      end
+      assert_raises(ArgumentError) do
+        Campaigns::AudioPreview.render(source: source, destination: File.join(dir, "past-end.m4a"), lyrics_sync: nil, duration_seconds: 90, start_seconds: 30.26)
+      end
+    end
+  end
+
+  test "a full length video with thirty photos spreads scenes across the song and preserves approved audio packets" do
+    Dir.mktmpdir do |dir|
+      File.open(tone(dir, 180.25)) { |file| @asset.audio.attach(io: file, filename: "full-song.wav", content_type: "audio/wav") }
+      @asset.update!(excerpt_duration_seconds: nil)
+      PrepareCampaignAudioJob.perform_now(@asset.id)
+      assert @asset.reload.audition_ready?
+      assert_in_delta 180.25, @asset.campaign_audio.blob.metadata.fetch("duration_seconds"), 0.001
+      renderer = Campaigns::VideoRenderer.new(@campaign)
+      Array.new(30) { |index| %w[red lime blue][index % 3] }.each_with_index do |color, index|
+        path = File.join(dir, "photo-#{index}.png")
+        Campaigns::MediaCommand.run!(renderer.send(:image_command), "-size", "100x180", "xc:#{color}", path)
+        File.open(path) { |file| @campaign.photos.attach(io: file, filename: "photo-#{index}.png", content_type: "image/png") }
+      end
+      assert Orders::MusicApprover.call(order: @order, asset_id: @asset.id).success?
+      renderer.call
+      @asset.campaign_audio.blob.open do |preview|
+        @campaign.video.blob.open do |video|
+          assert_equal packet_hashes(preview.path), packet_hashes(video.path)
+          assert_in_delta 180.25, duration(video.path), 0.05
+          [ [ 3, 0 ], [ 99, 1 ], [ 177, 2 ] ].each do |time, color_channel|
+            pixel = Campaigns::MediaCommand.run!("ffmpeg", "-v", "error", "-ss", time.to_s, "-i", video.path,
+              "-vf", "crop=2:2:360:500,format=rgb24", "-frames:v", "1", "-f", "rawvideo", "-").bytes.first(3)
+            assert_operator pixel.fetch(color_channel), :>, 200, "Photo must still fill its scene at #{time} seconds"
+          end
+        end
+      end
+      assert_in_delta 180.25, @campaign.video.blob.metadata.fetch("duration_seconds"), 0.001
+      assert_equal 1, @order.completed_music_rounds
+    end
+  end
+
   test "archiving prepares a short excerpt once and final video preserves every audio packet" do
     Dir.mktmpdir do |dir|
       source = tone(dir, 2)
       Campaigns::AudioDownload.stub(:call, ->(_url, destination) { FileUtils.cp(source, destination) }) do
-        assert_enqueued_with(job: PrepareCampaignAudioJob, args: [@asset.id]) { ArchiveCampaignAudioJob.perform_now(@asset.id) }
+        assert_enqueued_with(job: PrepareCampaignAudioJob, args: [ @asset.id ]) { ArchiveCampaignAudioJob.perform_now(@asset.id) }
       end
       version_before = @order.creation_version
       PrepareCampaignAudioJob.perform_now(@asset.id)
@@ -41,7 +95,7 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
       assert_equal "local", event.provider
       assert_operator event.usage.fetch("wall_seconds"), :>, 0
       assert_nil event.estimated_brl
-      assert_no_difference(["ActiveStorage::Blob.count", "GenerationCost.count"]) { PrepareCampaignAudioJob.perform_now(@asset.id) }
+      assert_no_difference([ "ActiveStorage::Blob.count", "GenerationCost.count" ]) { PrepareCampaignAudioJob.perform_now(@asset.id) }
       assert Orders::MusicApprover.call(order: @order, asset_id: @asset.id).success?
       Campaigns::VideoRenderer.new(@campaign).call
       @asset.campaign_audio.blob.open do |preview|
@@ -115,7 +169,7 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
     Dir.mktmpdir do |dir|
       source = File.join(dir, "silence.wav")
       Campaigns::MediaCommand.run!("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "12", source)
-      decoded = [0, 2].map do |start|
+      decoded = [ 0, 2 ].map do |start|
         destination = File.join(dir, "marked-#{start}.m4a")
         Campaigns::AudioAudition.render(source: source, destination: destination, start_seconds: start, duration_seconds: 12)
         assert_in_delta 12, duration(destination), 0.05

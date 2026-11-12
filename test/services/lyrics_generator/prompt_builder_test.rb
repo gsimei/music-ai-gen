@@ -23,6 +23,20 @@ require "test_helper"
 #   success? => true,  value: { prompt: String, prompt_version: String }
 #   success? => false, errors: Symbol (e.g. :missing_current_lyrics)
 class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
+  test "unnamed campaigns focus on the offer and never request an invented business name" do
+    briefing = briefings(:b2b_paid_briefing)
+    briefing.assign_attributes(recipient: nil, about: "Promoção: Casa com 03 quartos por R$ 750.000.", keywords: nil, extra_params: { "campaign" => true })
+    [ :initial, :regen ].each do |mode|
+      result = LyricsGenerator::PromptBuilder.call(mode: mode, briefing: briefing, current_lyrics: "Uma casa para você")
+      assert result.success?
+      assert_includes result.value[:prompt], "No business name was provided"
+      assert_includes result.value[:prompt], "Do not invent a company name"
+      assert_includes result.value[:prompt], briefing.about
+      refute_includes result.value[:prompt], "Business:"
+      refute_includes result.value[:prompt], "repeat the business name"
+    end
+  end
+
   test "a campaign revision receives the original conditions even when the previous lyrics omitted them" do
     briefing = briefings(:b2b_paid_briefing)
     briefing.about = "Café com 10% de desconto, terça a quinta, somente para consumir no local."
@@ -39,7 +53,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
 
   test "PROMPT_VERSION is defined as a non-empty string" do
-    assert_equal "v2.1", LyricsGenerator::PromptBuilder::PROMPT_VERSION
+    assert_equal "v2.2", LyricsGenerator::PromptBuilder::PROMPT_VERSION
   end
 
   test "PROMPT_VERSION is a String" do
@@ -71,7 +85,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v2.1", result.value[:prompt_version]
+    assert_equal "v2.2", result.value[:prompt_version]
   end
 
   test "mode :initial result value contains prompt string" do
@@ -290,7 +304,7 @@ class LyricsGenerator::PromptBuilderTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v2.1", result.value[:prompt_version]
+    assert_equal "v2.2", result.value[:prompt_version]
   end
 
   # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 module LyricsGenerator
   class PromptBuilder < BaseService
-    PROMPT_VERSION = "v2.1"
+    PROMPT_VERSION = "v2.2"
 
     attribute :mode
     attribute :briefing
@@ -45,7 +45,7 @@ module LyricsGenerator
     end
 
     def build_initial_prompt
-      business_name = briefing.recipient.presence || briefing.about.to_s.truncate(40)
+      business_name = provided_business_name
       use_case = briefing.occasion.presence || "social media"
 
       lines = []
@@ -57,7 +57,7 @@ module LyricsGenerator
         lines << (briefing.structure_hint.present? ? "Preferred structure: #{briefing.structure_hint}." : nil)
       end
 
-      lines << "Business: #{business_name} — #{use_case}."
+      lines << (business_name ? "Business: #{business_name} — #{use_case}." : "No business name was provided. Do not invent a company name. Focus on the offer. Use case: #{use_case}.")
       lines << "About: #{briefing.about}" if briefing.about.present?
       lines << campaign_accuracy_rules
       lines << "Language: #{briefing.language}. Style: #{briefing.music_style}."
@@ -67,20 +67,21 @@ module LyricsGenerator
       lines << "Include keywords: #{briefing.keywords}." if briefing.keywords.present?
       lines << "Avoid: #{briefing.avoid}." if briefing.avoid.present?
       lines << "Visual context: #{visual_context}." if visual_context.present?
-      lines << "Rules: hook-first, repeat the business name at least twice, clear rhyme scheme, no generic filler."
+      lines << (business_name ? "Rules: hook-first, repeat the business name at least twice, clear rhyme scheme, no generic filler." : "Rules: hook-first, clear rhyme scheme, no generic filler.")
 
       lines.compact.join(" ").strip
     end
 
     def build_regen_prompt
-      business_name = briefing.recipient.presence || briefing.about.to_s.truncate(40)
+      business_name = provided_business_name
 
       lines = []
 
       lines << "Rewrite the following jingle based on the feedback below."
       lines << (short_form? ? "Keep it SHORT: #{duration_seconds}s, 1 verse + 1 chorus, 30 words total." : "Target duration: #{duration_seconds} seconds.")
       lines << "Feedback: #{user_feedback.present? ? user_feedback : 'Make it more memorable and catchy.'}"
-      lines << "Business: #{business_name}. Style: #{briefing.music_style}. Language: #{briefing.language}."
+      lines << (business_name ? "Business: #{business_name}." : "No business name was provided. Do not invent a company name; focus on the offer.")
+      lines << "Style: #{briefing.music_style}. Language: #{briefing.language}."
       lines << "Original business and offer: #{briefing.about}" if briefing.about.present?
       lines << campaign_accuracy_rules
       lines << "Structure: #{briefing.structure_hint}." if briefing.structure_hint.present?
@@ -96,6 +97,11 @@ module LyricsGenerator
       return unless briefing.extra_params&.dig("campaign")
 
       "Offer accuracy takes priority over rhyme and repeated slogans. Preserve the discount, its meaning, eligible products, days, time limits and restrictions such as dine-in or pickup. Never turn a discount into a prize or reward. Keep these details near the beginning so they fit in the short video. Remove decorative phrases rather than offer conditions. Do not invent freshness, quality or other claims."
+    end
+
+    def provided_business_name
+      return if briefing.extra_params&.dig("campaign") && briefing.recipient.blank?
+      briefing.recipient.presence || briefing.about.to_s.truncate(40)
     end
   end
 end

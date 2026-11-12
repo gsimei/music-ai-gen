@@ -104,7 +104,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
     result = LyricsGenerator::Generator.call(order: order, mode: :initial)
 
     assert result.success?
-    assert_equal "v2.1", result.value.prompt_version
+    assert_equal "v2.2", result.value.prompt_version
   end
 
   test "mode :initial draft is associated with the order" do
@@ -378,7 +378,7 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
     )
 
     assert result.success?
-    assert_equal "v2.1", result.value.prompt_version
+    assert_equal "v2.2", result.value.prompt_version
   end
 
   # ---------------------------------------------------------------------------

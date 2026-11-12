@@ -178,7 +178,7 @@ class MusicGenerator::GeneratorTest < ActiveSupport::TestCase
       end
     end
 
-    assert_enqueued_with(job: PollMurekaStatusJob, args: [music_generation_id])
+    assert_enqueued_with(job: PollMurekaStatusJob, args: [ music_generation_id ])
   end
 
   test "MurekaClient is called with prompt and lyrics" do

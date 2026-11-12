@@ -70,7 +70,7 @@ class CampaignMusicRecoveryTest < ActiveSupport::TestCase
   test "watchdog resumes accepted jobs but never repeats a lost submission" do
     accepted!
     travel 4.minutes
-    assert_enqueued_with(job: PollCampaignMusicJob, args: [@generation.id]) { RecoverCampaignMusicJob.perform_now(@order.id) }
+    assert_enqueued_with(job: PollCampaignMusicJob, args: [ @generation.id ]) { RecoverCampaignMusicJob.perform_now(@order.id) }
     @generation.update!(mureka_job_id: nil, updated_at: 4.minutes.ago)
     clear_enqueued_jobs
     assert_no_enqueued_jobs(only: GenerateCampaignMusicJob) { RecoverCampaignMusicJob.perform_now(@order.id) }
@@ -100,12 +100,12 @@ class CampaignMusicRecoveryTest < ActiveSupport::TestCase
     PollCampaignMusicJob.perform_now(@generation.id)
     assert_equal "generation_delayed", @generation.reload.error_code
     assert_equal :unresolved_generation, Campaigns::MusicRounds.call(order: @order.reload).errors
-    assert_no_difference ["MusicGeneration.count", "GenerationCost.count"] do
+    assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
       resumed = Campaigns::MusicRounds.call(order: @order.reload, retry_failed: true)
       assert_equal @generation.id, resumed.value.id
     end
     stub_request(:get, status_url).to_return(status: 200, body: { status: "succeeded", choices: [
-      { url: "https://cdn.example.com/a.mp3", duration: 60000 }, { url: "https://cdn.example.com/b.mp3", duration: 60000 }] }.to_json)
+      { url: "https://cdn.example.com/a.mp3", duration: 60000 }, { url: "https://cdn.example.com/b.mp3", duration: 60000 } ] }.to_json)
     assert_difference "OrderAsset.count", 2 do
       2.times { PollCampaignMusicJob.perform_now(@generation.id) }
     end

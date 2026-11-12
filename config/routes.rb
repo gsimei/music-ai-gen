@@ -50,10 +50,15 @@ Rails.application.routes.draw do
   post "orders/:order_id/chat/approve_music",     to: "order_chat#approve_music",     as: :order_chat_approve_music
   post "orders/:order_id/chat/regenerate_music",  to: "order_chat#regenerate_music",  as: :order_chat_regenerate_music
   patch "orders/:order_id/chat/lyrics", to: "order_chat#edit_lyrics", as: :order_chat_edit_lyrics
+  post "orders/:order_id/chat/creation", to: "order_chat#creation", as: :order_chat_creation
+  post "orders/:order_id/chat/select_music", to: "order_chat#select_music", as: :order_chat_select_music
+  post "orders/:order_id/chat/change_music", to: "order_chat#change_music", as: :order_chat_change_music
   post "orders/:order_id/chat/favorite", to: "order_chat#favorite_music", as: :order_chat_favorite_music
   post "orders/:order_id/chat/prepare_audio", to: "order_chat#prepare_audio", as: :order_chat_prepare_audio
   patch "orders/:order_id/chat/sound_settings", to: "order_chat#sound_settings", as: :order_chat_sound_settings
   patch "orders/:order_id/chat/excerpt", to: "order_chat#excerpt_settings", as: :order_chat_excerpt_settings
+  patch "orders/:order_id/chat/video_photos", to: "order_chat#video_photos", as: :order_chat_video_photos
+  patch "orders/:order_id/chat/video_appearance", to: "order_chat#video_appearance", as: :order_chat_video_appearance
 
-  get  "songs",                        to: "songs#index",           as: :songs
+  get "songs",                        to: "songs#index",           as: :songs
 end

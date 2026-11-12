@@ -1,0 +1,26 @@
+<% photo_limit = order.campaign.photo_limit %>
+<section class="creative-video-photos" aria-labelledby="video-photos-heading">
+  <h2 id="video-photos-heading">Fotos do seu vídeo</h2>
+  <p class="studio-field-hint">Adicione, remova ou mude a ordem das fotos antes de gerar o vídeo. Elas serão distribuídas pela duração escolhida.</p>
+  <details id="video-photos" class="creative-details">
+    <summary>Ajustar fotos · <%= order.campaign.product_photos.size %> de <%= photo_limit %></summary>
+    <%= form_with url: order_chat_video_photos_path(order_id: order.id), method: :patch, multipart: true,
+      data: { controller: "video-photos", video_photos_limit_value: photo_limit, turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" } do %>
+      <%= hidden_field_tag :video_revision, order.campaign.video_revision %>
+      <%= hidden_field_tag "photo_sequence[]", "" %>
+      <%= label_tag "video-photos-input", "Adicionar fotos ao vídeo" %>
+      <div class="campaign-photo-choose"><span aria-hidden="true">Selecionar fotos +</span><%= file_field_tag "photos[]", multiple: true, accept: "image/jpeg,image/png,image/webp", id: "video-photos-input",
+        data: { video_photos_target: "input", action: "change->video-photos#add" }, aria: { describedby: "video-photos-help video-photos-status" } %></div>
+      <p class="studio-field-hint" id="video-photos-help">Até <%= photo_limit %> fotos no total. JPG, PNG ou WebP de até 10 MB cada. A primeira abre o vídeo.</p>
+      <p class="studio-field-hint">Aumente a duração no trecho acima para incluir mais fotos, até <%= Campaigns::PhotoLimit::MAX %>.</p>
+      <div class="campaign-photo-list campaign-photo-sort" data-video-photos-target="list">
+        <% order.campaign.product_photos.each_with_index do |photo, index| %>
+          <figure data-photo-key="saved:<%= photo.id %>"><%= image_tag photo, alt: "Foto #{index + 1} da campanha", loading: "lazy", decoding: "async" %><figcaption><%= index.zero? ? "1 · Abre o vídeo" : "#{index + 1} · Foto" %></figcaption><%= hidden_field_tag "photo_sequence[]", "saved:#{photo.id}" %></figure>
+        <% end %>
+      </div>
+      <p class="studio-field-hint" role="status" id="video-photos-status" data-video-photos-target="status"><%= order.campaign.product_photos.any? ? "Suas fotos estão salvas. Você pode incluir outras ou mudar a ordem." : "Sem fotos, usamos uma arte com sua oferta." %></p>
+      <button type="submit" class="studio-button studio-button-outline">Salvar fotos do vídeo</button>
+      <p class="studio-field-hint">Salvar as fotos não muda a música nem gasta uma rodada.</p>
+    <% end %>
+  </details>
+</section>

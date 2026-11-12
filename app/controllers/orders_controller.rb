@@ -3,9 +3,12 @@
 class OrdersController < ApplicationController
   # TODO: add skip_authorization when Pundit verify_authorized is enabled (ROADMAP M-6)
 
+  # Não re-declare `before_action :authenticate_user!, only: ...` aqui: isso
+  # substitui o filtro global do ApplicationController e deixa de fora as ações
+  # que não estiverem na lista (show, checkout), que então quebram com
+  # `current_user` nil em vez de redirecionar para o login.
   skip_before_action :authenticate_user!, only: :new
 
-  before_action :authenticate_user!, only: %i[wizard_show wizard_update approve_lyrics regenerate_lyrics approve_music regenerate_music]
   before_action :set_order, only: %i[show approve_lyrics regenerate_lyrics approve_music regenerate_music]
 
   def new
@@ -132,7 +135,10 @@ class OrdersController < ApplicationController
 
   def wizard_update
     step = params[:step].to_i
-    step_params = params.fetch(:order_wizard, {}).permit!.to_h.symbolize_keys
+    step_params = params.fetch(:order_wizard, ActionController::Parameters.new).permit(
+      :recipient, :about, :occasion, :visual_context, :music_style, :mood, :tempo,
+      :language, :keywords, :avoid, :structure_hint, :voice_id, :tier
+    ).to_h.symbolize_keys
 
     validator = Orders::StepValidator.new(
       step:   step,

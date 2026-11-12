@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 module ApplicationHelper
+  def brand_name
+    BRANDS_CONFIG.fetch(:b2b).fetch(:display_name)
+  end
+
   def campaign_price(order = nil)
     cents = order&.price_cents || BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :price_cents)
     number_to_currency(cents / 100.0, unit: order && order.currency == "EUR" ? "€" : "R$ ", separator: ",", delimiter: ".", precision: cents % 100 == 0 ? 0 : 2, format: "%u%n")
@@ -20,7 +24,7 @@ module ApplicationHelper
   # tenta primeiro "brands.{brand}.{key}" e faz fallback para a chave global.
   #
   # Uso nas views:
-  #   t_brand("hero.title")          # => "JinglePro" para b2b
+  #   t_brand("site_name")           # => "ViraJingle" para b2b
   #   t_brand("errors.not_found")    # => fallback para chave global se nao houver override de brand
   def t_brand(key, **opts)
     return t(key, **opts) if current_brand.blank?

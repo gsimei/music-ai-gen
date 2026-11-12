@@ -25,7 +25,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
   VALID_LYRICS_JSON = JSON.generate({
     "title"    => "Test Song",
     "sections" => [
-      { "type" => "verse", "lines" => ["Line one", "Line two"] }
+      { "type" => "verse", "lines" => [ "Line one", "Line two" ] }
     ]
   })
 
@@ -39,7 +39,7 @@ class GenerateLyricsJobTest < ActiveJob::TestCase
           "type"    => "message",
           "role"    => "assistant",
           "model"   => "claude-opus-4-7",
-          "content" => [{ "type" => "text", "text" => VALID_LYRICS_JSON }],
+          "content" => [ { "type" => "text", "text" => VALID_LYRICS_JSON } ],
           "stop_reason" => "end_turn",
           "usage" => { "input_tokens" => 200, "output_tokens" => 100 }
         })

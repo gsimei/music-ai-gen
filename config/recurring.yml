@@ -10,6 +10,9 @@
 #     schedule: at 5am every day
 
 production:
+  recover_interrupted_campaign_jobs:
+    class: RecoverInterruptedCampaignJobsJob
+    schedule: every minute
   recover_campaign_music:
     class: RecoverCampaignMusicJob
     schedule: every minute

@@ -1,4 +1,4 @@
-<% content_for :title, "Criar promoção · JinglePro" %>
+<% content_for :title, "Criar promoção · #{brand_name}" %>
 <% content_for :body_class, "studio-page" %>
 <% saved_photos = @campaign.persisted? ? @campaign.product_photos.select { |image| image.blob.persisted? } : [] %>
 <div class="studio-home studio-app campaign-app">
@@ -14,19 +14,19 @@
         </details>
       </section>
     <% end %>
-    <%= form_with model: @campaign, class: "campaign-builder", data: { controller: "campaign-form", action: "submit->campaign-form#validate" } do |f| %>
+    <%= form_with model: @campaign, class: "campaign-builder", data: { controller: "campaign-form", campaign_form_photo_limit_value: Campaigns::PhotoLimit::INITIAL, action: "submit->campaign-form#validate" } do |f| %>
       <div class="campaign-form-main">
         <% if @campaign.errors.any? %><div class="studio-notice studio-error" role="alert"><strong>Confira os campos abaixo:</strong><ul><% @campaign.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul><% if @campaign.product_photos.any? %><p>Selecione as fotos novamente antes de continuar.</p><% end %></div><% end %>
         <nav class="campaign-progress" aria-label="Etapas da campanha"><% ["Sua promoção", "Sua música", "Conferir"].each_with_index do |title, index| %><span data-campaign-form-target="indicator" aria-current="<%= index.zero? ? 'step' : 'false' %>"><b><%= index + 1 %></b><%= title %></span><% end %></nav>
         <section data-campaign-form-target="step" class="campaign-step">
           <p class="studio-kicker">01 / SOBRE A SUA PROMOÇÃO</p><h2>O que vamos divulgar?</h2>
-          <div class="studio-field"><%= f.label :business_name, "Nome do seu negócio" %><%= f.text_field :business_name, placeholder: "Ex.: Pizzaria da Vila", required: true, maxlength: 60, autocomplete: "organization", data: { campaign_form_target: "business", action: "input->campaign-form#preview" } %></div>
-          <div class="studio-field"><%= f.label :offer, "Qual é a oferta ou novidade?" %><%= f.text_area :offer, placeholder: "Ex.: Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça.", required: true, maxlength: 180, rows: 3, data: { campaign_form_target: "offer", action: "input->campaign-form#preview" } %><p class="studio-field-hint">Inclua preço, condições e validade, se houver. Até 180 caracteres.</p></div>
-          <div class="campaign-two-fields"><div class="studio-field"><%= f.label :call_to_action, "Como convidar o cliente?" %><%= f.select :call_to_action, ["Peça pelo WhatsApp", "Venha nos visitar", "Reserve seu horário", "Saiba mais no Instagram"], {}, data: { campaign_form_target: "cta", action: "change->campaign-form#preview" } %></div><div class="studio-field"><%= f.label :contact, "WhatsApp, endereço ou @Instagram" %><%= f.text_field :contact, required: true, maxlength: 70, placeholder: "Ex.: (11) 99999-9999", data: { campaign_form_target: "contact", action: "input->campaign-form#preview" } %></div></div>
+          <%= render "campaigns/brand_fields", f: f %>
+          <div class="studio-field"><%= f.label :offer, "Qual é a oferta ou novidade?" %><%= f.text_area :offer, placeholder: "Ex.: Terça da pizza! Duas pizzas grandes por R$ 79,90. Só nesta terça.", required: true, maxlength: 180, rows: 3, data: { campaign_form_target: "offer", action: "input->campaign-form#preview" } %><p class="studio-field-hint">Inclua preço, condições e validade, se houver. Use Enter para separar as linhas. Até 180 caracteres.</p></div>
+          <%= render "campaigns/cta_fields", f: f %>
           <div class="studio-field campaign-upload">
             <%= f.label :photos, "Fotos do produto ou do negócio (opcional)" %>
             <div class="campaign-photo-choose"><span aria-hidden="true">Selecionar fotos +</span><%= f.file_field :photos, multiple: true, include_hidden: false, accept: "image/jpeg,image/png,image/webp", data: { campaign_form_target: "photoInput", saved_photos: saved_photos.any?, action: "change->campaign-form#photo" }, aria: { describedby: "campaign-photo-help campaign-photo-status" } %></div>
-            <p id="campaign-photo-help" class="studio-field-hint">Escolha até 5 fotos de uma vez. O vídeo alterna entre elas com transições suaves, na ordem que você escolher abaixo. A primeira abre o vídeo. JPG, PNG ou WebP, até 10 MB por foto.</p>
+            <p id="campaign-photo-help" class="studio-field-hint">Comece com até <%= Campaigns::PhotoLimit::INITIAL %> fotos. Depois de escolher a duração do vídeo, você pode incluir mais no estúdio, até <%= Campaigns::PhotoLimit::MAX %>. A primeira abre o vídeo. JPG, PNG ou WebP, até 10 MB por foto.</p>
             <p id="campaign-photo-status" class="studio-field-hint" role="status" data-campaign-form-target="photoStatus"><%= saved_photos.any? ? "Suas fotos estão salvas. Se escolher novas fotos, elas substituem as anteriores." : "Use fotos nítidas, com o produto no centro. Sem fotos? Criamos uma arte com a oferta." %></p>
             <div class="campaign-photo-list campaign-photo-sort" data-campaign-form-target="photoList">
               <% if saved_photos.any? %><% saved_photos.each_with_index do |photo, index| %><figure data-photo-id="<%= photo.id %>"><%= image_tag photo, alt: "Foto #{index + 1} da campanha" %><figcaption><%= index.zero? ? "1 · Abre o vídeo" : "#{index + 1} · Foto" %></figcaption><%= hidden_field_tag "campaign[photo_order][]", photo.id %></figure><% end %><% end %>
@@ -43,13 +43,22 @@
         <section data-campaign-form-target="step" class="campaign-step">
           <p class="studio-kicker">03 / TUDO CERTO?</p><h2>Confira e comece.</h2><p>Confira a prévia e os dados da promoção. O vídeo final usa a música que você escolher.</p>
           <div class="campaign-note"><strong>Direção da sua música</strong><p data-campaign-form-target="soundSummary"><%= @campaign.sound_summary %></p></div>
-          <ul class="campaign-included"><li>Até 3 rodadas com 2 versões musicais cada</li><li>Até <%= BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :lyrics_regen_limit) %> reescritas com IA, além de edição livre da letra</li><li>Um vídeo vertical com suas fotos, transições, oferta e contato</li><li>Música em MP3 e legenda para copiar</li></ul>
+          <ul class="campaign-included"><li>Até 3 rodadas com 2 versões musicais cada</li><li>Até <%= BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :lyrics_regen_limit) %> reescritas com IA, além de edição livre da letra</li><li>Um vídeo vertical com suas fotos, transições e oferta, com faixa de contato opcional</li><li>Música em MP3 e legenda para copiar</li></ul>
           <div class="campaign-total"><span>Pagamento único<br><small>Sem assinatura. Sem créditos.</small></span><strong><%= campaign_price %></strong></div>
           <p class="studio-field-hint">Na próxima tela você revisa o pedido e segue para o pagamento. Nenhuma cobrança nesta etapa.</p>
         </section>
         <div class="campaign-form-actions"><button type="button" class="studio-button studio-button-outline" data-campaign-form-target="back" data-action="campaign-form#back" hidden>Voltar</button><button type="button" class="studio-button studio-button-green" data-campaign-form-target="next" data-action="campaign-form#next" hidden>Continuar</button><%= f.submit "Revisar minha campanha", class: "studio-button studio-button-green", data: { campaign_form_target: "submit" } %></div>
       </div>
-      <aside class="campaign-preview-wrap"><p class="studio-kicker" data-campaign-form-target="previewPhotoTitle">FOTO DE ABERTURA / PRÉVIA 9:16</p><div class="campaign-poster"><span class="campaign-poster-business" data-campaign-form-target="previewBusiness">Seu negócio</span><div class="campaign-poster-image"><% first_photo = saved_photos.first %><img alt="Foto da campanha" data-campaign-form-target="previewPhoto" <% if first_photo %>src="<%= rails_blob_path(first_photo) %>"<% else %>hidden<% end %>><span aria-hidden="true">✳</span></div><strong data-campaign-form-target="previewOffer">Sua próxima<br>grande oferta.</strong><div class="campaign-poster-contact"><span data-campaign-form-target="previewCta">Peça pelo WhatsApp</span><b data-campaign-form-target="previewContact">Seu contato aqui</b></div></div><p class="studio-field-hint">Prévia estática: no vídeo, as fotos ganham movimento, alternam entre si e os textos entram em sequência. A música vem depois da aprovação da letra.</p></aside>
+      <aside class="campaign-preview-wrap">
+        <p class="studio-kicker" data-campaign-form-target="previewPhotoTitle">FOTO DE ABERTURA / PRÉVIA 9:16</p>
+        <div class="campaign-poster">
+          <%= render "campaigns/brand_preview", campaign: @campaign %>
+          <div class="campaign-poster-image"><% first_photo = saved_photos.first %><img alt="Foto da campanha" data-campaign-form-target="previewPhoto" <% if first_photo %>src="<%= rails_blob_path(first_photo) %>"<% else %>hidden<% end %>><span aria-hidden="true">✳</span></div>
+          <strong class="campaign-offer-text" data-campaign-form-target="previewOffer"><%= @campaign.display_offer.presence || "Sua próxima grande oferta." %></strong>
+          <%= render "campaigns/cta_preview", campaign: @campaign %>
+        </div>
+        <p class="studio-field-hint">Prévia estática: no vídeo, as fotos ganham movimento, alternam entre si e os textos entram em sequência. A música vem depois da aprovação da letra.</p>
+      </aside>
     <% end %>
   </main>
 </div>

@@ -1,9 +1,9 @@
 it:
   brands:
     b2b:
-      site_name: "JinglePro"
+      site_name: "ViraJingle"
       hero:
         title: "Jingle professionali in pochi minuti"
         subtitle: "AI-powered music per la tua attività"
       wizard:
-        title: "JinglePro · Crea il tuo jingle"
+        title: "ViraJingle · Crea il tuo jingle"

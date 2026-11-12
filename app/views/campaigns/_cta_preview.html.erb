@@ -1,0 +1,4 @@
+<div class="campaign-poster-contact" data-campaign-form-target="previewCtaPanel" style="--campaign-cta-color: <%= campaign.cta_background_color %>; --campaign-cta-text-color: <%= campaign.cta_text_color %>;" <%= "hidden" unless campaign.show_cta? %>>
+  <span data-campaign-form-target="previewCta"><%= campaign.call_to_action.presence || Campaign::CTA_OPTIONS.first %></span>
+  <b data-campaign-form-target="previewContact"><%= campaign.contact.presence || "Seu contato aqui" %></b>
+</div>

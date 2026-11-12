@@ -12,7 +12,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "main h1", count: 1
-    assert_select ".studio-price", text: /R\$ 79/
+    assert_select ".studio-price", text: /R\$ 29,90/
     assert_select ".studio-plan", count: 1
     assert_select ".studio-plan li", text: /Vídeo vertical/
     assert_select "a[href=?]", new_user_session_path

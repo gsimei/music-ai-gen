@@ -69,7 +69,7 @@ module ::Stripe
     end
 
     def product_name
-      return "JinglePro — Campanha com música e vídeo" if order.campaign
+      return "#{BRANDS_CONFIG.fetch(:b2b).fetch(:display_name)} — Campanha com música e vídeo" if order.campaign
 
       brand_config = BRANDS_CONFIG.dig(order.brand.to_sym)
       display_name = brand_config&.dig(:display_name) || "Music AI Gen"
@@ -92,6 +92,7 @@ module ::Stripe
     end
 
     def resolved_host
+      return Rails.application.config.x.public_host if Rails.env.production?
       host.presence || BRANDS_CONFIG.dig(order.brand.to_sym, :hosts).first
     end
 

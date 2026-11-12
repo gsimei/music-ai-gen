@@ -17,7 +17,7 @@ class ChatCreationFlowTest < ActionDispatch::IntegrationTest
   test "chat message clears suggestions without removing the stream target" do
     post order_chat_message_path(order_id: orders(:b2b_paid).id), params: { message: "A cheerful cafe jingle" }, as: :turbo_stream
     assert_response :success
-    assert_select 'turbo-stream[action=update][target=chat-suggestions]'
+    assert_select "turbo-stream[action=update][target=chat-suggestions]"
   end
 
   test "approval schedules music once and does not offer a second generation" do
@@ -26,7 +26,7 @@ class ChatCreationFlowTest < ActionDispatch::IntegrationTest
       post order_chat_approve_lyrics_path(order_id: order.id), params: { draft_id: order.current_draft.id }, as: :turbo_stream
     end
     assert_response :success
-    assert_select 'turbo-stream[target=chat-workflow]'
+    assert_select "turbo-stream[target=chat-workflow]"
     assert_select "form[action=?]", order_chat_generate_music_path(order_id: order.id), count: 0
   end
 

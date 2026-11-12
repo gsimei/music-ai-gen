@@ -1,4 +1,4 @@
-<% content_for :title, "Recuperar seu acesso · JinglePro" %>
+<% content_for :title, "Recuperar seu acesso · #{brand_name}" %>
 <%= render layout: "users/shared/studio_auth" do %>
   <h1>Recuperar seu acesso</h1><p class="studio-form-intro">Enviaremos instruções para desbloquear sua conta.</p>
   <%= form_for resource, as: resource_name, url: unlock_path(resource_name), html: { method: :post } do |f| %>

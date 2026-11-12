@@ -33,7 +33,7 @@ class ApplicationHelperTest < ActionView::TestCase
     # Quando a chave e prefixada com brands.b2b, t_brand adicionaria brands.b2b. novamente.
     # Testamos com chave simples como previsto no helper: t_brand("hero.title")
     # mas aqui testamos o fallback via chave direta:
-    assert_equal "JinglePro", I18n.t("brands.b2b.site_name", locale: :it)
+    assert_equal "ViraJingle", I18n.t("brands.b2b.site_name", locale: :it)
   end
 
   test "t_brand com brand b2b e chave hero.title retorna titulo do brand" do

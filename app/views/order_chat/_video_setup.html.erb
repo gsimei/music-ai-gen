@@ -1,0 +1,28 @@
+<section class="creative-video-setup">
+  <%= button_to "Voltar para letra e músicas", order_chat_change_music_path(order_id: order.id), class: "studio-text-link", data: { turbo_stream: true } %>
+  <div class="creative-video-overview">
+    <div>
+      <div class="creative-video-preview" aria-label="Imagem de abertura sugerida para o vídeo">
+        <% if order.campaign.product_photos.first %><%= image_tag order.campaign.product_photos.first, alt: "Primeira foto do vídeo", class: "creative-video-cover" %><% end %>
+        <% if order.campaign.business_name.present? || order.campaign.logo.attached? %><div class="creative-video-brand"><%= render "campaigns/brand_preview", campaign: order.campaign %></div><% end %>
+        <% unless order.campaign.product_photos.first %><p class="creative-video-offer"><%= order.campaign.display_offer %></p><% end %>
+        <% if order.campaign.show_cta? %><div class="creative-video-cta"><%= render "campaigns/cta_preview", campaign: order.campaign %></div><% end %>
+      </div>
+      <p class="studio-field-hint">Imagem de abertura · <%= order.campaign.product_photos.size %> fotos no vídeo</p>
+    </div>
+    <article class="creative-version" id="music-version-<%= asset.id %>">
+      <div class="creative-version-heading"><strong>Sua música escolhida</strong></div>
+      <%= render "order_chat/music_audition", order: order, asset: asset, video: true %>
+      <% if asset.campaign_preview_ready? %><%= render "order_chat/excerpt_editor", order: order, asset: asset %><% end %>
+      <details id="selected-lyrics" class="creative-details"><summary>Ver a letra desta música</summary><pre><%= asset.music_generation.lyrics_draft&.content %></pre></details>
+    </article>
+  </div>
+  <%= render "order_chat/video_photos", order: order %>
+  <%= render "order_chat/video_appearance", order: order %>
+  <% too_many_photos = order.campaign.product_photos.size > Campaigns::PhotoLimit.for_asset(asset) %>
+  <% if too_many_photos %><p class="campaign-note" role="status">Você salvou <%= order.campaign.product_photos.size %> fotos. Aumente a duração do vídeo ou reduza para <%= Campaigns::PhotoLimit.for_asset(asset) %> fotos.</p><% end %>
+  <div class="creative-video-finish">
+    <%= button_to "Gerar meu vídeo", order_chat_approve_music_path(order_id: order.id), params: { asset_id: asset.id, preview_revision: asset.preview_revision, video_revision: order.campaign.video_revision }, class: "studio-button studio-button-green", disabled: too_many_photos || !asset.audition_ready?, data: { turbo_stream: true } %>
+    <p class="studio-field-hint">Vamos juntar suas fotos com este trecho. Você recebe o vídeo e a música escolhida para baixar.</p>
+  </div>
+</section>

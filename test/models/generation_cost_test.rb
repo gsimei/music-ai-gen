@@ -15,8 +15,8 @@ class GenerationCostTest < ActiveSupport::TestCase
     order = orders(:b2b_paid)
     Campaign.create!(order: order, business_name: "Teste", offer: "Pizza em dobro", contact: "@teste", call_to_action: "Peça", style: "animado")
     responses = [
-      { "id" => "response1", "choices" => [{ "message" => { "content" => "" } }], "usage" => { "prompt_tokens" => 1000, "completion_tokens" => 100, "prompt_tokens_details" => { "cached_tokens" => 200 } } },
-      { "id" => "response2", "choices" => [{ "message" => { "content" => '{"reply":"oi"}' } }], "usage" => { "prompt_tokens" => 1000, "completion_tokens" => 100 } }
+      { "id" => "response1", "choices" => [ { "message" => { "content" => "" } } ], "usage" => { "prompt_tokens" => 1000, "completion_tokens" => 100, "prompt_tokens_details" => { "cached_tokens" => 200 } } },
+      { "id" => "response2", "choices" => [ { "message" => { "content" => '{"reply":"oi"}' } } ], "usage" => { "prompt_tokens" => 1000, "completion_tokens" => 100 } }
     ]
     client = Object.new
     client.define_singleton_method(:chat) { |**| responses.shift }
@@ -29,7 +29,7 @@ class GenerationCostTest < ActiveSupport::TestCase
     assert_equal 2, costs.count
     assert_equal BigDecimal("0.000195"), costs.first.estimated_usd
     assert_equal BigDecimal("0.00021"), costs.last.estimated_usd
-    assert_equal ["response1", "response2"], costs.pluck(:provider_request_id)
+    assert_equal [ "response1", "response2" ], costs.pluck(:provider_request_id)
   ensure
     ENV["OPENAI_API_KEY"] = original_key
   end

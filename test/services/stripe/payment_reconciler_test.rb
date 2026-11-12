@@ -16,14 +16,14 @@ class Stripe::PaymentReconcilerTest < ActiveSupport::TestCase
         assert Stripe::PaymentReconciler.call(order: @order.reload).success?
       end
     end
-    assert_equal ["cs_test_reconcile"], calls
+    assert_equal [ "cs_test_reconcile" ], calls
     assert_equal "paid", @order.reload.status
     assert_equal "pi_test_reconcile", @order.stripe_payment_intent_id
     assert @order.paid_at
   end
 
   test "unpaid, mismatched session, amount and currency never unlock generation" do
-    [{ payment_status: "unpaid" }, { id: "cs_someone_else" }, { amount_total: 100 }, { currency: "eur" }].each do |invalid|
+    [ { payment_status: "unpaid" }, { id: "cs_someone_else" }, { amount_total: 100 }, { currency: "eur" } ].each do |invalid|
       Stripe::Checkout::Session.stub(:retrieve, Stripe::Checkout::Session.construct_from(@session.merge(invalid))) do
         assert_no_enqueued_jobs only: GenerateLyricsJob do
           assert Stripe::PaymentReconciler.call(order: @order).failure?

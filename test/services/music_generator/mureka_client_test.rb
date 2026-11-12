@@ -38,7 +38,7 @@ class MusicGenerator::MurekaClientTest < ActiveSupport::TestCase
   })
 
   test "gender uses the documented field and automatic choice omits it" do
-    ["female", "male", nil].each do |gender|
+    [ "female", "male", nil ].each do |gender|
       captured = nil
       stub_request(:post, MUREKA_SONG_URL).with { |request| captured = JSON.parse(request.body); true }
         .to_return(status: 200, body: SUCCESS_BODY)

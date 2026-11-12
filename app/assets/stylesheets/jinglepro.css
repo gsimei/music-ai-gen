@@ -19,6 +19,9 @@ body .studio-app h2 {font-size:26px;font-weight:800;line-height:1.25;letter-spac
 body .studio-app h3 {font-size:20px;font-weight:700}
 body .studio-home .studio-kicker,body .studio-home .lp-eyebrow {color:var(--jp-muted);font-size:13px;font-weight:700;letter-spacing:.06em}
 body .studio-home .studio-logo {display:inline-flex;align-items:center;gap:10px;font-size:26px;font-weight:800;letter-spacing:-.05em;color:inherit;flex-shrink:0}
+.studio-logo .vj-logo {display:block;width:180px;height:auto;flex:none}
+.studio-logo {min-height:44px}
+@media (max-width:380px) { .studio-logo .vj-logo {width:156px} }
 body .studio-home .studio-app-header {min-height:88px;padding:16px max(24px,calc((100vw - 1184px)/2));background:var(--jp-cream);border-bottom:1px solid var(--jp-border);gap:20px}
 body .studio-home .studio-app-header nav {gap:24px;font-size:14px}
 body .studio-app .studio-header-create {background:var(--jp-forest);color:var(--jp-cream);border:0;padding:12px 20px}
@@ -28,7 +31,7 @@ body .studio-home.studio-app .studio-button-green,body .landing-home .lp-button 
 body .studio-home .studio-button-outline {background:transparent;border:1.5px solid var(--jp-field);color:var(--jp-forest)}
 body .studio-home .studio-text-link {display:inline-flex;align-items:center;min-height:44px;font-size:14px;color:var(--jp-hover);font-weight:700;line-height:1.5;gap:8px;text-decoration:underline;text-underline-offset:4px}
 body .studio-home .studio-field label,body .studio-app .creative-studio label {color:var(--jp-forest);font-size:15px;font-weight:700}
-body .studio-app :is(.studio-field,.creative-studio) :is(input:not([type=radio]):not([type=checkbox]):not([type=file]):not([type=range]),textarea,select) {width:100%;min-height:56px;padding:14px 16px;font:400 16px/1.6 Manrope,sans-serif;background:var(--jp-surface);color:var(--jp-forest);border:1.5px solid var(--jp-field);border-radius:12px;box-shadow:none}
+body .studio-app :is(.studio-field,.creative-studio) :is(input:not([type=radio]):not([type=checkbox]):not([type=file]):not([type=range]):not([type=color]),textarea,select) {width:100%;min-height:56px;padding:14px 16px;font:400 16px/1.6 Manrope,sans-serif;background:var(--jp-surface);color:var(--jp-forest);border:1.5px solid var(--jp-field);border-radius:12px;box-shadow:none}
 body .studio-app textarea {resize:vertical}
 body .studio-app input::placeholder,body .studio-app textarea::placeholder {color:var(--jp-muted);opacity:1}
 body .studio-app .studio-field-hint {font-size:13px;line-height:1.65;color:var(--jp-muted);margin:8px 0 16px}
@@ -75,9 +78,26 @@ body .studio-app .campaign-form-actions {margin-top:28px;gap:12px;justify-conten
 body .studio-app .campaign-preview-wrap {position:sticky;top:28px;width:100%;padding:24px;background:var(--jp-mint);border-radius:24px}
 body .studio-app .campaign-poster {width:100%;aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:var(--jp-forest);color:var(--jp-cream);padding:22px;box-shadow:var(--jp-shadow)}
 body .studio-app .campaign-poster-business {color:var(--jp-cream);font-size:18px;font-weight:800}
-body .studio-app .campaign-poster>strong {font-size:27px;letter-spacing:-.02em;line-height:1.18;color:var(--jp-cream);overflow-wrap:anywhere}
-body .studio-app .campaign-poster-contact {color:var(--jp-forest);background:var(--jp-lime);border-radius:12px;padding:12px;margin-top:16px;overflow-wrap:anywhere}
+body .studio-app .campaign-poster-brand {display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex-shrink:0;min-width:0}
+body .studio-app .campaign-poster-logo {display:block;width:auto;height:auto;max-width:150px;max-height:80px;object-fit:contain;object-position:left center}
+body .studio-app .campaign-logo-upload {margin-bottom:28px}
+body .studio-app .campaign-brand-sample {padding:20px;background:var(--jp-forest);border-radius:16px;margin-bottom:12px}
+body .studio-app .jp-summary-logo {display:block;width:auto;height:auto;max-width:160px;max-height:80px;object-fit:contain;margin:12px 0;padding:10px;background:var(--jp-forest);border-radius:12px}
+body .studio-app .campaign-poster>strong {font-size:27px;letter-spacing:-.02em;line-height:1.18;color:var(--jp-cream);overflow-wrap:break-word;white-space:pre-wrap;word-break:normal}
+body .studio-app .campaign-offer-text {white-space:pre-wrap;overflow-wrap:break-word;word-break:normal}
+body .studio-app .campaign-poster-contact {color:var(--campaign-cta-text-color,var(--jp-forest));background:var(--campaign-cta-color,var(--jp-lime));border-radius:12px;padding:12px;margin-top:16px;overflow-wrap:anywhere}
 body .studio-app .campaign-poster-contact b {font-size:14px}
+body .studio-app .campaign-cta-settings {margin-bottom:28px;min-width:0}
+body .studio-app .campaign-cta-toggle {display:flex;align-items:center;gap:12px;min-height:48px;cursor:pointer;font-size:16px;font-weight:700;line-height:1.5}
+body .studio-app .campaign-cta-toggle input[type=checkbox] {width:20px;height:20px;min-width:20px;margin:0;accent-color:var(--jp-forest)}
+body .studio-app .campaign-cta-color>label {display:block;margin-bottom:8px;font-size:15px;font-weight:700}
+body .studio-app .campaign-cta-color-picker {display:flex;align-items:center;gap:14px;min-width:0}
+body .studio-app .campaign-cta-color-picker input[type=color] {display:block;width:72px;height:52px;min-width:72px;min-height:52px;padding:5px;border:1.5px solid var(--jp-field);border-radius:10px;background:var(--jp-surface);cursor:pointer}
+body .studio-app .campaign-cta-color-picker .studio-field-hint {margin:0;max-width:360px}
+body .studio-app .campaign-cta-sample {max-width:420px;margin-bottom:20px}
+body .studio-app .campaign-cta-sample .campaign-poster-contact {margin:0}
+body .studio-app .campaign-cta-sample .campaign-poster-contact :is(span,b) {display:block}
+body .studio-app .campaign-cta-sample .campaign-poster-contact b {margin-top:8px}
 body .studio-app .campaign-photo-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;max-width:100%}
 body .studio-app .campaign-photo-list figure {width:auto;min-width:0;background:var(--jp-surface);border:1px solid var(--jp-border);border-radius:14px;padding:8px}
 body .studio-app .campaign-photo-list img {height:120px;width:100%;object-fit:cover;border-radius:8px}
@@ -155,6 +175,15 @@ body .jp-workspace .creative-round {padding:24px 0;border-top:1px solid var(--jp
 body .jp-workspace .creative-round-heading h2 {font-size:24px;font-weight:800}
 body .jp-workspace .creative-round-heading span {font-size:13px}
 .jp-versions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+:is(.creative-video-photos,.creative-video-appearance) {margin:28px 0;padding:24px;border:1px solid var(--jp-border);border-radius:24px;background:var(--jp-mint)}
+:is(.creative-video-photos,.creative-video-appearance) h2 {font-size:22px;font-weight:800;line-height:1.3}
+:is(.creative-video-photos,.creative-video-appearance) form {display:grid;gap:12px;min-width:0}
+.creative-video-photos .campaign-photo-list {margin-top:0}
+body .jp-workspace .excerpt-editor form {display:grid;gap:12px;min-width:0}
+.excerpt-custom-duration {display:grid;gap:8px}
+.excerpt-custom-duration[hidden] {display:none}
+body .jp-workspace .excerpt-editor input[type=range] {padding:0;min-height:44px;accent-color:var(--jp-forest)}
+body .jp-workspace .excerpt-editor .studio-button {white-space:normal}
 body .jp-workspace .creative-version {padding:22px;border:1.5px solid var(--jp-border);border-radius:24px;background:var(--jp-surface);margin:12px 0;min-width:0}
 body .jp-workspace .creative-version.is-favorite {border-color:var(--jp-forest);box-shadow:inset 0 4px var(--jp-lime)}
 body .jp-workspace .creative-version-heading {display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
@@ -211,9 +240,8 @@ body .landing-home .lp-sound-button {bottom:18px;min-height:48px;padding:12px 24
 .jp-hero-note {position:absolute;top:90px;right:-15px;z-index:3;display:grid;gap:4px;background:var(--jp-surface);border:1px solid var(--jp-border);border-radius:16px;padding:16px 20px;box-shadow:var(--jp-shadow);font-size:13px;transform:rotate(4deg)}
 .jp-hero-badge {position:absolute;bottom:64px;left:16px;z-index:3;background:var(--jp-surface);border:1px solid var(--jp-border);border-radius:18px;padding:18px 24px;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;box-shadow:var(--jp-shadow)}
 .jp-hero-caption {position:absolute;bottom:20px;inset-inline:12px;text-align:center;font-size:13px;color:var(--jp-muted)}
-body .landing-home .lp-ticker {background:var(--jp-mint);padding-block:20px;border-block:1px solid var(--jp-border)}
-body .landing-home .lp-ticker span {font-size:22px}
 body .landing-home .lp-showcase {background:var(--jp-cream);color:var(--jp-forest);--studio-text:var(--jp-forest);--studio-muted:var(--jp-muted);--studio-line:var(--jp-border)}
+body .landing-home .studio-examples {padding-top:0}
 body .landing-home h2 {font-size:clamp(36px,4.2vw,52px);font-weight:800;line-height:1.12;letter-spacing:-.04em}
 body .landing-home .studio-section-heading>p:last-child {font-size:16px;color:var(--jp-muted)}
 body .landing-home .studio-example {border-color:var(--jp-border);background:var(--jp-surface);border:1px solid var(--jp-border);border-radius:24px;padding:28px;gap:28px}
@@ -249,7 +277,8 @@ body .landing-home .lp-faq details p {font-size:16px;color:var(--jp-muted)}
 body .landing-home .lp-closing {background:var(--jp-forest);color:var(--jp-cream);padding-top:64px}
 body .landing-home .lp-closing .lp-eyebrow {color:var(--jp-cream)}
 body .landing-home .lp-closing h2 {font-size:clamp(40px,5vw,64px);font-weight:800}
-body .landing-home .lp-closing-wordmark {font-size:clamp(60px,17vw,240px);line-height:1.2;letter-spacing:-.07em;padding:24px 20px 12px;white-space:nowrap;margin:16px 0 0;color:var(--jp-mint)}
+body .landing-home .lp-closing-wordmark {padding:40px 24px 32px;margin:16px 0 0}
+body .landing-home .lp-closing-wordmark img {display:block;width:min(100%,1184px);height:auto;margin-inline:auto}
 body .landing-home .lp-footer {padding-block:28px}
 body .landing-home .lp-footer p,body .landing-home .lp-footer>span {font-size:13px;color:var(--jp-muted)}
 /* Mobile: the active task leads; media previews remain reachable below it. */
@@ -345,8 +374,7 @@ body .landing-home .lp-footer p,body .landing-home .lp-footer>span {font-size:13
  .jp-hero-note {right:-8px;top:64px;padding:12px;font-size:13px}
  .jp-hero-badge {bottom:54px;left:-8px;padding:14px 18px}
  .jp-hero-caption {bottom:12px;font-size:13px}
- body .landing-home .lp-ticker span {font-size:18px}
- body .landing-home .studio-examples {padding-block:56px}
+ body .landing-home .studio-examples {padding:0 0 56px}
  body .landing-home .studio-section-heading {display:block}
  body .landing-home .studio-section-heading>p:last-child {margin-top:20px;max-width:none}
  body .landing-home h2 {font-size:38px}
@@ -367,7 +395,7 @@ body .landing-home .lp-footer p,body .landing-home .lp-footer>span {font-size:13
  body .landing-home .lp-faq details p {padding-right:0}
  body .landing-home .lp-closing {padding-top:48px}
  body .landing-home .lp-closing h2 {font-size:44px}
- body .landing-home .lp-closing-wordmark {padding:16px 8px;font-size:18vw;margin-top:24px;line-height:1.3}
+ body .landing-home .lp-closing-wordmark {padding:24px 20px;margin-top:24px}
  body .landing-home .lp-footer {gap:16px;flex-wrap:wrap}
 }
 /* Progressive motion: the unanimated, final layout is always usable. */
@@ -396,7 +424,7 @@ body .studio-app .campaign-poster::after {content:'';position:absolute;inset:0;z
 body .studio-app .campaign-poster-business {padding:0;line-height:1.3}
 body .studio-app .campaign-poster>strong {margin-top:auto;padding:70px 0 0;font-size:25px}
 body .studio-app .campaign-poster-contact {padding:12px;margin-top:16px}
-body .studio-app .campaign-poster-contact b {color:var(--jp-forest)}
+body .studio-app .campaign-poster-contact b {color:inherit}
 body .studio-app .campaign-saved-sound {background:var(--jp-mint);padding:18px 22px;border-radius:20px;font-size:14px}
 body .studio-app .campaign-profile-option {min-height:52px;font-size:14px}
 body .jp-workspace .creative-progress .jp-round-count strong {font-size:13px;display:inline;font-weight:800}
@@ -417,4 +445,50 @@ body .jp-legacy :is(.meta,.ref,.pill,.badge,label) {font-size:13px}
 @media(max-width:639px) {body .studio-home.studio-auth {display:block;grid-template-columns:none}}
 @media(max-width:639px) {
   body .landing-home .studio-example:not(.studio-example-featured) {grid-template-columns:minmax(0,1fr)}
+}
+
+/* Guided creation: lyrics and music share one workspace; video has its own review. */
+.jp-workspace-grid.jp-guided-workspace {grid-template-columns:minmax(0,1fr);max-width:880px;margin-inline:auto}
+body .jp-guided-workspace .creative-studio {display:block}
+.jp-guided-workspace .jp-phases {margin-bottom:24px}
+.jp-guided-workspace .jp-phases b {min-width:42px;padding-inline:6px}
+body .jp-guided-workspace .creative-progress {margin-bottom:24px;animation:none}
+body .jp-guided-workspace .creative-round {border:0;padding:0;margin:0 0 24px}
+body .jp-guided-workspace .creative-version {margin:0}
+body .jp-guided-workspace .creative-version audio {height:44px;width:100%;margin:16px 0}
+body .jp-guided-workspace .creative-details summary {min-height:44px;display:list-item;align-content:center;font-size:15px}
+body .jp-guided-workspace .creative-adjustments {background:var(--jp-mint)}
+body .jp-guided-workspace .creative-creation-form {padding:24px;border:1px solid var(--jp-border);border-radius:20px;background:var(--jp-surface)}
+body .jp-guided-workspace .creative-adjustments .creative-creation-form {padding:0;border:0;background:transparent}
+body .jp-guided-workspace .creative-creation-form textarea {line-height:1.65}
+body .jp-guided-workspace .creative-creation-form #editable-lyrics {min-height:200px}
+body .jp-guided-workspace .creative-creation-form label {font-size:15px}
+.creative-simple-sound {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.creative-simple-sound>div {min-width:0}
+.creative-form-actions {display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:24px}
+.creative-form-actions .studio-text-link {min-height:44px;padding:8px}
+.creative-video-overview {display:grid;grid-template-columns:minmax(180px,240px) minmax(0,1fr);gap:28px;align-items:start;margin-top:24px}
+.creative-video-preview {aspect-ratio:9/16;position:relative;overflow:hidden;border-radius:20px;background:var(--jp-mint);color:var(--jp-forest);isolation:isolate}
+.creative-video-cover {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
+.creative-video-brand {position:absolute;inset:12px 12px auto}
+.creative-video-cta {position:absolute;inset:auto 12px 12px}
+body .jp-guided-workspace .creative-video-preview .campaign-poster-brand {position:static;inset:auto;padding:10px;display:flex;gap:8px;align-items:center;background:var(--jp-surface);border-radius:12px;flex-wrap:wrap}
+body .jp-guided-workspace .creative-video-preview .campaign-poster-logo {width:44px;height:44px;object-fit:contain}
+body .jp-guided-workspace .creative-video-preview .campaign-poster-business {color:var(--jp-forest);font-size:14px;overflow-wrap:anywhere;min-width:0}
+body .jp-guided-workspace .creative-video-preview .campaign-poster-contact {position:static;inset:auto;padding:10px;font-size:13px;overflow-wrap:anywhere}
+body .jp-guided-workspace .creative-video-preview .campaign-poster-contact b {font-size:14px}
+body .jp-guided-workspace .creative-video-offer {position:absolute;inset:35% 16px auto;font-size:22px;font-weight:800;white-space:pre-line;overflow-wrap:anywhere}
+body .jp-guided-workspace :is(.creative-video-photos,.creative-video-appearance) {padding:0;border:0;background:transparent;margin:20px 0}
+body .jp-guided-workspace :is(.creative-video-photos,.creative-video-appearance) h2 {font-size:18px}
+.creative-video-finish {border-top:1px solid var(--jp-border);padding-top:24px;margin-top:24px}
+.creative-campaign-context {margin-top:32px;border-top:1px solid var(--jp-border);padding-top:16px;color:var(--jp-muted)}
+.creative-campaign-context>summary {cursor:pointer;min-height:44px;align-content:center;font-size:14px}
+.creative-campaign-context .jp-summary-card {max-width:380px;margin-top:12px}
+@media (max-width:640px) {
+  .creative-simple-sound {grid-template-columns:1fr;gap:0}
+  .creative-video-overview {grid-template-columns:1fr;gap:20px}
+  .creative-video-overview>div:first-child {max-width:200px;margin-inline:auto}
+  body .jp-guided-workspace .creative-creation-form {padding:18px}
+  .creative-form-actions {flex-direction:column;align-items:stretch;gap:8px}
+  .creative-form-actions .studio-button,.creative-video-finish .studio-button {width:100%;white-space:normal}
 }

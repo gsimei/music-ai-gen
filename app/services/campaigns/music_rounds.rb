@@ -17,7 +17,7 @@ module Campaigns
         return failure_result(:invalid_state) unless order.campaign && %w[lyrics_approved preview_ready music_failed].include?(order.status)
         return failure_result(:busy) if order.lyrics_revision_token.present? || order.music_generations.where(status: %w[pending processing]).exists?
         return failure_result(:regen_limit_reached) if order.completed_music_rounds >= LIMIT
-        unresolved = order.music_generations.failed.where(error_code: %w[generation_delayed status_unavailable]).where.not(mureka_job_id: [nil, ""]).order(:iteration).last
+        unresolved = order.music_generations.failed.where(error_code: %w[generation_delayed status_unavailable]).where.not(mureka_job_id: [ nil, "" ]).order(:iteration).last
         if unresolved
           if retry_failed
             unresolved.update!(status: "processing", poll_lease_until: nil, next_poll_at: Time.current)
@@ -32,7 +32,7 @@ module Campaigns
         parent_asset = if asset_id.present?
           order.all_music_assets.find_by(id: asset_id)
         else
-          order.favorite_music_asset || order.all_music_assets.last
+          order.all_music_assets.last
         end
         return failure_result(:not_found) if asset_id.present? && parent_asset.nil?
         previous = order.music_generations.failed.order(:iteration).last if retry_failed
@@ -57,6 +57,9 @@ module Campaigns
           parent_generation_id: previous&.parent_generation_id || parent_asset&.music_generation_id,
           music_style: order.briefing.music_style, melody_hint: feedback.presence,
           request_payload: payload)
+        if order.campaign.selected_music_asset_id?
+          order.campaign.update!(selected_music_asset: nil, video_revision: order.campaign.video_revision + 1)
+        end
         order.update!(status: "music_generating")
         GenerateCampaignMusicJob.perform_later(generation.id)
       end
@@ -75,7 +78,7 @@ module Campaigns
       prompt = "#{instruction} Brazilian Portuguese commercial jingle, 30 seconds, vocals immediately, no intro or solos. Musical direction: #{direction.to_s.first(400)}. Preserve the supplied lyrics and offer exactly."
       { "model" => model, "n" => 2, "lyrics" => draft.content, "prompt" => prompt.first(1024),
         "gender" => settings["vocal_gender"] == "auto" ? nil : settings["vocal_gender"], "sound_settings" => settings,
-        "direction" => [direction, feedback.presence].compact.join("; ").last(600),
+        "direction" => [ direction, feedback.presence ].compact.join("; ").last(600),
         "source_asset_id" => asset&.id }
     end
   end

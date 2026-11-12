@@ -13,7 +13,7 @@ class User < ApplicationRecord
   # Validations
   validates :role, inclusion: { in: ROLES }
   validates :origin_brand, inclusion: { in: BRANDS }, allow_nil: true
-  validates :locale, inclusion: { in: -> (_) { User.all_locales } }
+  validates :locale, inclusion: { in: ->(_) { User.all_locales } }
 
   # Associations
   has_many :orders, dependent: :nullify

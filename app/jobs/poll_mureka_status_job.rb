@@ -11,10 +11,10 @@ class PollMurekaStatusJob < ApplicationJob
     order     = music_gen.order
 
     status_client = case music_gen.generation_type
-                    when "soundtrack"   then MusicGenerator::MurekaSoundtrackStatusClient
-                    when "instrumental" then MusicGenerator::MurekaInstrumentalStatusClient
-                    else                     MusicGenerator::MurekaStatusClient
-                    end
+    when "soundtrack"   then MusicGenerator::MurekaSoundtrackStatusClient
+    when "instrumental" then MusicGenerator::MurekaInstrumentalStatusClient
+    else                     MusicGenerator::MurekaStatusClient
+    end
     result = status_client.call(job_id: music_gen.mureka_job_id)
 
     unless result.success?

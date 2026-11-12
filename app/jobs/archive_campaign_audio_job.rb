@@ -11,7 +11,7 @@ class ArchiveCampaignAudioJob < ApplicationJob
       PrepareCampaignAudioJob.perform_later(asset.id) unless asset.audition_ready?
       return
     end
-    Tempfile.create(["jingle-version-", ".mp3"]) do |file|
+    Tempfile.create([ "jingle-version-", ".mp3" ]) do |file|
       Campaigns::AudioDownload.call(asset.provider_url.presence || asset.url, file.path)
       # Active Storage uploads in after_commit. Keep the IO open until the
       # enclosing lock transaction has committed, not just until attach returns.

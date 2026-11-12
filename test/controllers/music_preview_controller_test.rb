@@ -38,7 +38,7 @@ class MusicPreviewControllerTest < ActionDispatch::IntegrationTest
     get order_music_preview_path(order)
 
     assert_equal 2, assigns(:assets).count
-    assert_equal [0, 1], assigns(:assets).map(&:variant_index)
+    assert_equal [ 0, 1 ], assigns(:assets).map(&:variant_index)
   end
 
   test "GET preview redirects to order_path when order is not in preview_ready state" do

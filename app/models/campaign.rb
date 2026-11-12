@@ -19,14 +19,29 @@ class Campaign < ApplicationRecord
     "rock" => { label: "Rock · guitarra e energia", prompt: "pop rock, electric guitar, drums, catchy melodic chorus" }
   }.freeze
   VOCAL_GENDERS = { "auto" => "Escolher por mim", "female" => "Voz feminina", "male" => "Voz masculina" }.freeze
+  CTA_DEFAULT_COLOR = "#d6f36b"
+  CTA_DARK_COLOR = "#173e32"
+  CTA_COLOR_FORMAT = /\A#[0-9a-f]{6}\z/i
+  CTA_OPTIONS = [ "Peça pelo WhatsApp", "Venha nos visitar", "Reserve seu horário", "Saiba mais no Instagram" ].freeze
+  LOGO_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
+  LOGO_MAX_SIZE = 5.megabytes
 
   belongs_to :order
+  belongs_to :selected_music_asset, class_name: "OrderAsset", optional: true
   has_one_attached :photo
   has_many_attached :photos
+  has_one_attached :logo
   has_one_attached :video
   has_one_attached :poster
 
-  validates :business_name, :offer, :contact, :call_to_action, presence: true
+  before_validation :normalize_display_settings
+  after_save :reset_logo_removal
+  attr_reader :remove_logo
+
+  validates :offer, presence: true
+  validates :contact, :call_to_action, presence: true, if: :show_cta?
+  validates :show_cta, inclusion: { in: [ true, false ] }
+  validates :cta_color, format: { with: CTA_COLOR_FORMAT }
   validates :business_name, length: { maximum: 60 }
   validates :offer, length: { maximum: 180 }
   validates :contact, length: { maximum: 70 }
@@ -38,9 +53,14 @@ class Campaign < ApplicationRecord
   validates :video_status, inclusion: { in: %w[pending queued rendering ready failed] }
   validate :supported_photo
   validate :valid_photo_order
+  validate :supported_logo
 
   def photo_order=(ids)
     self[:photo_order] = Array(ids).map { |id| Integer(id, exception: false) || id }
+  end
+
+  def remove_logo=(value)
+    @remove_logo = ActiveModel::Type::Boolean.new.cast(value)
   end
 
   # Old campaigns retain their original single photo until new photos are selected.
@@ -50,19 +70,54 @@ class Campaign < ApplicationRecord
     images.each_with_index.sort_by { |image, index| positions.fetch(image.id, positions.size + index) }.map(&:first)
   end
 
+  def photo_limit
+    return Campaigns::PhotoLimit::INITIAL unless order&.persisted?
+    return Campaigns::PhotoLimit.for_asset(selected_music_asset) if selected_music_asset && !order.approved?
+    assets = order.all_music_assets.with_attached_campaign_audio
+    if order.approved?
+      asset = assets.find_by(music_generation_id: order.approved_music_generation_id,
+        variant_index: { "a" => 0, "b" => 1 }[order.approved_variant])
+      Campaigns::PhotoLimit.for_asset(asset)
+    else
+      assets.map { |asset| Campaigns::PhotoLimit.for_asset(asset) }.max || Campaigns::PhotoLimit::INITIAL
+    end
+  end
+
   def caption
-    "#{business_name}: #{offer}\n\n#{call_to_action}: #{contact}"
+    text = [ business_name.presence, offer ].compact.join(": ")
+    show_cta? ? "#{text}\n\n#{call_to_action}: #{contact}" : text
+  end
+
+  def title
+    business_name.presence || (order&.reference.present? ? "Campanha #{order.reference}" : "Sua campanha")
+  end
+
+  def display_offer
+    Campaigns::DisplayText.call(offer)
+  end
+
+  def cta_background_color
+    CTA_COLOR_FORMAT.match?(cta_color.to_s) ? cta_color : CTA_DEFAULT_COLOR
+  end
+
+  def cta_text_color
+    background = relative_luminance(cta_background_color)
+    dark = relative_luminance(CTA_DARK_COLOR)
+    contrast = ([ background, dark ].max + 0.05) / ([ background, dark ].min + 0.05)
+    return CTA_DARK_COLOR if background > dark && contrast >= 4.5
+    background > 0.179 ? "#000000" : "#ffffff"
   end
 
   def sync_briefing!
     sound = STYLES.fetch(style)
     briefing = order.briefing || order.build_briefing
     briefing.update!(
-      recipient: business_name, about: "#{business_name}. Promoção: #{offer}. Chamada: #{call_to_action}.",
+      recipient: business_name.presence,
+      about: [ ("#{business_name}." if business_name.present?), "Promoção: #{offer}.", ("Chamada: #{call_to_action}." if show_cta?) ].compact.join(" "),
       voice: briefing.voice || Voice.active.for_brand(order.brand).where(min_tier: 0).ordered.first,
       occasion: "Campanha para Instagram Reels e Status do WhatsApp no Brasil",
       language: "pt", music_style: genre_prompt, mood: sound[:mood], target_duration_seconds: 30,
-      keywords: business_name, extra_params: (briefing.extra_params || {}).merge("instrumental" => false, "campaign" => true,
+      keywords: business_name.presence, extra_params: (briefing.extra_params || {}).merge("instrumental" => false, "campaign" => true,
         "music_preferences" => sound_settings)
     )
   end
@@ -76,13 +131,13 @@ class Campaign < ApplicationRecord
   end
 
   def sound_summary
-    [GENRES.dig(musical_genre, :label)&.split(" · ")&.first, VOCAL_GENDERS[vocal_gender], STYLES.dig(style, :label)].compact.join(" · ")
+    [ GENRES.dig(musical_genre, :label)&.split(" · ")&.first, VOCAL_GENDERS[vocal_gender], STYLES.dig(style, :label) ].compact.join(" · ")
   end
 
   def musical_direction
-    [genre_prompt, "Mood: #{STYLES.fetch(style)[:mood]}",
+    [ genre_prompt, "Mood: #{STYLES.fetch(style)[:mood]}",
       vocal_gender == "auto" ? "natural expressive singing voice" : "#{vocal_gender} singing voice",
-      music_notes.present? ? "Sound preferences: #{music_notes.strip}" : nil].compact.join(". ")
+      music_notes.present? ? "Sound preferences: #{music_notes.strip}" : nil ].compact.join(". ")
   end
 
   def queue_video!
@@ -97,8 +152,35 @@ class Campaign < ApplicationRecord
 
   private
 
+  def normalize_display_settings
+    self.business_name = business_name.to_s.strip
+    self.offer = offer.to_s.gsub(/\r\n?/, "\n")
+    self.contact = contact.to_s
+    self.call_to_action = call_to_action.to_s
+    self.cta_color = cta_color.to_s.strip.downcase.presence || CTA_DEFAULT_COLOR
+    self.logo = nil if remove_logo
+  end
+
+  def reset_logo_removal
+    self.remove_logo = false
+  end
+
+  def supported_logo
+    return unless logo.attached?
+    errors.add(:logo, "deve ser PNG, JPG ou WebP") unless LOGO_CONTENT_TYPES.include?(logo.blob.content_type)
+    errors.add(:logo, "deve ter até 5 MB") if logo.blob.byte_size > LOGO_MAX_SIZE
+  end
+
+  def relative_luminance(color)
+    channels = color.delete_prefix("#").scan(/../).map do |hex|
+      channel = hex.to_i(16) / 255.0
+      channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055)**2.4
+    end
+    channels.zip([ 0.2126, 0.7152, 0.0722 ]).sum { |channel, weight| channel * weight }
+  end
+
   def original_product_photos
-    photos.attached? ? photos.to_a.sort_by { |attachment| attachment.id || Float::INFINITY } : (photo.attached? ? [photo] : [])
+    photos.attached? ? photos.to_a.sort_by { |attachment| attachment.id || Float::INFINITY } : (photo.attached? ? [ photo ] : [])
   end
 
   def valid_photo_order
@@ -111,7 +193,10 @@ class Campaign < ApplicationRecord
 
   def supported_photo
     images = product_photos
-    errors.add(:photos, "devem ser no máximo 5") if images.size > 5
+    # Before the music exists, start with five. Later, a shorter cut must not
+    # invalidate saved photos; approval checks the chosen version's own limit.
+    limit = new_record? || order.pending? || order.payment_failed? ? Campaigns::PhotoLimit::INITIAL : Campaigns::PhotoLimit::MAX
+    errors.add(:photos, "devem ser no máximo #{limit}") if images.size > limit
     images.each_with_index do |image, index|
       errors.add(:photos, "— foto #{index + 1}: use JPG, PNG ou WebP") unless %w[image/jpeg image/png image/webp].include?(image.blob.content_type)
       errors.add(:photos, "— foto #{index + 1}: deve ter até 10 MB") if image.blob.byte_size > 10.megabytes

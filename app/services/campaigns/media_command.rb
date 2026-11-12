@@ -3,14 +3,14 @@ require "timeout"
 
 module Campaigns
   class MediaCommand
-    def self.run!(*command)
+    def self.run!(*command, timeout: 180)
       output = nil
       Open3.popen3(*command, pgroup: true) do |stdin, stdout, stderr, waiter|
         stdin.close
         errors = Thread.new { stderr.read }
         reader = Thread.new { stdout.read }
         begin
-          Timeout.timeout(180) do
+          Timeout.timeout(timeout) do
             raise "Falha na montagem do vídeo: #{errors.value.to_s.last(400)}" unless waiter.value.success?
             output = reader.value
           end

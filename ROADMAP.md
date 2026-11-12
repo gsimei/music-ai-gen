@@ -6,7 +6,7 @@ Cronograma de implementação baseado no SPEC.md (seção 19). Marcar tarefas co
 
 **Design de referência:** `design/jinglepro/` — pranchas `*.dc.html` + `canvas.json` + `README.md`, exportadas de um canvas de design em 09/11/2026 (HTML/CSS estáticos que não rodam sozinhos). Substitui o antigo `Plataforma - Vanilla.html`. Toda task de frontend deve consultar a prancha correspondente antes de implementar (mapa prancha → tela em `design/jinglepro/README.md`; ver CLAUDE.md).
 
-**Produto atual:** Campanha JinglePro (pt-BR, BRL, R$ 79 via `config/brands.yml`). As seções 7, 19, 20, 21 e 22 abaixo são do app anterior e estão anotadas como LEGADO/superadas; o trabalho em andamento está na **seção 23**.
+**Produto atual:** Campanha JinglePro (pt-BR, BRL, R$ 29,90 via `config/brands.yml`). As seções 7, 19, 20, 21 e 22 abaixo são do app anterior e estão anotadas como LEGADO/superadas; o trabalho em andamento está na **seção 23**.
 
 ---
 
@@ -203,14 +203,14 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 
 ### Antes do primeiro deploy em staging
 
-- [ ] **M-1**: Habilitar `config.force_ssl = true` e `config.assume_ssl = true` em `production.rb` (HSTS + Secure cookies via Kamal/Thruster TLS termination)
-- [ ] **M-3**: Configurar `config.hosts` em `production.rb` com hosts B2B/B2C (DNS rebinding protection)
+- [x] **M-1**: HTTPS obrigatório em produção; `assume_ssl` somente com `BEHIND_SSL_PROXY=true`, definido pelo deploy Kamal com TLS
+- [x] **M-3**: `config.hosts` restrito ao `APP_HOST` exato da marca única; origem do Checkout também vem dessa configuração
 - [ ] **M-7**: Adicionar `before_send` no Sentry filtrando query strings (evitar vazar `confirmation_token`/`reset_password_token` em traces)
-- [ ] **B-2**: Trocar `mailer_sender` e `default_url_options` placeholders por `ENV.fetch(...)` (evitar emails de `example.com` em staging)
+- [x] **B-2**: Remetente via `MAILER_FROM`, links HTTPS via `APP_HOST`, SMTP Resend via `RESEND_API_KEY`; produção valida as variáveis obrigatórias
 
 ### Antes do frontend ir para staging
 
-- [ ] **M-2**: Habilitar Content Security Policy em `config/initializers/content_security_policy.rb` (com nonce para Tailwind/Stimulus)
+- [x] **M-2**: CSP ativa com nonce para scripts/importmap; mantém estilos inline legados e origens específicas de fontes, mídia e checkout
 
 ### Antes da Seção 14 (Storage / R2)
 
@@ -222,9 +222,9 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 
 ### Hardening incremental (sem urgência)
 
-- [ ] **B-1**: Ajustar valores placeholder de Stripe no `.env.example` (evitar confusão com chaves parciais)
-- [ ] **B-4**: Usar `ENV["SENTRY_DSN"].presence` em vez de `ENV["SENTRY_DSN"]`
-- [ ] **B-5**: Quando seções de pagamento e dados bancários existirem, adicionar `:card_number`, `:iban` ao `filter_parameter_logging`
+- [x] **B-1**: Chaves Stripe em branco nos exemplos; nenhum segredo real versionado
+- [x] **B-4**: `SENTRY_DSN` vazio tratado com `.presence`
+- [x] **B-5**: `:card_number` e `:iban` filtrados nos parâmetros de log
 - [ ] **B-6**: Criar `config/initializers/session_store.rb` explícito quando `force_ssl` estiver ativo
 
 ---
@@ -233,7 +233,7 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 
 ## 19. Revisão de tiers e preços
 
-> **SUPERADO.** Esta revisão (Standard €29 / Pro €59) não vale mais: o produto é a Campanha a R$ 79 (`tiers.starter` em `config/brands.yml`; não usa `stripe_price_ids`, o Checkout cria o preço com `price_data`). Mantido como registro; não executar.
+> **SUPERADO.** Esta revisão (Standard €29 / Pro €59) não vale mais: o produto é a Campanha a R$ 29,90 (`tiers.starter` em `config/brands.yml`; não usa `stripe_price_ids`, o Checkout cria o preço com `price_data`). Mantido como registro; não executar.
 >
 > Descrição original: Standard €29 / Pro €59. Atualizar config e stripe_price_ids.
 

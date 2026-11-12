@@ -1,8 +1,8 @@
 # Music AI Gen — Instruções para o Claude
 
-Produto único: a **Campanha** da **JinglePro**. O lojista informa a oferta do negócio e envia até 5 fotos, paga uma vez via Stripe Checkout, revisa e edita a letra, escolhe entre 2 músicas por rodada (até 3 rodadas, limite em `Campaigns::MusicRounds::LIMIT`) e recebe vídeo vertical 9:16 (MP4) + música em MP3 + legenda sugerida.
+Produto único: a **Campanha** da **ViraJingle**. O lojista informa a oferta do negócio e envia até 5 fotos iniciais (ampliáveis no estúdio conforme a duração, até 30; `Campaigns::PhotoLimit`), paga uma vez via Stripe Checkout, revisa e edita a letra, escolhe entre 2 músicas por rodada (até 3 rodadas, limite em `Campaigns::MusicRounds::LIMIT`) e recebe vídeo vertical 9:16 (MP4) + música em MP3 + legenda sugerida.
 
-Mercado: Brasil. Interface em português (pt-BR) e preço em BRL: R$ 79 por campanha, pagamento único, sem assinatura. O valor vem de `config/brands.yml` (`campaign_tier` → `tiers.starter.price_cents`) e do helper `campaign_price` — **nunca hardcoded**.
+Mercado: Brasil. Interface em português (pt-BR) e preço em BRL: R$ 29,90 por campanha, pagamento único, sem assinatura. O valor vem de `config/brands.yml` (`campaign_tier` → `tiers.starter.price_cents`) e do helper `campaign_price` — **nunca hardcoded**.
 
 Não existem mais duas marcas (B2B/B2C), preços em € nem mercado europeu multi-idioma. O código ainda carrega vestígios disso (ver "Marca e locale" abaixo); não os reative sem passar pelo `idea-validator`.
 
@@ -17,7 +17,7 @@ Conferida em `Gemfile`, `Gemfile.lock`, `config/`, `Dockerfile` e `layouts/appli
 | Camada | Tecnologia |
 |---|---|
 | Linguagem | Ruby 4.0.5 (`.ruby-version`) |
-| Framework | Rails 8.1 (8.1.3 no lock) |
+| Framework | Rails 8.1 (8.1.4.1 no lock) |
 | Banco de dados | PostgreSQL (versão a confirmar) |
 | Frontend | Hotwire (Turbo + Stimulus) via importmap-rails; assets via Propshaft |
 | CSS | `stylesheet_link_tag :app` carrega em **todas** as páginas tudo o que está em `app/assets/**/*.css` (glob do Propshaft): CSS escrito à mão em `app/assets/stylesheets/` (`landing.css`, `studio.css`, `studio_app.css`, `studio_identity.css`) + Tailwind CSS 4 (`tailwindcss-rails`, entrada em `app/assets/tailwind/application.css`, classes utilitárias ainda aparecem em views de `lyrics/`, `order_chat/`, `orders/`, `music_preview/` e `pages/`). A fatia 1 do redesign unifica o CSS |
@@ -28,8 +28,8 @@ Conferida em `Gemfile`, `Gemfile.lock`, `config/`, `Dockerfile` e `layouts/appli
 | Cache / Cable | Solid Cache e Solid Cable (Gemfile) |
 | Pagamento | Stripe Checkout + webhooks (gem `stripe` 13) |
 | Storage | ActiveStorage com serviço Disk (`config/storage.yml` só tem `local` e `test`). Cloudflare R2 é planejado (ROADMAP, M-4), não configurado |
-| Email | Mailers do Devise; provedor de produção não configurado (Postmark/Resend não estão no Gemfile) |
-| Áudio e vídeo | FFmpeg/ffprobe e ImageMagick no servidor (instalados no `Dockerfile`); vídeo MP4 720x1280, H.264 + AAC, até 30 s |
+| Email | Mailers do Devise e ApplicationMailer; Resend via SMTP/TLS em produção, configurada por `RESEND_API_KEY`, `MAILER_FROM` e `APP_HOST` (sem gem extra). Conta, domínio verificado e teste de entrega ainda precisam ser ativados |
+| Áudio e vídeo | FFmpeg/ffprobe e ImageMagick no servidor (instalados no `Dockerfile`); vídeo MP4 720x1280, H.264 + AAC, duração ajustável até a música inteira (padrão 30 s) |
 | AI — Letras | Mureka `POST /v1/lyrics/generate` (`LyricsGenerator::MurekaLyricsClient`), na geração inicial e na reescrita |
 | AI — Música | Mureka `POST /v1/song/generate`, modelo `mureka-9`, `n: 2` (`Campaigns::MusicRounds::MODEL`) |
 | AI — Chat (LEGADO) | `ConversationalBriefingService` via `LyricsGenerator::ClaudeClient`, que chama a OpenAI `gpt-4o-mini` (gem `ruby-openai`, `OPENAI_API_KEY`). O nome da classe é herdado: não há Anthropic no Gemfile |
@@ -70,7 +70,7 @@ As pranchas são HTML/CSS estáticos que **não rodam sozinhos**: dependem do `s
 - Reproduzir tokens, proporções, estados (hover, focus, disabled, erro, vazio) e movimento conforme a prancha
 - Adaptar a sintaxe para ERB + CSS do app + Stimulus, mantendo fidelidade visual
 - Cores só como variável CSS `--jp-*`; nada de cor escrita à mão
-- Textos e números do protótipo ("R$ 79", "3 rodadas", "20 ajustes", "28 s") **não são fixos**: vêm de `campaign_price`, `Campaigns::MusicRounds::LIMIT`, `config/brands.yml` (`tiers.starter.lyrics_regen_limit`) e da duração real do áudio (máximo `Campaigns::AudioPreview::MAX_DURATION`)
+- Textos e números do protótipo ("R$ 79", "3 rodadas", "20 ajustes", "28 s") **não são fixos**: vêm de `campaign_price`, `Campaigns::MusicRounds::LIMIT`, `config/brands.yml` (`tiers.starter.lyrics_regen_limit`) e da duração escolhida do áudio (`Campaigns::AudioPreview::DEFAULT_DURATION` como padrão, até a música inteira)
 
 **Uso pelo `frontend-analyzer`:**
 - Comparar o render real (via Playwright) com a prancha correspondente e validar fidelidade visual, contraste, foco visível e `prefers-reduced-motion` antes do merge
@@ -183,7 +183,7 @@ end
 - O layout renderiza `<html lang="pt-BR">` quando `I18n.locale == :pt`. Campanhas são criadas com `locale: "pt"` e `currency` vinda de `brands.yml` (BRL). `Order::CURRENCIES` ainda aceita EUR para pedidos antigos.
 - Vestígios que ainda existem: `config.i18n.available_locales` (it, en, es, fr, de, pt), `supported_locales` e `hosts` em `brands.yml`, e `config/locales/brands/b2b/{de,en,es,fr,it}.yml` (sem `pt`). `Order` valida `locale` contra `supported_locales`.
 - `t_brand(key)` (em `ApplicationHelper`) tenta `brands.<current_brand>.<key>` e cai na chave global. Hoje só o wizard legado (`orders/wizard/step_1`) o usa; textos novos da campanha ficam em `config/locales/campaign_pt.yml` ou nas views.
-- Preços e limites vêm de `config/brands.yml` — **nunca hardcoded**. A campanha usa `campaign_tier: starter`: `price_cents: 7900` (R$ 79), `lyrics_regen_limit: 20`, `music_regen_limit: 2`. O limite efetivo de rodadas de música da campanha é `Campaigns::MusicRounds::LIMIT` (3), não `music_regen_limit`. O tier `pro` (stems, soundtrack) é LEGADO.
+- Preços e limites vêm de `config/brands.yml` — **nunca hardcoded**. A campanha usa `campaign_tier: starter`: `price_cents: 2990` (R$ 29,90), `lyrics_regen_limit: 20`, `music_regen_limit: 2`. O limite efetivo de rodadas de música da campanha é `Campaigns::MusicRounds::LIMIT` (3), não `music_regen_limit`. O tier `pro` (stems, soundtrack) é LEGADO.
 - Para exibir o preço, use `campaign_price(order = nil)` (`ApplicationHelper`): usa `order.price_cents` quando há pedido (preço congelado na compra) e o `starter` atual caso contrário.
 
 ### State machine (AASM)
@@ -199,7 +199,7 @@ end
 
 ### Jobs (Solid Queue)
 - Regra: exponential backoff, máx 5 tentativas; ao esgotar, o status vai para `_failed` e o admin é notificado por email
-- Estado atual: só `ArchiveCampaignAudioJob` e `PrepareCampaignAudioJob` declaram `retry_on` (`:polynomially_longer`, 3 tentativas). A geração musical usa recuperação própria (`RecoverCampaignMusicJob`, agendado a cada minuto em `config/recurring.yml`, só em `production`). `Order#notify_admin` apenas registra em log: **não há email ao admin**
+- Estado atual: `ArchiveCampaignAudioJob` e `PrepareCampaignAudioJob` têm 3 tentativas; `StripeWebhookProcessorJob` tem 5 e worker próprio na fila `webhooks`. A geração musical usa `RecoverCampaignMusicJob`. `RecoverInterruptedCampaignJobsJob` recupera letras/vídeos sem atualização há 30 minutos, sem reenviar chamadas de IA já iniciadas. Ambos rodam a cada minuto em produção. `Order#notify_admin` registra log e alerta Sentry quando há DSN; **não há email ao admin**
 - Em development o adapter é `:async` (sem worker separado); em production é `:solid_queue` e exige workers e scheduler rodando
 
 ### Stripe

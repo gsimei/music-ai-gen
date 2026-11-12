@@ -14,6 +14,7 @@ class RenderCampaignVideoJob < ApplicationJob
     broadcast(campaign)
   rescue StandardError => error
     Rails.logger.error("[Campaign video #{campaign_id}] #{error.class}: #{error.message}")
+    Sentry.capture_exception(error, tags: { campaign_id: campaign_id })
     campaign&.update!(video_status: "failed", video_error: "Não conseguimos montar o vídeo. Sua música está salva. Tente novamente.")
     broadcast(campaign) if campaign
   ensure

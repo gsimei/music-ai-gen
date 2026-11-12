@@ -8,6 +8,15 @@
 class StripeWebhookProcessorJob < ApplicationJob
   queue_as :webhooks
 
+  retry_on StandardError, wait: :polynomially_longer, attempts: 5 do |job, error|
+    event = StripeEvent.find_by(id: job.arguments.first)
+    event&.with_lock { event.update!(status: "failed") unless event.processed? }
+    Rails.logger.error "[StripeWebhookProcessorJob] retries exhausted event=#{job.arguments.first} error=#{error.class}"
+    Sentry.capture_exception(error)
+  end
+
+  discard_on ActiveRecord::RecordNotFound
+
   discard_on ActiveJob::DeserializationError do |job, error|
     Rails.logger.error "[StripeWebhookProcessorJob] DeserializationError — discarding: #{error.message}"
   end
@@ -25,15 +34,19 @@ class StripeWebhookProcessorJob < ApplicationJob
 
     stripe_event.increment!(:attempt_count)
 
-    handler_class = HANDLER_MAP[stripe_event.event_type]
-    raise "No handler for event type: #{stripe_event.event_type}" unless handler_class
+    stripe_event.with_lock do
+      return if stripe_event.processed?
 
-    result = handler_class.call(stripe_event: stripe_event)
+      handler_class = HANDLER_MAP[stripe_event.event_type]
+      raise "No handler for event type: #{stripe_event.event_type}" unless handler_class
 
-    if result.success?
-      stripe_event.update!(status: "processed", processed_at: Time.current)
-    else
-      raise "Handler failed: #{Array(result.errors).join(', ')}"
+      result = handler_class.call(stripe_event: stripe_event)
+
+      if result.success?
+        stripe_event.update!(status: "processed", processed_at: Time.current)
+      else
+        raise "Handler failed: #{Array(result.errors).join(', ')}"
+      end
     end
   end
 end

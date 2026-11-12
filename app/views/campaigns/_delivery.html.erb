@@ -3,9 +3,11 @@
     data-controller="creation-status" data-creation-status-url-value="<%= status_campaign_path(campaign) %>" data-creation-status-version-value="<%= campaign.video_status %>"
   <% end %>>
   <% if campaign.video_status == "ready" && campaign.video.attached? %>
-    <div class="campaign-video"><video controls playsinline preload="metadata" poster="<%= rails_blob_path(campaign.poster) if campaign.poster.attached? %>" aria-label="Vídeo da promoção de <%= campaign.business_name %>"><source src="<%= download_campaign_path(campaign, preview: 1) %>" type="video/mp4"></video></div>
-    <div class="campaign-card"><p class="studio-kicker">PODE DAR O PLAY. E POSTAR.</p><h2>Sua campanha está pronta.</h2><p>Seu vídeo tem até 30 segundos, com encerramento suave. Baixe no celular e publique no Reels ou Status do WhatsApp.</p><%= link_to "Baixar vídeo MP4", download_campaign_path(campaign), class: "studio-button studio-button-green", data: { turbo: false } %>
-      <% asset = approved_music_asset(campaign.order) %><% if asset&.playback_url.present? %><%= link_to "Baixar música MP3", asset.playback_url, class: "studio-text-link", target: "_blank", rel: "noopener", download: true %><% end %>
+    <div class="campaign-video"><video controls playsinline preload="metadata" poster="<%= rails_blob_path(campaign.poster) if campaign.poster.attached? %>" aria-label="Vídeo: <%= campaign.title %>"><source src="<%= download_campaign_path(campaign, preview: 1) %>" type="video/mp4"></video></div>
+    <% asset = approved_music_asset(campaign.order) %>
+    <% duration = campaign.video.blob.metadata['duration_seconds'] || (asset.campaign_audio.blob.metadata['duration_seconds'] if asset&.campaign_preview_ready?) %>
+    <div class="campaign-card"><p class="studio-kicker">PODE DAR O PLAY. E POSTAR.</p><h2>Sua campanha está pronta.</h2><p>Seu vídeo<%= " de #{campaign_media_time(duration)}" if duration %> está pronto, com encerramento suave. Baixe no celular e publique nas suas redes.</p><%= link_to "Baixar vídeo MP4", download_campaign_path(campaign), class: "studio-button studio-button-green", data: { turbo: false } %>
+      <% if asset&.playback_url.present? %><%= link_to "Baixar música MP3", asset.playback_url, class: "studio-text-link", target: "_blank", rel: "noopener", download: true %><% end %>
       <div class="studio-field" data-controller="campaign-form"><label for="campaign-caption-<%= campaign.id %>">Legenda sugerida para a publicação</label><textarea id="campaign-caption-<%= campaign.id %>" rows="5" readonly data-campaign-form-target="caption"><%= campaign.caption %></textarea><button type="button" class="studio-button studio-button-outline" data-action="campaign-form#copy">Copiar legenda</button></div>
       <%= link_to "Criar outra promoção", new_order_path, class: "studio-text-link" %>
     </div>

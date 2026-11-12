@@ -22,29 +22,20 @@ module ::Stripe
       event = verify_signature!
       return failure_result("invalid_signature") unless event
 
-      # Idempotency: already handled
-      existing = StripeEvent.find_by(stripe_event_id: event.id)
-      if existing&.processed? || existing&.skipped?
-        return success_result(:already_processed)
-      end
+      stripe_event = find_or_create_event(event)
+      # Use the same row lock as the processor: a redelivery must recheck the
+      # committed status after waiting, never reopen a processed event.
+      stripe_event.with_lock do
+        return success_result(:already_processed) if stripe_event.processed? || stripe_event.skipped?
 
-      if HANDLED_EVENTS.include?(event.type)
-        stripe_event = find_or_initialize_event(event)
-        stripe_event.update!(
-          status:     "pending",
-          event_type: event.type,
-          payload:    event.as_json
-        )
-        StripeWebhookProcessorJob.perform_later(stripe_event.id)
-        success_result(:enqueued)
-      else
-        stripe_event = find_or_initialize_event(event)
-        stripe_event.update!(
-          status:     "skipped",
-          event_type: event.type,
-          payload:    event.as_json
-        )
-        success_result(:skipped)
+        if HANDLED_EVENTS.include?(event.type)
+          stripe_event.update!(status: "pending")
+          StripeWebhookProcessorJob.perform_later(stripe_event.id)
+          success_result(:enqueued)
+        else
+          stripe_event.update!(status: "skipped")
+          success_result(:skipped)
+        end
       end
     rescue ::Stripe::SignatureVerificationError => e
       Rails.logger.warn "[WebhookHandler] Invalid signature: #{e.message}"
@@ -63,8 +54,14 @@ module ::Stripe
       nil
     end
 
-    def find_or_initialize_event(event)
-      StripeEvent.find_or_initialize_by(stripe_event_id: event.id)
+    def find_or_create_event(event)
+      StripeEvent.find_or_create_by!(stripe_event_id: event.id) do |record|
+        record.assign_attributes(status: "pending", event_type: event.type, payload: event.as_json)
+      end
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+      # Concurrent first deliveries can collide at either the unique index or
+      # the uniqueness validation. Only use an actually persisted canonical row.
+      StripeEvent.find_by!(stripe_event_id: event.id)
     end
   end
 end
