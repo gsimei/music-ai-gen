@@ -1,0 +1,13 @@
+pt:
+  devise:
+    mailer:
+      reset_password_instructions:
+        subject: "Crie uma nova senha"
+      confirmation_instructions:
+        subject: "Confirme seu e-mail"
+      unlock_instructions:
+        subject: "Recupere o acesso à sua conta"
+      email_changed:
+        subject: "Alteração no e-mail da sua conta"
+      password_change:
+        subject: "Sua senha foi alterada"

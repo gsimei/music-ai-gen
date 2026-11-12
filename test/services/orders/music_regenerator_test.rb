@@ -44,7 +44,7 @@ class Orders::MusicRegeneratorTest < ActiveSupport::TestCase
   test "enqueues GenerateMusicJob with order.id on success" do
     order = orders(:b2b_preview_ready)
 
-    assert_enqueued_with(job: GenerateMusicJob, args: [order.id]) do
+    assert_enqueued_with(job: GenerateMusicJob, args: [ order.id ]) do
       Orders::MusicRegenerator.call(order: order, melody_hint: nil)
     end
   end

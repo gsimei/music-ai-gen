@@ -1,4 +1,4 @@
-<% content_for :title, "Minha conta · JinglePro" %>
+<% content_for :title, "Minha conta · #{brand_name}" %>
 <%= render layout: "users/shared/studio_auth" do %>
   <h1>Minha conta</h1><p class="studio-form-intro">Atualize seu e-mail ou sua senha.</p>
   <%= form_for resource, as: resource_name, url: registration_path(resource_name), html: { method: :put } do |f| %>

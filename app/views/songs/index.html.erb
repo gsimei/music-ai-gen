@@ -1,4 +1,4 @@
-<% content_for :title, "JinglePro · Minhas campanhas" %>
+<% content_for :title, "#{brand_name} · Minhas campanhas" %>
 <% content_for :body_class, "studio-page" %>
 <div class="studio-home studio-app studio-library">
   <%= render "shared/studio_header" %>
@@ -29,8 +29,8 @@
             <div class="studio-track-info">
               <p class="jp-status <%= 'jp-status-error' if order.status.end_with?("failed") || order.campaign&.video_status == "failed" %>"><%= campaign_status_label(order) %></p>
               <p class="studio-kicker"><%= order.reference %> <span> / <%= order.updated_at.strftime("%d.%m.%Y") %></span></p>
-              <h2><%= order.campaign&.business_name.presence || order.briefing&.about.presence&.truncate(80) || "Sua campanha" %></h2>
-              <% if order.campaign %><p class="jp-library-offer"><%= order.campaign.offer %></p><% end %>
+              <h2><%= order.campaign&.title || order.briefing&.about.presence&.truncate(80) || "Sua campanha" %></h2>
+              <% if order.campaign %><p class="jp-library-offer campaign-offer-text"><%= order.campaign.display_offer %></p><% end %>
               <div class="studio-track-tags"><span><%= order.campaign&.sound_summary.presence || "Música personalizada" %></span><% if order.briefing&.language.present? %><span><%= order.briefing.language.upcase %></span><% end %><span>Opção <%= order.approved_variant&.upcase || "em criação" %></span></div>
               <% if audio_url.present? %>
                 <audio controls preload="none" aria-label="Ouvir <%= order.reference %>"><source src="<%= audio_url %>" type="audio/mpeg"></audio>

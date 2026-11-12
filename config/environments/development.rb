@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../../lib/resend_mail_settings"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -39,6 +40,15 @@ Rails.application.configure do
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+
+  # Real delivery is opt-in; simply having a key must not send development mail.
+  if ENV["MAIL_DELIVERY_METHOD"] == "resend"
+    mail = ResendMailSettings.load
+    config.x.mailer_from = mail.mailer_from
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = mail.smtp_settings
+    config.action_mailer.raise_delivery_errors = true
+  end
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

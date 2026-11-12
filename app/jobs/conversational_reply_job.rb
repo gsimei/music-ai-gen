@@ -45,7 +45,7 @@ class ConversationalReplyJob < ApplicationJob
 
     order.reload
     if order.campaign && (order.preview_ready? || order.music_failed?)
-      feedback = result.value[:revision_feedback].presence || (order.briefing_messages.where(role: "user").last(5).map(&:content) + [message]).uniq.join("\n")
+      feedback = result.value[:revision_feedback].presence || (order.briefing_messages.where(role: "user").last(5).map(&:content) + [ message ]).uniq.join("\n")
       revision = if result.value[:ready] == true && result.value[:revision_target] == "lyrics"
         Orders::LyricsRegenerator.call(order: order, user_feedback: feedback)
       elsif result.value[:generate_music] == true && result.value[:revision_target] == "music"
@@ -79,7 +79,7 @@ class ConversationalReplyJob < ApplicationJob
         html:   ""
       )
     elsif result.value[:ready] && order.lyrics_ready?
-      feedback = result.value[:revision_feedback].presence || (order.briefing_messages.where(role: "user").last(5).map(&:content) + [message]).uniq.join("\n")
+      feedback = result.value[:revision_feedback].presence || (order.briefing_messages.where(role: "user").last(5).map(&:content) + [ message ]).uniq.join("\n")
       Orders::LyricsRegenerator.call(order: order, user_feedback: feedback)
       OrderChatBroadcaster.call(order)
     elsif result.value[:generate_music] && !result.value[:ready]

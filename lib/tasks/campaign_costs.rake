@@ -9,13 +9,13 @@ namespace :campaigns do
       events = order.generation_costs
       api = events.where.not(provider: "local")
       renders = events.where(operation: "video_render").to_a
-      emit.call([campaign.id, order.reference, order.price_cents / 100.0, order.completed_music_rounds, events.count,
+      emit.call([ campaign.id, order.reference, order.price_cents / 100.0, order.completed_music_rounds, events.count,
         api.exists? ? api.sum(:estimated_brl).to_f.round(4) : nil, api.exists? ? api.where(status: "uncertain").sum(:estimated_brl).to_f.round(4) : nil,
         api.where(status: "unpriced").count, renders.sum { |event| event.usage["wall_seconds"].to_f }.round(3),
         campaign.video.attached? ? campaign.video.blob.byte_size : 0,
         order.music_generations.where.not(id: events.where.not(music_generation_id: nil).select(:music_generation_id)).count,
         events.minimum(:created_at)&.iso8601,
-        events.where(operation: "audio_preview").sum { |event| event.usage["wall_seconds"].to_f }.round(3)])
+        events.where(operation: "audio_preview").sum { |event| event.usage["wall_seconds"].to_f }.round(3) ])
     end
   end
 end

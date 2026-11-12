@@ -8,7 +8,7 @@ Spec Técnico — Plataforma de Geração de Música com AI
 
 O lojista informa a oferta do negócio e envia até 5 fotos, paga uma vez via Stripe Checkout, revisa e edita a letra, escolhe entre 2 músicas por rodada (até 3 rodadas) e recebe um vídeo vertical 9:16 (MP4) + a música em MP3 + uma legenda sugerida. Mercado: Brasil, interface em pt-BR, moeda BRL, pagamento único, sem assinatura.
 
-- **Preço:** R$ 79 hoje. Vem de `config/brands.yml` (`b2b.campaign_tier: starter` → `tiers.starter.price_cents: 7900`, `currency: BRL`) e é exibido por `campaign_price`. Nunca hardcoded. `CampaignsController#create` copia `price_cents`, `currency`, `lyrics_regen_limit` e `music_regen_limit` para o `Order`; mudar o YAML não altera pedidos existentes.
+- **Preço:** R$ 29,90 hoje. Vem de `config/brands.yml` (`b2b.campaign_tier: starter` → `tiers.starter.price_cents: 2990`, `currency: BRL`) e é exibido por `campaign_price`. Nunca hardcoded. `CampaignsController#create` copia `price_cents`, `currency`, `lyrics_regen_limit` e `music_regen_limit` para o `Order`; mudar o YAML não altera pedidos existentes.
 - **Marca:** existe uma só, com identificador interno `b2b` (nome herdado: é a JinglePro, não um segmento B2B). Ver CLAUDE.md, "Marca e locale".
 - **Arquitetura:** Rails monolito + Hotwire. Sem SPA.
 
@@ -19,10 +19,10 @@ Descreve o código atual (fatia 0 do redesign). Onde o redesign muda o fluxo, a 
 1. **Entrada.** `GET /` (`pages#home`). O CTA vai para `GET /orders/new`, que **não cria pedido**: visitante sem sessão é enviado ao cadastro (`/users/sign_up`) com `/campaigns/new` guardado como destino; usuário logado vai direto para `/campaigns/new`. (Fatia 4: conta e pagamento passam para o passo 3 do Criar.)
 2. **Criar.** `GET /campaigns/new` → `POST /campaigns`. Campos: nome do negócio (até 60 caracteres), oferta (180), contato (70), chamada para ação (40, padrão "Peça pelo WhatsApp"), até 5 fotos (JPG, PNG ou WebP, até 10 MB cada, com ordem escolhida), ritmo (10 opções + "escolher por mim"), voz (automática, feminina ou masculina), clima (`style`: animado, acolhedor ou marcante) e direção adicional (até 240). Cria `Order` em `pending`, `Campaign` e `Briefing` (`Campaign#sync_briefing!`). A edição (`campaigns#edit/update`) só é aceita enquanto o pedido está `pending` e sem `stripe_session_id`.
 3. **Confirmar e pagar.** `GET /campaigns/:id` (pedido `pending`) mostra o resumo e o botão que faz `POST /orders/:id/checkout` → Stripe Checkout (`mode: payment`, cartão, um item "JinglePro — Campanha com música e vídeo"). O pagamento é confirmado pelo webhook `checkout.session.completed` ou pela reconciliação em `campaigns#show` (`Stripe::PaymentReconciler`); ambos chamam `Stripe::CheckoutFulfillment` → `mark_paid!` → `GenerateLyricsJob`. Visitar a URL de sucesso não confirma pagamento. Em development existe `POST /campaigns/:id/test_payment` ("Testar sem cobrança").
-4. **Estúdio.** Hoje renderizado em `/orders/:order_id/chat` (`order_chat#show`, partial `_campaign_studio`); a fatia 3 o reorganiza em 3 fases:
-   - **Fase 1, letra.** A Mureka gera a letra (`LyricsGenerator::Generator` → `MurekaLyricsClient`). O lojista edita à mão (`Campaigns::LyricsEditor`, cria um `LyricsDraft` com `source: "user_edited"`, não gasta rodada nem ajuste) ou pede reescrita por IA (`RewriteCampaignLyricsJob`, consome `lyrics_regen_used` até `lyrics_regen_limit`, 20 hoje). Aprovar a letra leva a `lyrics_approved`.
-   - **Fase 2, músicas.** `Campaigns::MusicRounds` reserva a rodada sob lock e enfileira `GenerateCampaignMusicJob` (Mureka, modelo `mureka-9`, `n: 2`). Cada rodada traz 2 versões (A e B). Cada versão ganha um trecho de até 30 s (`PrepareCampaignAudioJob`) cujo início o lojista pode ajustar antes de aprovar. É possível marcar uma favorita e pedir nova rodada com direção de mudança. Aprovar uma versão de qualquer rodada leva a `approved`.
-   - **Fase 3, vídeo.** `Campaign#queue_video!` → `RenderCampaignVideoJob`: `video_status` vai de `queued` a `rendering` e termina em `ready` ou `failed`.
+4. **Estúdio.** Renderizado em `/orders/:order_id/chat` (`order_chat#show`). As fases 1 e 2 compartilham o mesmo ambiente **Letra e música**; a preparação do vídeo aparece após escolher uma música.
+   - **Letra e música.** A letra inicial pode ser editada diretamente ou reescrita com IA. Um único formulário (`Campaigns::CreationChanges`) salva letra e estilo juntos e permite salvar, reescrever ou gerar duas músicas. As alterações são aplicadas de forma atômica; uma solicitação inválida não salva apenas parte do formulário. Editar à mão não consome geração musical; reescritas mantêm o limite próprio. Após ouvir, o lojista pode mudar novamente a letra e o som enquanto houver gerações disponíveis. Cada par conserva o texto usado na sua criação.
+   - **Escolha.** Os players vêm primeiro, com amostras protegidas identificadas. O painel “Quero ajustar a letra ou a música” e as opções anteriores ficam recolhidos. Não há favorito na interface. “Usar esta música” guarda `Campaign#selected_music_asset_id`, sem aprovar nem iniciar renderização, e abre a preparação do vídeo. A seleção pode ser desfeita para voltar à letra e às músicas.
+   - **Vídeo.** A pessoa confere a imagem de abertura sugerida e o trecho exato, podendo ajustar fotos, logo, contato, duração e início. Só “Gerar meu vídeo” aprova a música, fixa a letra correspondente e chama `Campaign#queue_video!` → `RenderCampaignVideoJob`. A seleção faz parte de `video_revision`, evitando finalizar uma composição de uma aba desatualizada. O vídeo passa de `queued` a `rendering` e termina em `ready` ou `failed`.
 5. **Entrega.** `campaigns/_delivery` mostra o vídeo, o link `GET /campaigns/:id/download` (MP4), o MP3 da versão aprovada e a legenda sugerida (`Campaign#caption`). `GET /campaigns/:id/status` serve o polling enquanto o vídeo é montado.
 6. **Biblioteca.** `GET /songs` (`songs#index`) lista as campanhas do usuário. Ver 0.4.
 
@@ -34,7 +34,7 @@ Descreve o código atual (fatia 0 do redesign). Onde o redesign muda o fluxo, a 
 | Versões por rodada | 2 | `n: 2` em `MusicRounds` |
 | Modelo musical | `mureka-9` | `Campaigns::MusicRounds::MODEL` |
 | Reescritas de letra por IA | 20 | `brands.yml`, `tiers.starter.lyrics_regen_limit`, copiado para `orders.lyrics_regen_limit` |
-| Edições manuais da letra | sem limite (até 5.000 caracteres) | `Campaigns::LyricsEditor` |
+| Edições manuais da letra | até 5.000 caracteres por edição; disponíveis no estúdio enquanto houver gerações musicais | `Campaigns::CreationChanges` / `Campaigns::LyricsEditor` |
 | Fotos por campanha | até 5, 10 MB cada | validações de `Campaign` |
 | Trecho de áudio / vídeo | até 30 s | `Campaigns::AudioPreview::MAX_DURATION` |
 | Vídeo | MP4 720x1280, 24 fps, H.264 + AAC | `Campaigns::VideoRenderer` |
@@ -44,6 +44,8 @@ Falhas de geração não consomem rodada: só uma rodada com 2 músicas válidas
 
 ### 0.4 Mapeamento de estados: Order + `video_status` → estúdio e Biblioteca
 
+Quando `Campaign#selected_music_asset_id` está preenchido e o pedido ainda não foi aprovado, o estúdio mostra a preparação do vídeo e a Biblioteca mostra “Prepare seu vídeo”. O estado do pedido continua `preview_ready` (ou `music_failed` se a pessoa escolheu uma música anterior após uma falha).
+
 `Order::STATUSES` tem 13 valores. O vídeo tem estado próprio em `campaigns.video_status` (`pending`, `queued`, `rendering`, `ready`, `failed`). O estado `approved` **não basta** para saber se a campanha está pronta: sempre cruze com `video_status`.
 
 | `Order.status` | `video_status` | Fase do estúdio | Estado na Biblioteca |
@@ -52,10 +54,10 @@ Falhas de geração não consomem rodada: só uma rodada com 2 músicas válidas
 | `payment_failed` | `pending` | Fora do estúdio | **Aguardando pagamento** |
 | `paid` | `pending` | Fase 1 de 3, "preparando a letra" | **Em criação**, fase 1 de 3 |
 | `lyrics_drafting` | `pending` | Fase 1 de 3, "preparando a letra" | **Em criação**, fase 1 de 3 |
-| `lyrics_ready` | `pending` | Fase 1 de 3: revisar, editar, reescrever, aprovar | **Em criação**, fase 1 de 3 |
+| `lyrics_ready` | `pending` | Letra e música: revisar, editar, reescrever e gerar | **Em criação**, fase 1 de 3 |
 | `lyrics_approved` | `pending` | Fase 2 de 3, "criando duas versões" | **Em criação**, fase 2 de 3 |
 | `music_generating` | `pending` | Fase 2 de 3, "criando duas versões" | **Em criação**, fase 2 de 3 |
-| `preview_ready` | `pending` | Fase 2 de 3: ouvir, ajustar corte, favoritar, aprovar ou nova rodada | **Em criação**, fase 2 de 3 |
+| `preview_ready` | `pending` | Letra e música: ouvir, ajustar a letra e o som, gerar novamente ou escolher | **Em criação**, fase 2 de 3 |
 | `approved` | `pending`, `queued` ou `rendering` | Fase 3 de 3, "montando o vídeo" | **Em criação**, fase 3 de 3 |
 | `approved` | `ready` | Entrega ("Campanha pronta") | **Pronta** ("Baixar vídeo" e "Ver campanha") |
 | `approved` | `failed` | Fase 3 de 3, falha do vídeo ("A música está salva"; tentar montar de novo) | **Precisa de atenção** |
@@ -96,14 +98,14 @@ Transições AASM do `Order` (eventos em `app/models/order.rb`): `mark_paid` (`p
 | `POST /campaigns/:id/retry_generation` | `campaigns#retry_generation` | Retentar letra ou música |
 | `GET /campaigns/:id/download` | `campaigns#download` | Baixar o MP4 |
 | `POST /campaigns/:id/save_music_profile` | `campaigns#save_music_profile` | Salvar o som do negócio |
-| `/orders/:order_id/chat/*` | `order_chat#*` | Estúdio atual (letra, rodadas, favorita, trecho). Muda na fatia 3 |
+| `/orders/:order_id/chat/*` | `order_chat#*` | Estúdio atual (letra e música juntas; preparação e geração do vídeo) |
 | `GET /songs` | `songs#index` | Biblioteca |
 
 ### 0.7 LEGADO (código presente, fora do produto)
 
 Não construir nada novo sobre estes itens. A remoção do código morto do chat é a fatia 5 do redesign (ROADMAP).
 
-- **Chat conversacional:** `OrderChatController#create` (`handle_chat_message`), `ConversationalReplyJob`, `ConversationalBriefingService`, `BriefingMessage` (`briefing_messages`) e as views de conversa de `order_chat/`. Esse controller **também hospeda hoje as ações do estúdio** (aprovar e editar letra, rodadas, favorita, trecho, direção musical): elas precisam migrar na fatia 3 antes da remoção. O LLM do chat é a OpenAI `gpt-4o-mini` (classe `LyricsGenerator::ClaudeClient`, nome herdado). Ver seção A.
+- **Chat conversacional:** `OrderChatController#create` (`handle_chat_message`), `ConversationalReplyJob`, `ConversationalBriefingService`, `BriefingMessage` (`briefing_messages`) e as views de conversa de `order_chat/`. Esse controller **também hospeda hoje as ações do estúdio** (editar letra, gerar músicas, escolher, preparar e finalizar vídeo): elas precisam migrar na fatia 3 antes da remoção. O LLM do chat é a OpenAI `gpt-4o-mini` (classe `LyricsGenerator::ClaudeClient`, nome herdado). Ver seção A.
 - **Soundtrack:** `SoundtrackInput`, `SoundtrackInputsController`, `UploadSoundtrackInputToMurekaJob`, `GenerateSoundtrackJob`, `DeleteSoundtrackInputJob`, `Order#start_soundtrack_generation` e o tier `pro` de `brands.yml`. Ver seção B.
 - **Voice cloning:** nunca implementado (não existe model `VoiceUpload`). A seção C e o tier `pro` ficam só como registro; a seção 21 já proíbe a funcionalidade. O catálogo `Voice` **continua em uso** (`Campaign#sync_briefing!` escolhe a voz padrão do briefing).
 - **Wizard de 5 passos:** `orders#wizard_show/wizard_update`, rotas `/orders/wizard/:step`, views `orders/wizard/step_1` a `step_5`, `Orders::WizardSession`, `Orders::StepValidator`, `Orders::CreateDraftService` e os Stimulus `wizard_tier` e `wizard_voice`.
@@ -113,7 +115,7 @@ Não construir nada novo sobre estes itens. A remoção do código morto do chat
 
 | Seção | O que diz | O que o código faz hoje |
 |---|---|---|
-| 1, 3, 4, 18 | Europa, multi-idioma, tiers `standard`/`pro` em € (€29/€59), B2B + B2C | Brasil, pt, BRL; `brands.yml` tem só `b2b` com tiers `starter` (R$ 79) e `pro` (legado); locale efetivo sempre `pt` |
+| 1, 3, 4, 18 | Europa, multi-idioma, tiers `standard`/`pro` em € (€29/€59), B2B + B2C | Brasil, pt, BRL; `brands.yml` tem só `b2b` com tiers `starter` (R$ 29,90) e `pro` (legado); locale efetivo sempre `pt` |
 | 2, 13 | LLM de letras: Anthropic Claude | Letras: só Mureka (`/v1/lyrics/generate`), inicial e reescrita. O único LLM é a OpenAI `gpt-4o-mini`, no chat legado |
 | 2, 15 | Storage em Cloudflare R2, buckets público e privado, signed URLs de 1h | Disk (`config/storage.yml`); download via `campaigns#download`. R2 é meta (ROADMAP, M-4) |
 | 2, 16 | Emails transacionais por brand e locale (Postmark ou Resend) | Só mailers do Devise. `OrderMailer` e o model `EmailDelivery` foram removidos (a tabela `email_deliveries` continua no schema); sem provedor configurado |
@@ -156,7 +158,7 @@ Monitoring: Sentry
 
 3. Modelo de negócio
 
-> **LEGADO / desatualizado.** Preços em €, tiers `standard`/`pro` e fluxo com `delivered` não valem mais. O produto atual (R$ 79, tier `starter` de `config/brands.yml`) está na seção 0. O tier `pro` (soundtrack e voz clonada) é LEGADO.
+> **LEGADO / desatualizado.** Preços em €, tiers `standard`/`pro` e fluxo com `delivered` não valem mais. O produto atual (R$ 29,90, tier `starter` de `config/brands.yml`) está na seção 0. O tier `pro` (soundtrack e voz clonada) é LEGADO.
 
 Marca única: B2B — JinglePro (jinglepro.it / jinglepro.com)
 
@@ -1174,7 +1176,7 @@ POSTMARK_API_TOKEN=    # ou RESEND_API_KEY
 SENTRY_DSN=
 18. Configuração por brand (YAML)
 
-> **LEGADO / desatualizado.** O `config/brands.yml` real só tem a chave `b2b` (sem `b2c`), com `default_locale: pt`, `currency: BRL`, `campaign_tier: starter` e os tiers `starter` (R$ 79; `lyrics_regen_limit: 20`, `music_regen_limit: 2`) e `pro` (legado). O bloco abaixo é o desenho original.
+> **LEGADO / desatualizado.** O `config/brands.yml` real só tem a chave `b2b` (sem `b2c`), com `default_locale: pt`, `currency: BRL`, `campaign_tier: starter` e os tiers `starter` (R$ 29,90; `lyrics_regen_limit: 20`, `music_regen_limit: 2`) e `pro` (legado). O bloco abaixo é o desenho original.
 yaml# config/brands.yml
 b2b:
   hosts: ["jinglepro.it", "jinglepro.com"]

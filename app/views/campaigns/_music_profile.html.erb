@@ -1,6 +1,6 @@
-<% profile = current_user.business_music_profiles.find_by(business_key: BusinessMusicProfile.key_for(campaign.business_name)) %>
+<% profile = current_user.business_music_profiles.find_by(business_key: BusinessMusicProfile.key_for(campaign.business_name)) if campaign.business_name.present? %>
 <% settings = campaign.order.approved? ? campaign.order.approved_music_generation&.request_payload&.dig("sound_settings") : campaign.sound_settings %>
-<% if settings.present? || profile %>
+<% if campaign.business_name.present? && (settings.present? || profile) %>
 <section class="campaign-saved-sound">
   <p class="studio-kicker">O SOM DO SEU NEGÓCIO</p>
   <% if settings.present? %>

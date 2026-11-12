@@ -1,4 +1,4 @@
-<% content_for :title, "JinglePro · Sua campanha" %>
+<% content_for :title, "#{brand_name} · Sua campanha" %>
 <% content_for :body_class, "studio-page" %>
 <%= turbo_stream_from "order_#{@order.id}_chat" %>
 
@@ -7,7 +7,7 @@
      data-creation-status-version-value="<%= @order.creation_version %>">
   <%= render "shared/studio_header" %>
   <%= render "shared/studio_flash" %>
-  <% if @order.campaign %><div class="campaign-chat-banner"><div><strong><%= @order.campaign.business_name %></strong><p>1. Revise a letra → 2. Escolha a música → 3. Baixe o vídeo</p></div><%= link_to "Ver minha campanha", campaign_path(@order.campaign), class: "studio-text-link" %></div><% end %>
+  <% if @order.campaign %><div class="campaign-chat-banner"><div><strong><%= @order.campaign.title %></strong><p>1. Revise a letra → 2. Escolha a música → 3. Baixe o vídeo</p></div><%= link_to "Ver minha campanha", campaign_path(@order.campaign), class: "studio-text-link" %></div><% end %>
   <div class="studio-project-bar"><div><span class="studio-status"></span> SUA CAMPANHA <span class="studio-project-ref"><%= @order.reference %></span></div><span><%= @order.campaign ? "Música + vídeo" : @order.tier.capitalize %></span></div>
   <div class="studio-mobile-panels" aria-label="Etapas da criação">
     <button type="button" aria-pressed="<%= !@order.campaign %>" aria-controls="studio-conversation" data-studio-panels-target="button" data-panel="conversation" data-action="studio-panels#switch">Conversa</button>
@@ -28,7 +28,7 @@
          data-chat-input-target="messages">
       <div id="chat-transcript" class="space-y-3">
       <% if @messages.empty? && @order.campaign %>
-        <div class="campaign-note"><p class="studio-kicker">SEU PEDIDO JÁ ESTÁ AQUI</p><strong><%= @order.campaign.offer %></strong><p>Confira o nome, o preço e as condições na letra antes de aprovar. Você pode pedir ajustes abaixo.</p></div>
+        <div class="campaign-note"><p class="studio-kicker">SEU PEDIDO JÁ ESTÁ AQUI</p><strong class="campaign-offer-text"><%= @order.campaign.display_offer %></strong><p>Confira o nome, o preço e as condições na letra antes de aprovar. Você pode pedir ajustes abaixo.</p></div>
       <% elsif @messages.empty? %>
         <div class="studio-chat-welcome">
           <p class="studio-kicker">VAMOS CRIAR SUA PROMOÇÃO</p>

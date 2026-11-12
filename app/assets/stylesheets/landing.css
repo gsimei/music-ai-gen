@@ -48,10 +48,6 @@ body.landing-page { background: #f6f5ed; }
 .landing-home .lp-stage-footer { position:absolute; bottom:22px; left:25px; right:25px; display:flex; align-items:center; gap:7px; font-size:7px; letter-spacing:.07em; }.landing-home .lp-stage-footer > span:last-child { margin-left:auto; }
 .landing-home .lp-sound-button { position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); border:0; border-radius:30px; padding:11px 15px; white-space:nowrap; background:#d6f36b; color:#173e32; font-size:11px; font-weight:700; box-shadow:0 2px 10px #0003; }
 .landing-home .lp-media-error { font-size:11px; padding:15px; color:white; }
-.landing-home .lp-ticker { background:#d6f36b; color:#173e32; overflow:hidden; padding-block:21px; }
-.landing-home .lp-ticker-track { display:flex; width:max-content; }
-.landing-home .lp-ticker-track > div { display:flex; gap:42px; align-items:center; padding-right:42px; }
-.landing-home .lp-ticker span { font-size:27px; letter-spacing:-1px; font-weight:600; white-space:nowrap; }.landing-home .lp-ticker b { font-size:28px; font-weight:400; }
 .landing-home .lp-showcase { background:#163e32; color:#f6f5ed; --studio-text:#f6f5ed; --studio-muted:#b5c9bc; --studio-line:#426354; }
 .landing-home .studio-width { width:min(1200px,calc(100% - 96px)); }
 .landing-home .studio-examples { padding-block:88px; border:0; }
@@ -105,18 +101,15 @@ body.landing-page { background: #f6f5ed; }
 @keyframes lp-enter { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:translateY(0); } }
 @keyframes lp-drift { from { transform:translateY(0) rotate(var(--tilt)); } to { transform:translateY(-12px) rotate(calc(var(--tilt) + 3deg)); } }
 @keyframes lp-wave { from { transform:scaleY(.5); } to { transform:scaleY(1); } }
-@keyframes lp-marquee { to { transform:translateX(-50%); } }
 @media (prefers-reduced-motion:no-preference) {
   .landing-home[data-motion=on] .lp-title-line { animation:lp-enter .8s cubic-bezier(.2,.7,.2,1) both; }
   .landing-home[data-motion=on] .lp-title-line:nth-child(2) { animation-delay:.1s; }.landing-home[data-motion=on] .lp-title-line:nth-child(3) { animation-delay:.2s; }
   .landing-home[data-motion=on] .lp-photo { animation:lp-drift 5s ease-in-out infinite alternate; }.landing-home .lp-photo-one { --tilt:-14deg; }.landing-home .lp-photo-two { --tilt:12deg; animation-delay:-2s!important; }
   .landing-home[data-motion=on] .lp-soundmark i { animation:lp-wave .8s ease-in-out infinite alternate; }.landing-home .lp-soundmark i:nth-child(2n) { animation-delay:-.4s!important; }.landing-home .lp-soundmark i:nth-child(3) { animation-delay:-.65s!important; }
-  .landing-home[data-motion=on] .lp-ticker-track { animation:lp-marquee 30s linear infinite; }
   .landing-home[data-motion=on] [data-landing-motion-target~=reveal].lp-reveal-pending { opacity:0; transform:translateY(24px); }
   .landing-home [data-landing-motion-target~=reveal] { transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1); }
 }
 .landing-home[data-motion=off] [data-landing-motion-target~=reveal] { opacity:1; transform:none; }
-.landing-home[data-motion=off] .lp-ticker-track { transform:none; }
 @media (max-width:1100px) {
   .landing-home .lp-width,.landing-home .studio-width { width:calc(100% - 64px); }
   .landing-home .lp-nav nav { gap:22px; }.landing-home .lp-hero { gap:26px; }.landing-home h1 { font-size:clamp(58px,7.5vw,82px); }
@@ -130,7 +123,6 @@ body.landing-page { background: #f6f5ed; }
   .landing-home .lp-nav { height:80px; gap:12px; }.landing-home .lp-nav nav { display:none; }.landing-home .studio-logo { font-size:25px; }.landing-home .lp-login { padding:11px 14px; font-size:11px; }.landing-home .lp-nav-actions { gap:8px; }.landing-home .lp-motion-toggle { width:40px; height:40px; }
   .landing-home .lp-hero { grid-template-columns:1fr; padding-block:38px 36px; gap:38px; }.landing-home h1 { font-size:clamp(64px,11.8vw,90px); margin-block:22px; }.landing-home .lp-eyebrow { font-size:9px; }.landing-home .lp-intro { margin-top:24px; font-size:14px; }.landing-home .lp-hero-actions { margin-top:22px; gap:16px; }.landing-home .lp-button { font-size:12px; padding:16px 20px; }.landing-home .lp-price-note { font-size:10px; margin-top:14px; }
   .landing-home .lp-stage { width:min(100%,480px); justify-self:center; height:560px; border-radius:140px 140px 12px 12px; }.landing-home .lp-preview { width:235px; top:73px; }.landing-home .lp-photo-one { left:0; top:130px; }.landing-home .lp-photo-two { right:-5px; bottom:68px; width:115px; }.landing-home .lp-sticker { right:0; top:54px; }.landing-home .lp-stage-label { top:28px; }.landing-home .lp-stage-footer { font-size:7px; }.landing-home .lp-soundmark { height:53px; }
-  .landing-home .lp-ticker { padding-block:16px; }.landing-home .lp-ticker span { font-size:23px; }.landing-home .lp-ticker-track > div { gap:25px; padding-right:25px; }
   .landing-home .studio-examples { padding-block:56px; }.landing-home .studio-section-heading { grid-template-columns:1fr; gap:18px; }.landing-home .studio-section-heading > p:last-child { justify-self:start; font-size:13px; }.landing-home h2 { font-size:clamp(38px,8vw,56px); }
   .landing-home .studio-example-grid { grid-template-columns:1fr; margin-top:32px; gap:38px; }.landing-home .studio-example-featured { grid-template-columns:1fr; gap:26px; padding-top:28px; }.landing-home .studio-example-featured .studio-example-video { width:min(100%,300px); margin-inline:auto; }.landing-home .studio-example-featured .studio-example-copy h3 { font-size:38px; max-width:340px; }.landing-home .studio-example-sequence { gap:7px; }.landing-home .studio-example-sequence span { font-size:9px; }
   .landing-home .studio-example:not(.studio-example-featured) { grid-template-columns: minmax(0,.8fr) minmax(0,1fr); gap:20px; }.landing-home .studio-example:not(.studio-example-featured) h3 { font-size:25px; }.landing-home .studio-example:not(.studio-example-featured) .studio-example-audio { grid-column:1/-1; }.landing-home .studio-example:not(.studio-example-featured) .studio-kicker { font-size:8px; }.landing-home .studio-example-offer { font-size:12px; }.landing-home .studio-example-format { font-size:7px; line-height:1.7; }.landing-home .studio-example-copy > a { font-size:11px; }

@@ -137,6 +137,27 @@ class Stripe::CheckoutBuilderTest < ActiveSupport::TestCase
     assert result.failure?
   end
 
+  test "production checkout return URLs ignore an untrusted caller-supplied host" do
+    original_host = Rails.application.config.x.public_host
+    Rails.application.config.x.public_host = "app.jinglepro.com.br"
+    captured = nil
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_return do |request|
+      captured = URI.decode_www_form(request.body).to_h
+      { status: 200, headers: { "Content-Type" => "application/json" },
+        body: stripe_session_response("cs_production", "https://checkout.stripe.com/pay/test") }
+    end
+    Rails.stub(:env, ActiveSupport::EnvironmentInquirer.new("production")) do
+      result = Stripe::CheckoutBuilder.call(order: @b2b_pending_order, host: "attacker.test:3000")
+      assert result.success?, result.errors.inspect
+    end
+    %w[success_url cancel_url].each do |key|
+      assert_equal "app.jinglepro.com.br", URI(captured.fetch(key)).host
+      assert_equal "https", URI(captured.fetch(key)).scheme
+    end
+  ensure
+    Rails.application.config.x.public_host = original_host
+  end
+
   private
 
   def stub_stripe_checkout_session_create(session_id:, url:)

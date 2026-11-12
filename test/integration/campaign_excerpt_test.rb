@@ -18,8 +18,8 @@ class CampaignExcerptTest < ActionDispatch::IntegrationTest
   test "merchant can request a fractional cut without spending a musical round and must audition the new revision" do
     original = @asset.audio.blob.id
     previous = @asset.campaign_audio.blob.id
-    assert_no_difference ["MusicGeneration.count", "GenerationCost.count"] do
-      assert_enqueued_with(job: PrepareCampaignAudioJob, args: [@asset.id, 1]) { change(10.25) }
+    assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
+      assert_enqueued_with(job: PrepareCampaignAudioJob, args: [ @asset.id, 1 ]) { change(10.25) }
     end
     assert_response :success
     assert_equal BigDecimal("10.25"), @asset.reload.excerpt_start_seconds
@@ -38,7 +38,7 @@ class CampaignExcerptTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid starts and other customers assets cannot change the audio" do
-    [-1, 30.01, "NaN", "Infinity", "", "texto"].each do |invalid|
+    [ -1, 30.01, "NaN", "Infinity", "", "texto" ].each do |invalid|
       change(invalid)
       assert_response :unprocessable_entity
       assert_equal 0, @asset.reload.preview_revision

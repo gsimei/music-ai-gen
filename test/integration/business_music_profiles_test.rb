@@ -13,7 +13,7 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
   end
 
   test "saving an identity and reusing it never copies the old offer or creates a generation" do
-    assert_no_difference ["Order.count", "MusicGeneration.count", "GenerationCost.count"] do
+    assert_no_difference [ "Order.count", "MusicGeneration.count", "GenerationCost.count" ] do
       assert_difference "BusinessMusicProfile.count", 1 do
         post save_music_profile_campaign_path(@campaign)
       end
@@ -31,7 +31,7 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
     assert_select 'textarea[name="campaign[offer]"]', text: ""
     assert_select 'input[name="campaign[contact]"][value]', count: 0
     get new_campaign_path
-    assert_select 'a[href=?]', new_campaign_path(music_profile_id: profile.id)
+    assert_select "a[href=?]", new_campaign_path(music_profile_id: profile.id)
   end
 
   test "same business updates only its own identity and campaign changes remain independent" do
@@ -77,7 +77,7 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     sign_in users(:customer_other)
     get new_campaign_path
-    assert_select 'a[href=?]', new_campaign_path(music_profile_id: profile.id), count: 0
+    assert_select "a[href=?]", new_campaign_path(music_profile_id: profile.id), count: 0
   end
 
   test "legacy approvals without direction snapshots do not silently save a different sound" do
@@ -92,7 +92,7 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
   test "rhythm previews are static assets and require no generation requests" do
     catalog = { "forro" => { url: "/demos/genres/forro-v1.mp3", label: "Forró" } }
     Campaigns::GenreSamples.stub(:catalog, catalog) do
-      assert_no_difference ["MusicGeneration.count", "GenerationCost.count"] do
+      assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
         get new_campaign_path
       end
       assert_select '[data-controller="genre-preview"]'

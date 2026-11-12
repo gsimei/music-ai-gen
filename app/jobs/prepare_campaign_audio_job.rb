@@ -23,7 +23,8 @@ class PrepareCampaignAudioJob < ApplicationJob
         existing_blob.metadata
       else
         asset.audio.blob.open do |source|
-          Campaigns::AudioPreview.render(source: source.path, destination: destination, lyrics_sync: asset.lyrics_sync, start_seconds: asset.excerpt_start_seconds)
+          Campaigns::AudioPreview.render(source: source.path, destination: destination, lyrics_sync: asset.lyrics_sync,
+            start_seconds: asset.excerpt_start_seconds, duration_seconds: asset.excerpt_duration_seconds)
         end
       end
       Campaigns::AudioAudition.render(source: destination, destination: audition_path,

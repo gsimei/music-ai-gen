@@ -185,5 +185,4 @@ class UserTest < ActiveSupport::TestCase
     assert_not_nil reflection
     assert_equal "RefundRequest", reflection.options[:class_name]
   end
-
 end

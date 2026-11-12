@@ -97,7 +97,7 @@ class StripeWebhookProcessorJobTest < ActiveJob::TestCase
 
     assert_raises(RuntimeError) do
       Stripe::Handlers::PaymentIntentFailed.stub(:call, ->(_args) { failure }) do
-        StripeWebhookProcessorJob.perform_now(event.id)
+        StripeWebhookProcessorJob.new.perform(event.id)
       end
     end
   end
@@ -107,7 +107,7 @@ class StripeWebhookProcessorJobTest < ActiveJob::TestCase
 
     assert_raises(RuntimeError) do
       Stripe::Handlers::ChargeRefunded.stub(:call, ->(_args) { raise "unexpected error" }) do
-        StripeWebhookProcessorJob.perform_now(event.id)
+        StripeWebhookProcessorJob.new.perform(event.id)
       end
     end
 
@@ -127,7 +127,40 @@ class StripeWebhookProcessorJobTest < ActiveJob::TestCase
     event.update_columns(status: "pending")
 
     assert_raises(StandardError) do
-      StripeWebhookProcessorJob.perform_now(event.id)
+      StripeWebhookProcessorJob.new.perform(event.id)
     end
+  end
+
+  test "a transient failure schedules a retry on the served webhook queue" do
+    event = stripe_events(:payment_failed_event)
+    Stripe::Handlers::PaymentIntentFailed.stub(:call, ->(*) { raise "temporary failure" }) do
+      assert_enqueued_with(job: StripeWebhookProcessorJob, args: [ event.id ], queue: "webhooks") do
+        StripeWebhookProcessorJob.perform_now(event.id)
+      end
+    end
+    assert event.reload.pending?
+  end
+
+  test "retry exhaustion marks the event failed for operational review" do
+    event = stripe_events(:payment_failed_event)
+    job = StripeWebhookProcessorJob.new(event.id)
+    job.executions = 4
+    job.exception_executions = { "[StandardError]" => 4 }
+    Stripe::Handlers::PaymentIntentFailed.stub(:call, ->(*) { raise "persistent failure" }) do
+      assert_no_enqueued_jobs { job.perform_now }
+    end
+    assert event.reload.failed?
+  end
+
+  test "a late exhausted retry cannot overwrite another worker's processed event" do
+    event = stripe_events(:payment_failed_event)
+    stale = StripeEvent.find(event.id)
+    event.update!(status: "processed", processed_at: Time.current)
+    job = StripeWebhookProcessorJob.new(event.id)
+    job.exception_executions = { "[StandardError]" => 4 }
+    StripeEvent.stub(:find_by, stale) do
+      job.stub(:perform, ->(*) { raise "late failure" }) { job.perform_now }
+    end
+    assert event.reload.processed?
   end
 end

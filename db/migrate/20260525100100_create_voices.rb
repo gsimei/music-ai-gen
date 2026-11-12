@@ -19,7 +19,7 @@ class CreateVoices < ActiveRecord::Migration[8.1]
       t.string :avatar_url
 
       t.integer :min_tier, default: 0              # 0 = standard, 1 = pro only
-      t.string :allowed_brands, array: true, default: ["b2b", "b2c"]
+      t.string :allowed_brands, array: true, default: [ "b2b", "b2c" ]
 
       t.integer :display_order, default: 0
       t.boolean :active, default: true, null: false
@@ -28,7 +28,7 @@ class CreateVoices < ActiveRecord::Migration[8.1]
     end
 
     # PG permite múltiplos NULLs em unique index — correto para external_id nullable
-    add_index :voices, [:provider, :external_id], unique: true
+    add_index :voices, [ :provider, :external_id ], unique: true
     add_index :voices, :slug, unique: true
     add_index :voices, :active
     add_index :voices, :display_order

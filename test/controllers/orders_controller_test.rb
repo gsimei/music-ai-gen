@@ -461,7 +461,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:customer_b2b)
     order = orders(:b2b_preview_ready)
 
-    assert_enqueued_with(job: GenerateMusicJob, args: [order.id]) do
+    assert_enqueued_with(job: GenerateMusicJob, args: [ order.id ]) do
       post regenerate_music_order_path(order), params: { melody_hint: "More drums" }
     end
   end

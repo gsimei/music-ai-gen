@@ -32,7 +32,7 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid choices cannot create a paid campaign" do
-    assert_no_difference ["Campaign.count", "Order.count"] do
+    assert_no_difference [ "Campaign.count", "Order.count" ] do
       post campaigns_path, params: { campaign: @campaign.attributes.slice("business_name", "offer", "contact", "call_to_action", "style").merge(
         musical_genre: "unknown", vocal_gender: "invalid", music_notes: "x" * 241) }
     end
@@ -41,7 +41,7 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
 
   test "saved direction controls the first paid API request and does not spend a round on save" do
     before = @order.creation_version
-    assert_no_difference ["MusicGeneration.count", "GenerationCost.count", "LyricsDraft.count"] do
+    assert_no_difference [ "MusicGeneration.count", "GenerationCost.count", "LyricsDraft.count" ] do
       patch order_chat_sound_settings_path(order_id: @order.id), params: { campaign: {
         musical_genre: "forro", vocal_gender: "female", style: "animado", music_notes: "Sanfona em destaque", model: "mureka-9.5" } }, headers: @headers
     end

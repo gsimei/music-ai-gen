@@ -1,0 +1,16 @@
+<section class="creative-video-appearance" aria-labelledby="video-appearance-heading">
+  <h2 id="video-appearance-heading">Aparência do vídeo</h2>
+  <details id="video-appearance" class="creative-details">
+    <summary>Ajustar nome, logo e faixa · <%= order.campaign.show_cta? ? "com contato" : "sem faixa" %></summary>
+    <%= form_with model: order.campaign, url: order_chat_video_appearance_path(order_id: order.id), method: :patch, multipart: true,
+      data: { controller: "campaign-form", turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" } do |f| %>
+      <%= hidden_field_tag :video_revision, order.campaign.video_revision %>
+      <%= render "campaigns/brand_fields", f: f %>
+      <div class="campaign-brand-sample" data-campaign-form-target="brandSample" <%= "hidden" if order.campaign.business_name.blank? && !order.campaign.logo.attached? %>><%= render "campaigns/brand_preview", campaign: order.campaign %></div>
+      <%= render "campaigns/cta_fields", f: f %>
+      <div class="campaign-cta-sample"><%= render "campaigns/cta_preview", campaign: order.campaign %></div>
+      <button type="submit" class="studio-button studio-button-outline">Salvar aparência do vídeo</button>
+      <p class="studio-field-hint">Ajusta apenas o visual. O nome cantado na música e a letra continuam iguais, sem gastar uma rodada.</p>
+    <% end %>
+  </details>
+</section>

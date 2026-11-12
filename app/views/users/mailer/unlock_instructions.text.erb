@@ -1,0 +1,7 @@
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
+Olá!
+
+O acesso à sua conta na <%= product_name %> foi bloqueado temporariamente após várias tentativas de entrada sem sucesso.
+
+Desbloqueie sua conta para voltar às suas campanhas:
+<%= unlock_url(@resource, unlock_token: @token) %>

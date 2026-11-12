@@ -5,7 +5,7 @@ module SampleRequestDiagnostics
     response = super
     if response.code.to_i != 200
       body = JSON.parse(response.body) rescue {}
-      puts({http_status: response.code, error: body['error']}.to_json)
+      puts({ http_status: response.code, error: body['error'] }.to_json)
       $stdout.flush
     end
     response
@@ -52,7 +52,7 @@ end
       Campaigns::AudioDownload.call(choice.fetch(:url), source)
       total = Float(Campaigns::MediaCommand.run!('ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', source))
       start = Campaigns::AudioExcerpt.start_seconds(lyrics_sync: { 'sections' => choice[:lyrics_sections] || [] }, track_duration: total)
-      duration = [12.0, total - start].min
+      duration = [ 12.0, total - start ].min
       destination = Rails.root.join('public/demos/genres', "#{key}-v1.mp3")
       temporary = destination.sub_ext('.pending.mp3')
       Campaigns::MediaCommand.run!('ffmpeg', '-y', '-v', 'error', '-ss', start.to_s, '-i', source, '-t', duration.to_s,

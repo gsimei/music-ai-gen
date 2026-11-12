@@ -4,9 +4,9 @@ class ConversationalReplyJobTest < ActiveJob::TestCase
   test "confirmed vocal briefing schedules lyrics generation" do
     order = orders(:b2b_paid)
     order.briefing.update!(extra_params: { "instrumental" => false })
-    result = ServiceResult.new(success: true, errors: nil, value: {reply: "Vamos gerar.", ready: true, generate_music: false, suggestions: []})
+    result = ServiceResult.new(success: true, errors: nil, value: { reply: "Vamos gerar.", ready: true, generate_music: false, suggestions: [] })
     ConversationalBriefingService.stub(:call, ->(**_) { result }) do
-      assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
+      assert_enqueued_with(job: GenerateLyricsJob, args: [ order.id ]) do
         ConversationalReplyJob.perform_now(order.id, "Sim, pode gerar")
       end
     end
@@ -14,7 +14,7 @@ class ConversationalReplyJobTest < ActiveJob::TestCase
 
   test "confirmed lyric edits schedule a revision instead of doing nothing" do
     order = orders(:b2b_lyrics_ready)
-    result = ServiceResult.new(success: true, errors: nil, value: {reply: "Vamos revisar.", ready: true, generate_music: false, suggestions: []})
+    result = ServiceResult.new(success: true, errors: nil, value: { reply: "Vamos revisar.", ready: true, generate_music: false, suggestions: [] })
     ConversationalBriefingService.stub(:call, ->(**_) { result }) do
       assert_enqueued_jobs 1, only: GenerateLyricsJob do
         ConversationalReplyJob.perform_now(order.id, "Inclua café fresco")

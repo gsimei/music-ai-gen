@@ -2,6 +2,7 @@
 
 require "net/http"
 require "json"
+require "timeout"
 
 module LyricsGenerator
   class MurekaLyricsClient < BaseService
@@ -55,7 +56,7 @@ module LyricsGenerator
 
       req.body = JSON.generate({ "prompt" => prompt })
 
-      http.request(req)
+      Timeout.timeout(150) { http.request(req) }
     end
   end
 end

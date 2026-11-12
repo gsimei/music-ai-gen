@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["step", "indicator", "back", "next", "submit", "business", "offer", "cta", "contact", "previewBusiness", "previewOffer", "previewCta", "previewContact", "previewPhoto", "previewPhotoTitle", "photoInput", "photoList", "photoStatus", "caption", "soundSummary"]
+  static values = { photoLimit: { type: Number, default: 5 } }
+  static targets = ["step", "indicator", "back", "next", "submit", "business", "offer", "logoInput", "removeLogo", "logoRemoval", "logoStatus", "previewLogo", "brandSample", "cta", "contact", "showCta", "ctaColor", "ctaFields", "previewCtaPanel", "previewBusiness", "previewOffer", "previewCta", "previewContact", "previewPhoto", "previewPhotoTitle", "photoInput", "photoList", "photoStatus", "caption", "soundSummary"]
   connect() {
     this.index = 0
     if (this.hasStepTarget) {
@@ -13,10 +14,11 @@ export default class extends Controller {
       if (this.photoInputTarget.files.length) this.photo({ target: this.photoInputTarget })
       else this.renderPhotos()
       this.show()
-      this.preview()
     }
+    this.preview()
+    this.logo()
   }
-  disconnect() { this.releasePhotos() }
+  disconnect() { this.releasePhotos(); if (this.logoUrl) URL.revokeObjectURL(this.logoUrl) }
   releasePhotos() { (this.photoUrls || []).forEach(url => URL.revokeObjectURL(url)); this.photoUrls = [] }
   valid() {
     const invalid = Array.from(this.stepTargets[this.index].querySelectorAll("input,textarea,select")).find(input => !input.checkValidity())
@@ -41,6 +43,7 @@ export default class extends Controller {
     this.backTarget.hidden = this.index === 0
     this.nextTarget.hidden = this.index === this.stepTargets.length - 1
     this.submitTarget.hidden = this.index !== this.stepTargets.length - 1
+    this.previewCta()
     if (focus) {
       const step = this.stepTargets[this.index]
       const heading = step.querySelector("h2")
@@ -57,11 +60,67 @@ export default class extends Controller {
     if (invalidIndex >= 0) { event.preventDefault(); this.index = invalidIndex; this.show(); this.valid() }
   }
   preview() {
-    if (!this.hasBusinessTarget) return
-    this.previewBusinessTarget.textContent = this.businessTarget.value || "Seu negócio"
-    this.previewOfferTarget.textContent = this.offerTarget.value || "Sua próxima grande oferta."
+    if (this.hasBusinessTarget) {
+      this.previewBusinessTarget.textContent = this.businessTarget.value.trim()
+      this.previewBusinessTarget.hidden = !this.businessTarget.value.trim()
+    }
+    if (this.hasOfferTarget) {
+      this.previewOfferTarget.textContent = (this.offerTarget.value || "Sua próxima grande oferta.").replace(/\r\n?/g, "\n").replace(/R\$[^\S\r\n]*(?=\d)/g, "R$\u00a0")
+    }
+    this.previewBrand()
+    this.previewCta()
+  }
+  previewBrand() {
+    if (this.hasBrandSampleTarget) this.brandSampleTarget.hidden = this.previewBusinessTarget.hidden && this.previewLogoTarget.hidden
+  }
+  logo(event) {
+    if (!this.hasLogoInputTarget) return
+    if (this.logoUrl) URL.revokeObjectURL(this.logoUrl)
+    this.logoUrl = null
+    const input = this.logoInputTarget, removal = this.removeLogoTarget
+    if (event?.target === input && input.files.length) removal.checked = false
+    if (removal.checked) input.value = ""
+    const file = input.files[0], savedUrl = input.dataset.savedLogoUrl
+    this.logoRemovalTarget.hidden = !file && !savedUrl && !removal.checked
+    input.setCustomValidity("")
+    this.previewLogoTarget.hidden = true
+    this.previewLogoTarget.removeAttribute("src")
+    this.previewBrand()
+    if (file && (file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      const error = "A logo deve ser PNG, JPG ou WebP de até 5 MB."
+      input.setCustomValidity(error)
+      this.logoStatusTarget.textContent = error
+      input.reportValidity()
+      return
+    }
+    const url = removal.checked ? null : (file ? (this.logoUrl = URL.createObjectURL(file)) : savedUrl)
+    if (url) { this.previewLogoTarget.src = url; this.previewLogoTarget.hidden = false }
+    this.previewBrand()
+    this.logoStatusTarget.textContent = removal.checked ? "Sem logo no vídeo. Salve para confirmar." : (file ? "Logo selecionada. Confira a prévia antes de salvar." : (savedUrl ? "Sua logo está salva. Selecione outra para substituir." : "Sem logo? O vídeo usa o nome, se preenchido."))
+  }
+  previewCta() {
+    if (!this.hasShowCtaTarget) return
+    const enabled = this.showCtaTarget.checked
+    this.ctaFieldsTarget.hidden = !enabled
+    this.contactTarget.required = enabled
+    this.previewCtaPanelTarget.hidden = !enabled
     this.previewCtaTarget.textContent = this.ctaTarget.value
     this.previewContactTarget.textContent = this.contactTarget.value || "Seu contato aqui"
+    const color = this.ctaColorTarget.value
+    this.previewCtaPanelTarget.style.setProperty("--campaign-cta-color", color)
+    this.previewCtaPanelTarget.style.setProperty("--campaign-cta-text-color", this.ctaTextColor(color))
+  }
+  ctaTextColor(color) {
+    const luminance = hex => {
+      const channels = hex.slice(1).match(/../g).map(value => {
+        const channel = parseInt(value, 16) / 255
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+      })
+      return channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
+    }
+    const background = luminance(color), dark = luminance("#173e32")
+    if (background > dark && (background + 0.05) / (dark + 0.05) >= 4.5) return "#173e32"
+    return background > 0.179 ? "#000000" : "#ffffff"
   }
   photo(event) {
     const input = event.target, files = Array.from(input.files)
@@ -71,7 +130,7 @@ export default class extends Controller {
     this.previewPhotoTarget.removeAttribute("src")
     input.setCustomValidity("")
     let error = ""
-    if (files.length > 5) error = "Escolha no máximo 5 fotos."
+    if (files.length > this.photoLimitValue) error = `Escolha no máximo ${this.photoLimitValue} fotos nesta etapa.`
     else if (files.some(file => file.size > 10 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type))) error = "Cada foto deve ser JPG, PNG ou WebP de até 10 MB."
     if (error) {
       input.setCustomValidity(error)

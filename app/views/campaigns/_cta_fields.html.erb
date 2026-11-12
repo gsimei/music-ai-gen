@@ -1,0 +1,26 @@
+<div class="campaign-cta-settings">
+  <label class="campaign-cta-toggle">
+    <%= f.check_box :show_cta, data: { campaign_form_target: "showCta", action: "change->campaign-form#previewCta" }, aria: { describedby: "#{f.field_id(:show_cta)}-help" } %>
+    <span>Incluir faixa de contato no vídeo</span>
+  </label>
+  <p class="studio-field-hint" id="<%= f.field_id(:show_cta) %>-help">Opcional. Para anúncios pagos, você pode usar só o botão do Instagram.</p>
+  <div class="campaign-cta-fields" data-campaign-form-target="ctaFields" <%= "hidden" unless f.object.show_cta? %>>
+    <div class="campaign-two-fields">
+      <div class="studio-field">
+        <%= f.label :call_to_action, "Como convidar o cliente?" %>
+        <%= f.select :call_to_action, (Campaign::CTA_OPTIONS + [f.object.call_to_action.presence]).compact.uniq, {}, data: { campaign_form_target: "cta", action: "change->campaign-form#previewCta" } %>
+      </div>
+      <div class="studio-field">
+        <%= f.label :contact, "WhatsApp, endereço ou @Instagram" %>
+        <%= f.text_field :contact, required: f.object.show_cta?, maxlength: 70, placeholder: "Ex.: (11) 99999-9999", data: { campaign_form_target: "contact", action: "input->campaign-form#previewCta" } %>
+      </div>
+    </div>
+    <div class="campaign-cta-color">
+      <%= f.label :cta_color, "Cor da faixa" %>
+      <div class="campaign-cta-color-picker">
+        <%= f.color_field :cta_color, value: f.object.cta_background_color, data: { campaign_form_target: "ctaColor", action: "input->campaign-form#previewCta change->campaign-form#previewCta" } %>
+        <span class="studio-field-hint">Escolha a cor da sua marca. O texto se ajusta para ficar legível.</span>
+      </div>
+    </div>
+  </div>
+</div>

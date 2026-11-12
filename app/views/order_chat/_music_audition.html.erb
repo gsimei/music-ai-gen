@@ -1,0 +1,10 @@
+<% if asset.audition_ready? %>
+  <p class="studio-field-hint"><%= video ? "Trecho do vídeo" : "Amostra" %> de <%= campaign_media_time(asset.campaign_audio.blob.metadata.fetch("duration_seconds")) %> · com marca sonora</p>
+  <audio controls controlslist="nodownload noplaybackrate" disableremoteplayback preload="metadata" data-action="play->creative-editor#play" aria-label="<%= video ? 'Ouvir trecho do vídeo' : 'Ouvir amostra' %>, opção <%= ("A".ord + asset.variant_index).chr %>"><source src="<%= asset.campaign_playback_url %>" type="audio/mp4"></audio>
+  <% if video %><p class="studio-field-hint">Ouça até o fim e confira se a oferta ficou completa. O vídeo final será entregue sem a marca sonora.</p><% else %><p class="studio-field-hint">Você escolhe o trecho e a duração na preparação do vídeo.</p><% end %>
+<% elsif asset.campaign_preview_status == "queued" %>
+  <p class="creative-working" role="status">Preparando <%= video ? 'o trecho do vídeo' : 'a amostra' %>…</p>
+<% else %>
+  <p class="studio-field-hint">Sua música está salva. Prepare a amostra para ouvir.</p>
+  <%= button_to "Preparar amostra", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id }, class: "studio-button studio-button-outline", data: { turbo_stream: true } %>
+<% end %>

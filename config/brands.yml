@@ -1,14 +1,13 @@
 # config/brands.yml
 # Configuracao da marca B2B. Acessar via BRANDS_CONFIG[:b2b].
 # NUNCA hardcodar precos ou limites na aplicacao — usar sempre este arquivo.
-# Nomes de dominio sao placeholders; ajustar com nomes finais antes do launch.
+# Dominio publico da ViraJingle e host local de desenvolvimento.
 
 b2b:
   hosts:
-    - "jinglepro.it"
-    - "jinglepro.com"
+    - "virajingle.com.br"
     - "b2b.lvh.me"   # dev-only: lvh.me resolve para 127.0.0.1 via DNS wildcard
-  display_name: "JinglePro"
+  display_name: "ViraJingle"
   default_locale: pt
   currency: BRL
   campaign_tier: starter
@@ -22,7 +21,7 @@ b2b:
   primary_color: "#c1f66b"
   tiers:
     starter:
-      price_cents: 7900
+      price_cents: 2990
       lyrics_regen_limit: 20
       music_regen_limit: 2
       includes_stems: false

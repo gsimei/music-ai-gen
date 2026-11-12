@@ -1,5 +1,8 @@
-<p>Welcome <%= @email %>!</p>
-
-<p>You can confirm your account email through the link below:</p>
-
-<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
+<% content_for :preheader, "Confirme seu e-mail para começar sua próxima campanha." %>
+<% url = confirmation_url(@resource, confirmation_token: @token) %>
+<h1 style="margin:0 0 24px;font-size:30px;line-height:36px;color:#173e32;">Bem-vindo à <%= product_name %>.</h1>
+<p style="margin:0 0 24px;font-size:16px;line-height:26px;">Olá! Confirme o endereço <strong><%= @email %></strong> para concluir seu cadastro e começar a criar suas campanhas.</p>
+<p style="margin:0 0 24px;"><%= link_to "Confirmar meu e-mail", url, style: "display:inline-block;padding:16px 28px;border-radius:100px;background-color:#173e32;color:#fffef9;font-size:16px;font-weight:bold;text-decoration:none;" %></p>
+<p style="margin:0 0 16px;font-size:14px;line-height:23px;color:#4c6155;">Se você não criou uma conta na <%= product_name %>, ignore esta mensagem.</p>
+<p style="margin:0;font-size:12px;line-height:20px;word-break:break-all;"><%= link_to url, url, style: "color:#24593e;word-break:break-all;" %></p>

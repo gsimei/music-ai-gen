@@ -69,7 +69,7 @@ Uma ideia só: "o som vira imagem".
 
 ## Textos e números que não podem ser fixos
 
-O protótipo escreve "R$ 79", "3 rodadas", "20 ajustes" e "28 s" no texto. No app esses valores vêm de: `campaign_price`, `Campaigns::MusicRounds::LIMIT`, `config/brands.yml` (`tiers.starter.lyrics_regen_limit`) e da duração real do áudio (no máximo `AudioPreview::MAX_DURATION`).
+O protótipo escreve "R$ 79", "3 rodadas", "20 ajustes" e "28 s" no texto. No app esses valores vêm de: `campaign_price`, `Campaigns::MusicRounds::LIMIT`, `config/brands.yml` (`tiers.starter.lyrics_regen_limit`) da duração escolhida do vídeo (`Campaigns::AudioPreview::DEFAULT_DURATION` como padrão, até a música inteira) e do limite proporcional de fotos (`Campaigns::PhotoLimit`). As cinco fotos da prancha são a seleção inicial; no estúdio, vídeos mais longos liberam mais fotos, até trinta.
 
 ## Pendências
 

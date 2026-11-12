@@ -135,7 +135,10 @@ class OrdersController < ApplicationController
 
   def wizard_update
     step = params[:step].to_i
-    step_params = params.fetch(:order_wizard, {}).permit!.to_h.symbolize_keys
+    step_params = params.fetch(:order_wizard, ActionController::Parameters.new).permit(
+      :recipient, :about, :occasion, :visual_context, :music_style, :mood, :tempo,
+      :language, :keywords, :avoid, :structure_hint, :voice_id, :tier
+    ).to_h.symbolize_keys
 
     validator = Orders::StepValidator.new(
       step:   step,

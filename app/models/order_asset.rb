@@ -13,7 +13,7 @@ class OrderAsset < ApplicationRecord
   end
 
   def approved_for_delivery?
-    music_variant? && music_generation_id.present? && variant_index.in?([0, 1]) &&
+    music_variant? && music_generation_id.present? && variant_index.in?([ 0, 1 ]) &&
       order.approved? && order.approved_music_generation_id == music_generation_id &&
       order.approved_variant == ("a".ord + variant_index).chr
   end
@@ -27,8 +27,13 @@ class OrderAsset < ApplicationRecord
     (archived_duration || duration_ms.to_f / 1000).to_f
   end
 
-  def excerpt_max_start
-    [track_duration_seconds - Campaigns::AudioPreview::MAX_DURATION, 0].max.floor(2)
+  def excerpt_max_start(duration_seconds: excerpt_duration_seconds)
+    return 0.0 if duration_seconds.nil?
+    [ track_duration_seconds - duration_seconds.to_f, 0 ].max.floor(2)
+  end
+
+  def video_duration_seconds
+    [ excerpt_duration_seconds&.to_f || track_duration_seconds, track_duration_seconds ].min
   end
 
   def campaign_playback_url
@@ -54,6 +59,7 @@ class OrderAsset < ApplicationRecord
   # Validations
   validates :kind,        presence: true, inclusion: { in: ALL_KINDS }
   validates :storage_key, presence: true, unless: -> { music_variant? || soundtrack_video? }
+  validates :excerpt_duration_seconds, numericality: { greater_than: 0 }, allow_nil: true
 
   # Associations
   belongs_to :order

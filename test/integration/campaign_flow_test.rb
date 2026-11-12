@@ -15,18 +15,18 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     assert_select "form.campaign-builder"
-    assert_select ".campaign-total strong", "R$ 79"
+    assert_select ".campaign-total strong", "R$ 29,90"
   end
 
   test "submission creates pending order and a Portuguese vocal briefing with server price" do
     assert_no_enqueued_jobs only: GenerateLyricsJob do
-      assert_difference ["Campaign.count", "Order.count", "Briefing.count"], 1 do
+      assert_difference [ "Campaign.count", "Order.count", "Briefing.count" ], 1 do
         post campaigns_path, params: { campaign: @attributes.merge(price_cents: 1, currency: "USD", status: "paid") }
       end
     end
     campaign = Campaign.last
     assert_redirected_to campaign_path(campaign)
-    assert_equal ["pending", "BRL", 7900, "pt"], campaign.order.attributes.values_at("status", "currency", "price_cents", "locale")
+    assert_equal [ "pending", "BRL", 2990, "pt" ], campaign.order.attributes.values_at("status", "currency", "price_cents", "locale")
     assert_equal "pt", campaign.order.briefing.language
     assert_not_nil campaign.order.briefing.voice_id
     assert_equal false, campaign.order.briefing.extra_params["instrumental"]
@@ -57,25 +57,25 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     get edit_campaign_path(campaign)
     assert_response :success
     assert_select 'input[type=file][multiple][name="campaign[photos][]"]'
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [""]) }
+    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ "" ]) }
     assert_equal 3, campaign.reload.product_photos.size
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: 6.times.map { |index| photo_upload("excess#{index}") }) }
     assert_response :unprocessable_entity
     assert_select "[role=alert]", text: /no máximo 5/
     assert_equal 3, campaign.reload.product_photos.size
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [photo_upload("replacement")]) }
-    assert_equal ["replacement.jpg"], campaign.reload.product_photos.map { |photo| photo.filename.to_s }
+    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ photo_upload("replacement") ]) }
+    assert_equal [ "replacement.jpg" ], campaign.reload.product_photos.map { |photo| photo.filename.to_s }
   end
 
   test "server rejects more than five photos or unsupported uploads without creating orders" do
-    assert_no_difference ["Order.count", "Campaign.count"] do
+    assert_no_difference [ "Order.count", "Campaign.count" ] do
       post campaigns_path, params: { campaign: @attributes.merge(photos: 6.times.map { |index| photo_upload("photo#{index}") }) }
     end
     assert_response :unprocessable_entity
     assert_select "[role=alert]", text: /no máximo 5/
     bad_file = Rack::Test::UploadedFile.new(StringIO.new("not an image"), "text/plain", original_filename: "notes.txt")
     assert_no_difference "Order.count" do
-      post campaigns_path, params: { campaign: @attributes.merge(photos: [bad_file]) }
+      post campaigns_path, params: { campaign: @attributes.merge(photos: [ bad_file ]) }
     end
     assert_response :unprocessable_entity
     assert_select "[role=alert]", text: /JPG, PNG ou WebP/
@@ -93,7 +93,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     post campaigns_path, params: { campaign: @attributes.merge(photos: %w[first second third].map { |name| photo_upload(name) }) }
     campaign = Campaign.last
     ids = campaign.product_photos.map(&:id)
-    chosen_order = [ids[2], ids[0], ids[1]]
+    chosen_order = [ ids[2], ids[0], ids[1] ]
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen_order.map(&:to_s)) }
     assert_redirected_to campaign_path(campaign)
     assert_equal chosen_order, campaign.reload.product_photos.map(&:id)
@@ -106,19 +106,19 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_select 'img[data-campaign-form-target="previewPhoto"][src=?]', rails_blob_path(campaign.product_photos.first)
     patch campaign_path(campaign), params: { campaign: @attributes.merge(offer: "Oferta atualizada") }
     assert_equal chosen_order, campaign.reload.product_photos.map(&:id)
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen_order, photos: [photo_upload("new-opener"), photo_upload("new-second")]) }
+    patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen_order, photos: [ photo_upload("new-opener"), photo_upload("new-second") ]) }
     assert_redirected_to campaign_path(campaign)
     assert_equal [], campaign.reload.photo_order
     assert_equal %w[new-opener.jpg new-second.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
   end
 
   test "reordering only accepts a complete permutation of this campaigns photos before checkout" do
-    post campaigns_path, params: { campaign: @attributes.merge(photos: [photo_upload("first"), photo_upload("second")]) }
+    post campaigns_path, params: { campaign: @attributes.merge(photos: [ photo_upload("first"), photo_upload("second") ]) }
     campaign = Campaign.last
     ids = campaign.product_photos.map(&:id)
     other = Campaign.create!(@attributes.merge(order: orders(:b2b_pending)))
     other.photos.attach(io: StringIO.new(File.binread(Rails.root.join("public/demos/cafe-aurora.jpg"))), filename: "other.jpg", content_type: "image/jpeg")
-    [[ids.first, other.photos.first.id], [ids.first, ids.first], [ids.first], ["invalid", ids.last]].each do |invalid_order|
+    [ [ ids.first, other.photos.first.id ], [ ids.first, ids.first ], [ ids.first ], [ "invalid", ids.last ] ].each do |invalid_order|
       patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: invalid_order) }
       assert_response :unprocessable_entity
       assert_select "[role=alert]", text: /Ordem das fotos/
@@ -151,7 +151,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to "https://checkout.stripe.com/test"
     assert_equal "brl", captured[:line_items][0][:price_data][:currency]
-    assert_equal 7900, captured[:line_items][0][:price_data][:unit_amount]
+    assert_equal 2990, captured[:line_items][0][:price_data][:unit_amount]
     assert_equal "pt-BR", captured[:locale]
     assert_equal "pending", campaign.order.reload.status
   end
@@ -177,7 +177,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     post campaigns_path, params: { campaign: @attributes }
     order = Campaign.last.order
     order.update!(stripe_session_id: "cs_campaign_verified")
-    event = StripeEvent.create!(stripe_event_id: "evt_campaign_verified", event_type: "checkout.session.completed", status: "pending", payload: { data: { object: { id: order.stripe_session_id, payment_status: "unpaid", amount_total: 7900, currency: "brl" } } })
+    event = StripeEvent.create!(stripe_event_id: "evt_campaign_verified", event_type: "checkout.session.completed", status: "pending", payload: { data: { object: { id: order.stripe_session_id, payment_status: "unpaid", amount_total: 2990, currency: "brl" } } })
     assert Stripe::Handlers::CheckoutSessionCompleted.call(stripe_event: event).failure?
     assert_equal "pending", order.reload.status
     payload = event.payload.deep_dup

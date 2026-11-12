@@ -97,7 +97,7 @@ class PollMurekaStatusJobTest < ActiveJob::TestCase
     pending = status_result(status: "pending")
 
     MusicGenerator::MurekaStatusClient.stub(:call, ->(**_args) { pending }) do
-      assert_enqueued_with(job: PollMurekaStatusJob, args: [mg.id]) do
+      assert_enqueued_with(job: PollMurekaStatusJob, args: [ mg.id ]) do
         PollMurekaStatusJob.perform_now(mg.id)
       end
     end

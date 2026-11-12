@@ -50,7 +50,7 @@ class CreateMusicGenerations < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :music_generations, [:order_id, :iteration], unique: true
+    add_index :music_generations, [ :order_id, :iteration ], unique: true
     add_index :music_generations, :provider_task_id
     add_index :music_generations, :status
   end

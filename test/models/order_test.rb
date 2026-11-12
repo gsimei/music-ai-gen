@@ -594,7 +594,7 @@ class OrderAasmTest < ActiveSupport::TestCase
   # ---------------------------------------------------------------------------
   test "mark_paid! enfileira GenerateLyricsJob com order.id" do
     order = orders(:b2b_pending)
-    assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
+    assert_enqueued_with(job: GenerateLyricsJob, args: [ order.id ]) do
       order.mark_paid!
     end
   end
@@ -788,7 +788,7 @@ class OrderAasmTest < ActiveSupport::TestCase
       storage_key: "test.mp4"
     )
 
-    assert_enqueued_with(job: UploadSoundtrackInputToMurekaJob, args: [order.id]) do
+    assert_enqueued_with(job: UploadSoundtrackInputToMurekaJob, args: [ order.id ]) do
       order.mark_paid!
     end
   end
@@ -809,7 +809,7 @@ class OrderAasmTest < ActiveSupport::TestCase
     )
     # No soundtrack_input created
 
-    assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
+    assert_enqueued_with(job: GenerateLyricsJob, args: [ order.id ]) do
       order.mark_paid!
     end
   end

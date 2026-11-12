@@ -1,17 +1,52 @@
 import { Controller } from "@hotwired/stimulus"
 
+const workspaceState = new Map()
+
 export default class extends Controller {
   static targets = ["feedback", "saveHint"]
+  static values = { view: String, busy: Boolean }
 
   connect() {
+    this.stateKey = window.location.pathname
+    const previous = workspaceState.get(this.stateKey)
+    if (previous?.view === this.viewValue) {
+      previous.openDetails.forEach(id => {
+        const details = document.getElementById(id)
+        if (details && this.element.contains(details)) details.open = true
+      })
+      const feedback = this.element.querySelector('[name="feedback"]')
+      if (feedback && previous.feedback) feedback.value = previous.feedback
+    } else if (previous) {
+      this.element.querySelector("h1")?.focus()
+    }
     this.guard = (event) => {
-      if ((this.dirty || this.playing) && event.target.getAttribute("target") === "chat-lyrics-panel") event.preventDefault()
+      if (event.target.getAttribute("target") === "creative-errors") {
+        const render = event.detail.render
+        event.detail.render = async (stream) => {
+          await render(stream)
+          this.element.querySelector("#creative-errors")?.focus()
+        }
+        return
+      }
+      if (event.target.getAttribute("target") !== "chat-lyrics-panel") return
+      if (this.dirty || this.playing) {
+        event.preventDefault()
+        return
+      }
+      workspaceState.set(this.stateKey, {
+        view: this.viewValue,
+        openDetails: this.busyValue && previous?.view === this.viewValue ? previous.openDetails : this.submittedIntent === "generate" ? [] : Array.from(this.element.querySelectorAll("details[open][id]")).map(details => details.id),
+        feedback: this.submittedIntent === "generate" ? "" : (this.element.querySelector('[name="feedback"]')?.value ?? previous?.feedback ?? "")
+      })
     }
     this.guardSubmit = (event) => {
       if (this.dirty && event.target !== this.dirtyForm) {
         event.preventDefault()
-        this.element.querySelector('#creative-errors').textContent = "Salve ou envie a alteração que está escrevendo antes de continuar."
+        const errors = this.element.querySelector('#creative-errors')
+        errors.textContent = "Salve ou envie a alteração que está escrevendo antes de continuar."
+        errors.focus()
       } else {
+        this.submittedIntent = event.submitter?.value
         this.element.querySelectorAll("audio").forEach(audio => audio.pause())
         this.dirty = false
         delete this.element.dataset.creativeEditorDirty
@@ -30,7 +65,7 @@ export default class extends Controller {
     this.dirty = true
     this.dirtyForm = event?.target?.form || this.element.querySelector('.creative-lyrics-form')
     this.element.dataset.creativeEditorDirty = "true"
-    this.saveHintTarget.textContent = "Você tem alterações para salvar. As versões anteriores continuam guardadas."
+    if (this.hasSaveHintTarget) this.saveHintTarget.textContent = "Você tem alterações para salvar. As versões anteriores continuam guardadas."
   }
 
   feedbackChanged(event) {
@@ -41,6 +76,12 @@ export default class extends Controller {
   }
 
   saving() { this.dirty = false; delete this.element.dataset.creativeEditorDirty }
+  restoreChanges(event) {
+    if (event.detail.success) return
+    this.dirty = true
+    this.dirtyForm = event.target
+    this.element.dataset.creativeEditorDirty = "true"
+  }
   saved(event) { if (!event.detail.success) this.changed() }
   suggest(event) { this.feedbackTarget.value = event.currentTarget.dataset.feedback; this.feedbackChanged({target: this.feedbackTarget}); this.feedbackTarget.focus() }
   play(event) { this.element.querySelectorAll("audio").forEach(audio => { if (audio !== event.currentTarget) audio.pause() }) }

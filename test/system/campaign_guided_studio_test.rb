@@ -1,0 +1,124 @@
+require "application_system_test_case"
+require "warden/test/helpers"
+
+class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
+  include Warden::Test::Helpers
+
+  setup do
+    Warden.test_mode!
+    login_as users(:customer_b2b), scope: :user
+  end
+
+  teardown do
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    Warden.test_reset!
+  end
+
+  test "merchant edits lyrics and sound together and moves to video without losing earlier choices" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café fresquinho por R$ 12", show_cta: false)
+    campaign.sync_briefing!
+    draft = order.current_draft
+    draft.update!(content: "Café do Bairro, venha experimentar!\nCafé fresquinho por doze reais.")
+    order.all_music_assets.each { |asset| prepare_sample(asset) }
+    visit order_chat_path(order_id: order.id)
+    assert_text "Ouça e escolha sua música."
+    assert_no_text "Fotos do seu vídeo"
+    assert_no_text "Salvar favorita"
+    page.save_screenshot(Rails.root.join("tmp/guided-studio-desktop.png"))
+    find("#creation-adjustments summary", text: "Quero ajustar").click
+    fill_in "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    find("#creation-sound summary").click
+    select "Forró · sanfona e alegria", from: "Ritmo"
+    fill_in "O que você quer diferente na música? (opcional)", with: "Mais animada"
+    within "#music-version-#{order_assets(:music_variant_a).id}" do
+      click_button "Usar esta música"
+    end
+    assert_text "Salve ou envie a alteração"
+    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    click_button "Salvar alterações"
+    assert_text "Alterações salvas."
+    assert_selector "#creation-adjustments[open]"
+    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    assert_field "O que você quer diferente na música? (opcional)", with: "Mais animada"
+    assert_equal "forro", campaign.reload.musical_genre
+    assert_equal 1, order.completed_music_rounds
+    assert_includes draft.reload.content, "venha experimentar"
+
+    click_button "Gerar duas novas músicas"
+    assert_text "Criando duas novas versões"
+    assert_current_path order_chat_path(order_id: order.id)
+    generation = order.music_generations.order(:iteration).last
+    assert_equal "Café do Bairro, o seu dia começa aqui!", generation.request_payload["lyrics"]
+    assert_equal "Mais animada", generation.melody_hint
+    generation.update!(status: "completed")
+    2.times do |index|
+      asset = order.order_assets.create!(music_generation: generation, kind: "music_variant", variant_index: index)
+      prepare_sample(asset)
+    end
+    order.reload.music_ready!
+    assert_selector ".creative-version", count: 2
+    assert_selector "#previous-music"
+    assert_selector "#creation-adjustments:not([open])"
+
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    page.scroll_to(:top)
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+    page.save_screenshot(Rails.root.join("tmp/guided-studio-mobile.png"))
+    within "#music-version-#{generation.order_assets.first.id}" do
+      click_button "Usar esta música"
+    end
+    assert_text "Vamos preparar seu vídeo."
+    assert_button "Gerar meu vídeo"
+    assert_no_selector "#editable-lyrics"
+    assert order.reload.preview_ready?
+    assert_equal "pending", campaign.reload.video_status
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+    page.save_screenshot(Rails.root.join("tmp/guided-video-mobile.png"))
+    click_button "Voltar para letra e músicas"
+    assert_text "Ouça e escolha sua música."
+    find("#creation-adjustments summary", text: "Quero ajustar").click
+    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    assert_equal 2, order.completed_music_rounds
+    errors = page.driver.browser.logs.get(:browser).select { |entry| entry.level == "SEVERE" && entry.message.match?(/Uncaught|Error connecting controller|Error invoking action/) }
+    assert_empty errors, errors.map(&:message).join("\n")
+  end
+
+  test "first creation keeps rewritten lyrics visible before generating music" do
+    order = orders(:b2b_lyrics_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.sync_briefing!
+    order.current_draft.update!(content: "Café do Bairro, venha experimentar!")
+    visit order_chat_path(order_id: order.id)
+    assert_text "Vamos criar sua música."
+    assert_field "Sua letra", with: "Café do Bairro, venha experimentar!"
+    assert_button "Gerar duas músicas"
+    page.save_screenshot(Rails.root.join("tmp/guided-lyrics-desktop.png"))
+    fill_in "Sua letra", with: "Café do Bairro, café por doze reais!"
+    find("#rewrite-lyrics summary").click
+    fill_in "O que você quer mudar na letra?", with: "Inclua bom dia"
+    click_button "Reescrever a letra"
+    assert_text "Reescrevendo sua letra"
+    assert_no_button "Gerar duas músicas"
+    token = order.reload.lyrics_revision_token
+    stub_request(:post, LyricsGenerator::MurekaLyricsClient::MUREKA_LYRICS_URL)
+      .to_return(status: 200, body: { title: "Café", lyrics: "Bom dia! Café do Bairro, café por doze reais!" }.to_json)
+    RewriteCampaignLyricsJob.perform_now(order.id, token, order.current_draft.id, "Inclua bom dia")
+    assert_field "Sua letra", with: "Bom dia! Café do Bairro, café por doze reais!"
+    assert_equal 0, order.completed_music_rounds
+    click_button "Gerar duas músicas"
+    assert_text "Criando duas novas versões"
+    assert_current_path order_chat_path(order_id: order.id)
+    assert order.reload.lyrics_approved?
+    assert_equal "Bom dia! Café do Bairro, café por doze reais!", order.approved_lyrics_draft.content
+  end
+
+  private
+
+  def prepare_sample(asset)
+    asset.campaign_audio.attach(io: StringIO.new("preview"), filename: "preview.m4a", content_type: "audio/mp4", metadata: { duration_seconds: 30 })
+    asset.audition_audio.attach(io: StringIO.new("marked"), filename: "marked.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: asset.campaign_audio.blob.id, preview_revision: 0, watermark_version: Campaigns::AudioAudition::VERSION })
+    asset.update!(campaign_preview_status: "ready")
+  end
+end

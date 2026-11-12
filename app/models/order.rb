@@ -147,7 +147,7 @@ class Order < ApplicationRecord
   end
 
   def music_regen_remaining
-    return [Campaigns::MusicRounds::LIMIT - completed_music_rounds, 0].max if campaign
+    return [ Campaigns::MusicRounds::LIMIT - completed_music_rounds, 0 ].max if campaign
     music_regen_limit - music_regen_used
   end
 
@@ -172,9 +172,9 @@ class Order < ApplicationRecord
   end
 
   def creation_version
-    [status, lyrics_drafts.maximum(:id), lyrics_regen_used, music_regen_used, favorite_music_asset_id, lyrics_revision_token, lyrics_revision_error,
+    [ status, lyrics_drafts.maximum(:id), lyrics_regen_used, music_regen_used, favorite_music_asset_id, lyrics_revision_token, lyrics_revision_error,
       order_assets.maximum(:updated_at)&.iso8601(6), campaign&.updated_at&.iso8601(6),
-      music_generations.order(:iteration).last&.error_code].join(":")
+      music_generations.order(:iteration).last&.error_code ].join(":")
   end
 
   # Predicates
@@ -225,6 +225,7 @@ class Order < ApplicationRecord
 
   def notify_admin
     Rails.logger.warn "[Order ##{id}] entered failed state: #{status}"
+    Sentry.capture_message("Campaign generation failed", level: :error, tags: { order_id: id, status: status })
   end
 
   def record_cancellation_timestamp

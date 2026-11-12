@@ -47,10 +47,10 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 0, @order.music_regen_remaining
     get order_chat_path(order_id: @order.id)
     assert_select ".creative-version", count: 6
-    assert_select ".creative-favorite-label", text: /Sua favorita/
+    assert_select ".creative-favorite-label", count: 0
     assert_select 'audio source[type="audio/mp4"]', count: 6
     assert_select 'audio source[type="audio/mpeg"]', count: 0
-    assert_select 'form[action=?]', order_chat_regenerate_music_path(order_id: @order.id), count: 0
+    assert_select "form[action=?]", order_chat_regenerate_music_path(order_id: @order.id), count: 0
     assert_no_difference "MusicGeneration.count" do
       post order_chat_regenerate_music_path(order_id: @order.id), params: { feedback: "Mais uma" }, headers: @headers
     end
@@ -100,7 +100,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
       GenerateCampaignMusicJob.perform_now(generation.id)
     end
     finish_latest_round(submit: false)
-    assert_no_difference ["OrderAsset.count", "GenerationCost.count"] do
+    assert_no_difference [ "OrderAsset.count", "GenerationCost.count" ] do
       PollCampaignMusicJob.perform_now(generation.id)
     end
   end
@@ -140,7 +140,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 1, @order.reload.lyrics_regen_used
     assert_nil @order.lyrics_revision_token
     assert_equal BigDecimal("0.054"), @order.generation_costs.sum(:estimated_brl)
-    assert_no_difference ["GenerationCost.count", "LyricsDraft.count"] do
+    assert_no_difference [ "GenerationCost.count", "LyricsDraft.count" ] do
       RewriteCampaignLyricsJob.perform_now(@order.id, token, @draft.id, "duplicate")
     end
   end
@@ -175,7 +175,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     Campaigns::MusicRounds.call(order: @order.reload, feedback: "Mais lento")
     generation = @order.music_generations.order(:iteration).last
     submit_round(generation)
-    incomplete = ServiceResult.new(success: true, errors: nil, value: { status: "succeeded", choices: [{ url: "https://cdn.mureka.ai/one.mp3" }] })
+    incomplete = ServiceResult.new(success: true, errors: nil, value: { status: "succeeded", choices: [ { url: "https://cdn.mureka.ai/one.mp3" } ] })
     MusicGenerator::MurekaStatusClient.stub(:call, incomplete) { PollCampaignMusicJob.perform_now(generation.id) }
     assert_equal "failed", generation.reload.status
     assert_equal 2, @order.all_music_assets.count
@@ -211,7 +211,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_includes response.body, "Aguarde o trecho"
     assert_equal "preview_ready", @order.reload.status
-    assert_enqueued_with(job: ArchiveCampaignAudioJob, args: [asset.id]) do
+    assert_enqueued_with(job: ArchiveCampaignAudioJob, args: [ asset.id ]) do
       post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
     end
     assert_response :success
@@ -220,7 +220,7 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
       post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
     end
     asset.update!(campaign_preview_status: "failed")
-    assert_enqueued_with(job: ArchiveCampaignAudioJob, args: [asset.id]) do
+    assert_enqueued_with(job: ArchiveCampaignAudioJob, args: [ asset.id ]) do
       post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
     end
     post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: order_assets(:music_variant_a).id }, headers: @headers

@@ -1,0 +1,11 @@
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
+Olá!
+
+<% if @resource.try(:unconfirmed_email?) %>
+Recebemos um pedido para alterar o e-mail da sua conta na <%= product_name %> para <%= @resource.unconfirmed_email %>.
+<% else %>
+O e-mail da sua conta na <%= product_name %> foi alterado para <%= @resource.email %>.
+<% end %>
+
+Se você não reconhece essa alteração, recupere o acesso à sua conta:
+<%= new_password_url(@resource) %>

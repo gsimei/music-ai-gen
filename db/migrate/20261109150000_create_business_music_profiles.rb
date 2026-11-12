@@ -10,6 +10,6 @@ class CreateBusinessMusicProfiles < ActiveRecord::Migration[8.1]
       t.string :music_notes, null: false, default: ""
       t.timestamps
     end
-    add_index :business_music_profiles, [:user_id, :business_key], unique: true
+    add_index :business_music_profiles, [ :user_id, :business_key ], unique: true
   end
 end

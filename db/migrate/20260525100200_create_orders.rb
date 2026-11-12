@@ -44,7 +44,7 @@ class CreateOrders < ActiveRecord::Migration[8.1]
     end
 
     add_index :orders, :reference, unique: true
-    add_index :orders, [:brand, :status]
+    add_index :orders, [ :brand, :status ]
     add_index :orders, :stripe_session_id
     add_index :orders, :stripe_payment_intent_id
     add_index :orders, :created_at

@@ -93,7 +93,8 @@ class CampaignsController < ApplicationController
     if result.success?
       redirect_to @campaign, notice: "Identidade musical salva para #{@campaign.business_name}. Você poderá usá-la nas próximas campanhas."
     else
-      redirect_to @campaign, alert: "Não foi possível salvar essa direção. Revise o ritmo e a voz antes de tentar novamente."
+      message = result.errors == :missing_business_name ? "Informe o nome do negócio para salvar a identidade musical." : "Não foi possível salvar essa direção. Revise o ritmo e a voz antes de tentar novamente."
+      redirect_to @campaign, alert: message
     end
   end
 
@@ -113,7 +114,11 @@ class CampaignsController < ApplicationController
   end
 
   def campaign_params
-    attributes = params.require(:campaign).permit(:business_name, :offer, :contact, :call_to_action, :style, :musical_genre, :vocal_gender, :music_notes, :photo, photos: [], photo_order: [])
+    attributes = params.require(:campaign).permit(:business_name, :logo, :remove_logo, :offer, :contact, :call_to_action, :show_cta, :cta_color, :style, :musical_genre, :vocal_gender, :music_notes, :photo, photos: [], photo_order: [])
+    attributes.delete(:logo) if attributes[:logo].blank?
+    if attributes[:logo] && !attributes[:logo].is_a?(ActionDispatch::Http::UploadedFile)
+      raise ActionController::BadRequest, "Envie a logo como um arquivo PNG, JPG ou WebP"
+    end
     # An empty file picker on edit keeps the campaign's saved photos.
     attributes.delete(:photos) if attributes[:photos]&.all?(&:blank?)
     # New files already arrive in the chosen order; saved attachment IDs no longer apply.

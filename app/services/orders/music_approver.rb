@@ -19,6 +19,7 @@ module Orders
     attribute :variant, :string
     attribute :asset_id
     attribute :preview_revision
+    attribute :video_revision
 
     VARIANT_INDEX = { "a" => 0, "b" => 1 }.freeze
 
@@ -56,9 +57,15 @@ module Orders
           order.music_variant_assets.find_by(variant_index: VARIANT_INDEX[variant]) if VARIANT_INDEX.key?(variant)
         end
         return failure_result(:not_found) unless asset
+        if order.campaign.selected_music_asset_id && order.campaign.selected_music_asset_id != asset.id
+          return failure_result(:stale_video)
+        end
         return failure_result(:preview_not_ready) unless asset.campaign_preview_ready?
         expected = preview_revision.nil? ? 0 : Integer(preview_revision.to_s, exception: false)
         return failure_result(:stale_preview) unless expected == asset.preview_revision
+        expected_video = video_revision.nil? ? 0 : Integer(video_revision.to_s, exception: false)
+        return failure_result(:stale_video) unless expected_video == order.campaign.video_revision
+        return failure_result(:photos_exceed_duration) if order.campaign.product_photos.size > Campaigns::PhotoLimit.for_asset(asset)
         order.update!(approved_variant: ("a".ord + asset.variant_index).chr,
           approved_music_generation_id: asset.music_generation_id,
           approved_lyrics_draft_id: asset.music_generation.lyrics_draft_id,

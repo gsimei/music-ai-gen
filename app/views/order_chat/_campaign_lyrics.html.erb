@@ -5,7 +5,7 @@
         <%= form_with url: order_chat_edit_lyrics_path(order_id: order.id), method: :patch, data: { turbo_stream: true, action: "submit->creative-editor#saving turbo:submit-end->creative-editor#saved" }, class: "creative-lyrics-form" do %>
           <%= hidden_field_tag :draft_id, draft.id %>
           <label for="editable-lyrics">Edite o nome, preço ou qualquer palavra</label>
-          <p class="studio-field-hint">Prefira uma letra curta para o vídeo de até 30 segundos. Confira a oferta, o nome e as condições.</p>
+          <p class="studio-field-hint">Confira a oferta, o nome e as condições. Depois de ouvir as músicas, você escolhe a duração do vídeo.</p>
           <textarea id="editable-lyrics" name="content" rows="9" maxlength="5000" required data-action="input->creative-editor#changed"><%= draft.content %></textarea>
           <p class="studio-field-hint" data-creative-editor-target="saveHint">Editar e salvar a letra não gasta uma rodada musical.</p>
           <button type="submit" class="studio-button studio-button-green">Salvar letra</button>

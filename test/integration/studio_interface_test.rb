@@ -6,7 +6,7 @@ class StudioInterfaceTest < ActionDispatch::IntegrationTest
   setup { host! "b2b.lvh.me" }
 
   test "authentication entry points render forms in the studio layout" do
-    [new_user_session_path, new_user_registration_path, new_user_password_path].each do |path|
+    [ new_user_session_path, new_user_registration_path, new_user_password_path ].each do |path|
       get path
       assert_response :success
       assert_select "body.studio-page"

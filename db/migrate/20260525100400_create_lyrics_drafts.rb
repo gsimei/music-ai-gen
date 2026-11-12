@@ -28,7 +28,7 @@ class CreateLyricsDrafts < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :lyrics_drafts, [:order_id, :version], unique: true
-    add_index :lyrics_drafts, [:order_id, :is_approved]
+    add_index :lyrics_drafts, [ :order_id, :version ], unique: true
+    add_index :lyrics_drafts, [ :order_id, :is_approved ]
   end
 end

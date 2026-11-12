@@ -36,7 +36,7 @@ class Orders::LyricsRegeneratorTest < ActiveSupport::TestCase
   test "enqueues GenerateLyricsJob with correct order_id on success" do
     order = orders(:b2b_lyrics_ready)
 
-    assert_enqueued_with(job: GenerateLyricsJob, args: [order.id]) do
+    assert_enqueued_with(job: GenerateLyricsJob, args: [ order.id ]) do
       Orders::LyricsRegenerator.call(order: order, user_feedback: "Piu romantica")
     end
   end

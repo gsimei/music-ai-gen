@@ -34,7 +34,7 @@ class PollCampaignMusicJob < ApplicationJob
           end
           generation.update!(status: "completed", ready_at: Time.current, error_code: nil, poll_lease_until: nil, next_poll_at: nil)
           cost.update!(status: "estimated")
-          order.update!(status: "preview_ready", music_regen_used: [order.completed_music_rounds - 1, 0].max) unless order.approved? || order.cancelled? || order.refunded?
+          order.update!(status: "preview_ready", music_regen_used: [ order.completed_music_rounds - 1, 0 ].max) unless order.approved? || order.cancelled? || order.refunded?
           generation.order_assets.each { |asset| ArchiveCampaignAudioJob.perform_later(asset.id) }
         end
       elsif result.success? && result.value[:status] == "failed"
@@ -43,7 +43,7 @@ class PollCampaignMusicJob < ApplicationJob
         Campaigns::MusicFailure.call(generation, "generation_delayed")
       else
         # Transient query errors are not evidence that paid generation failed.
-        wait = result.success? ? (generation.poll_count < 12 ? 5 : 15) : [15 * generation.poll_count, 60].min
+        wait = result.success? ? (generation.poll_count < 12 ? 5 : 15) : [ 15 * generation.poll_count, 60 ].min
         next_at = Time.current + wait.seconds
         generation.update!(poll_lease_until: nil, next_poll_at: next_at, error_code: result.success? ? nil : "status_unavailable")
         self.class.set(wait_until: next_at).perform_later(generation.id)

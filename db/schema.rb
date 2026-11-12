@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,17 +96,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_160000) do
     t.string "call_to_action", default: "Peça pelo WhatsApp", null: false
     t.string "contact", null: false
     t.datetime "created_at", null: false
+    t.string "cta_color", limit: 7, default: "#d6f36b", null: false
     t.string "music_notes", default: "", null: false
     t.string "musical_genre", default: "auto", null: false
     t.string "offer", null: false
     t.bigint "order_id", null: false
     t.jsonb "photo_order", default: [], null: false
+    t.bigint "selected_music_asset_id"
+    t.boolean "show_cta", default: true, null: false
     t.string "style", default: "animado", null: false
     t.datetime "updated_at", null: false
     t.text "video_error"
+    t.integer "video_revision", default: 0, null: false
     t.string "video_status", default: "pending", null: false
     t.string "vocal_gender", default: "auto", null: false
     t.index ["order_id"], name: "index_campaigns_on_order_id", unique: true
+    t.index ["selected_music_asset_id"], name: "index_campaigns_on_selected_music_asset_id"
   end
 
   create_table "email_deliveries", force: :cascade do |t|
@@ -266,6 +271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_160000) do
     t.datetime "created_at", null: false
     t.integer "download_count", default: 0
     t.integer "duration_ms"
+    t.decimal "excerpt_duration_seconds", precision: 10, scale: 2, default: "30.0"
     t.decimal "excerpt_start_seconds", precision: 10, scale: 2
     t.integer "file_size_bytes"
     t.string "flac_url"
@@ -450,6 +456,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_160000) do
   add_foreign_key "briefings", "orders"
   add_foreign_key "briefings", "voices"
   add_foreign_key "business_music_profiles", "users"
+  add_foreign_key "campaigns", "order_assets", column: "selected_music_asset_id"
   add_foreign_key "campaigns", "orders"
   add_foreign_key "email_deliveries", "orders"
   add_foreign_key "email_deliveries", "users"

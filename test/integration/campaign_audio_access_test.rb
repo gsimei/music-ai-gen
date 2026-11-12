@@ -17,15 +17,15 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
   end
 
   test "stock storage routes reject even known signed original and excerpt links" do
-    [@asset.audio.blob, @asset.campaign_audio.blob].each do |blob|
-      [rails_storage_redirect_path(blob), rails_storage_proxy_path(blob)].each do |path|
+    [ @asset.audio.blob, @asset.campaign_audio.blob ].each do |blob|
+      [ rails_storage_redirect_path(blob), rails_storage_proxy_path(blob) ].each do |path|
         get path
         assert_response :not_found
       end
       ActiveStorage::Current.set(url_options: { host: "b2b.lvh.me" }) do
         get URI(blob.url).request_uri
         assert_response :not_found
-        ["signed_id", "signed_blob_id"].each do |query|
+        [ "signed_id", "signed_blob_id" ].each do |query|
           get URI(blob.url).request_uri, params: { query => "invalid" }
           assert_response :not_found
           head URI(blob.url).request_uri, params: { query => "invalid" }
@@ -36,7 +36,7 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
   end
 
   test "legacy pages never expose provider recordings for campaigns" do
-    [order_path(@order), order_music_preview_path(@order)].each do |path|
+    [ order_path(@order), order_music_preview_path(@order) ].each do |path|
       get path
       assert_redirected_to order_chat_path(order_id: @order.id)
       refute_includes response.body, @asset.provider_url
@@ -81,7 +81,7 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
     assert_equal "private original", response.body
     assert_includes response.headers["Cache-Control"], "no-store"
     assert_includes response.headers["Content-Disposition"], "attachment"
-    [order_assets(:music_variant_b), older].each do |other|
+    [ order_assets(:music_variant_b), older ].each do |other|
       get order_audio_final_path(@order, asset_id: other.id)
       assert_response :not_found
     end
@@ -96,7 +96,7 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
   test "anonymous and other customers cannot access previews or final downloads" do
     attach_audition
     @order.update!(status: "approved", approved_variant: "a", approved_music_generation_id: @asset.music_generation_id)
-    paths = [order_audio_preview_path(@order, asset_id: @asset.id), order_audio_final_path(@order, asset_id: @asset.id)]
+    paths = [ order_audio_preview_path(@order, asset_id: @asset.id), order_audio_final_path(@order, asset_id: @asset.id) ]
     sign_out :user
     paths.each { |path| get path; assert_response :redirect }
     sign_in users(:customer_other)
@@ -114,7 +114,7 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     get rails_blob_path(blob)
     assert_response :not_found
-    variation = ActiveStorage::Variation.encode(resize_to_limit: [100, 100])
+    variation = ActiveStorage::Variation.encode(resize_to_limit: [ 100, 100 ])
     get rails_blob_representation_proxy_path(signed_blob_id: blob.signed_id, variation_key: variation, filename: blob.filename)
     assert_response :not_found
     get rails_blob_representation_proxy_path(signed_blob_id: blob.signed_id, variation_key: variation, filename: blob.filename), params: { signed_id: "invalid" }

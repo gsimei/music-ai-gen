@@ -1,7 +1,12 @@
-<p>Hello <%= @email %>!</p>
-
-<% if @resource.try(:unconfirmed_email?) %>
-  <p>We're contacting you to notify you that your email is being changed to <%= @resource.unconfirmed_email %>.</p>
-<% else %>
-  <p>We're contacting you to notify you that your email has been changed to <%= @resource.email %>.</p>
-<% end %>
+<% product_name = BRANDS_CONFIG.fetch(:b2b).fetch(:display_name) %>
+<% content_for :preheader, "Confira a alteração no e-mail da sua conta." %>
+<h1 style="margin:0 0 24px;font-size:30px;line-height:36px;color:#173e32;">E-mail da sua conta.</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:26px;">Olá!</p>
+<p style="margin:0 0 24px;font-size:16px;line-height:26px;">
+  <% if @resource.try(:unconfirmed_email?) %>
+    Recebemos um pedido para alterar o e-mail da sua conta na <%= product_name %> para <strong><%= @resource.unconfirmed_email %></strong>.
+  <% else %>
+    O e-mail da sua conta na <%= product_name %> foi alterado para <strong><%= @resource.email %></strong>.
+  <% end %>
+</p>
+<p style="margin:0;font-size:14px;line-height:23px;color:#4c6155;">Se você não reconhece essa alteração, <%= link_to "recupere o acesso à sua conta", new_password_url(@resource), style: "color:#24593e;" %>.</p>
