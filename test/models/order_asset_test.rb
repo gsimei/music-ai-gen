@@ -145,4 +145,27 @@ class OrderAssetTest < ActiveSupport::TestCase
     asset.validate
     assert_empty asset.errors[:storage_key]
   end
+
+  # ---------------------------------------------------------------------------
+  # Full-length marked audition
+  # ---------------------------------------------------------------------------
+  test "full_audition_ready? requires the current source blob and watermark version" do
+    asset = order_assets(:music_variant_a)
+    Campaign.create!(order: asset.order, business_name: "Bella Napoli", offer: "Pizza em dobro",
+      contact: "@bella", call_to_action: "Peça agora", style: "animado")
+    asset.audio.attach(io: StringIO.new("original"), filename: "original.mp3", content_type: "audio/mpeg")
+    assert_not asset.full_audition_ready?
+    assert_nil asset.full_playback_url
+    attach = ->(metadata) do
+      asset.full_audition_audio.attach(io: StringIO.new("marked"), filename: "full.m4a", content_type: "audio/mp4", metadata: metadata)
+    end
+    attach.call(source_blob_id: asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION)
+    assert asset.full_audition_ready?
+    assert_equal Rails.application.routes.url_helpers.order_audio_full_path(asset.order, asset_id: asset.id), asset.full_playback_url
+    attach.call(source_blob_id: asset.audio.blob.id + 1, watermark_version: Campaigns::AudioAudition::VERSION)
+    assert_not asset.full_audition_ready?
+    attach.call(source_blob_id: asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION + 1)
+    assert_not asset.full_audition_ready?
+    assert_nil asset.full_playback_url
+  end
 end

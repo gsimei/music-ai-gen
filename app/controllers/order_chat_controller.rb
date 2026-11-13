@@ -151,6 +151,8 @@ class OrderChatController < ApplicationController
         asset.update!(campaign_preview_status: "queued") unless asset.campaign_preview_ready?
         ArchiveCampaignAudioJob.perform_later(asset.id)
       end
+      # Versions archived before the full marked preview existed.
+      PrepareFullAuditionJob.perform_later(asset.id) if asset.audition_ready? && asset.audio.attached? && !asset.full_audition_ready?
     end
     render_chat_state
   end

@@ -8,6 +8,11 @@ class CampaignAudioController < ApplicationController
     deliver(@asset.audition_audio.blob, disposition: "inline")
   end
 
+  def full
+    return head :not_found unless @asset.full_audition_ready?
+    deliver(@asset.full_audition_audio.blob, disposition: "inline")
+  end
+
   def final
     return head :not_found unless @asset.approved_for_delivery? && @asset.audio.attached?
     deliver(@asset.audio.blob, disposition: "attachment")

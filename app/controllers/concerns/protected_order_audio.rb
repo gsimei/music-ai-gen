@@ -24,7 +24,7 @@ module ProtectedOrderAudio
     return unless blob
     protected = blob.metadata["private_order_audio"] ||
       (blob.metadata["source_blob_id"] && blob.metadata["preview_version"]) ||
-      blob.attachments.where(record_type: "OrderAsset", name: %w[audio campaign_audio audition_audio],
+      blob.attachments.where(record_type: "OrderAsset", name: %w[audio campaign_audio audition_audio full_audition_audio],
         record_id: OrderAsset.joins(order: :campaign).select(:id)).exists?
     if protected
       response.headers["Cache-Control"] = "private, no-store"

@@ -26,6 +26,7 @@ Rails.application.routes.draw do
   resources :orders, only: [ :show ] do
     get "audio/:asset_id/preview", to: "campaign_audio#preview", as: :audio_preview
     get "audio/:asset_id/final", to: "campaign_audio#final", as: :audio_final
+    get "audio/:asset_id/full", to: "campaign_audio#full", as: :audio_full
     post :checkout,          on: :member
     post :approve_lyrics,    on: :member, path: "spf/approve_lyrics"
     post :regenerate_lyrics, on: :member, path: "spf/regenerate_lyrics"

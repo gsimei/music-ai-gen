@@ -183,6 +183,26 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert Orders::MusicApprover.call(order: @order.reload, asset_id: first.order_assets.first.id).success?
   end
 
+  test "prepare_audio backfills the marked full audition for older archived versions" do
+    @order.update!(status: "lyrics_approved")
+    Campaigns::MusicRounds.call(order: @order)
+    asset = finish_latest_round.order_assets.first
+    assert asset.audition_ready?
+    assert_no_enqueued_jobs only: PrepareFullAuditionJob do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
+    asset.audio.attach(io: StringIO.new("fake MP3"), filename: "original.mp3", content_type: "audio/mpeg")
+    assert_enqueued_with(job: PrepareFullAuditionJob, args: [ asset.id ]) do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
+    assert_response :success
+    asset.full_audition_audio.attach(io: StringIO.new("marked full"), filename: "full.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION })
+    assert_no_enqueued_jobs only: PrepareFullAuditionJob do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
+  end
+
   test "saved audio can be played after provider URL expires" do
     @order.update!(status: "lyrics_approved")
     Campaigns::MusicRounds.call(order: @order)

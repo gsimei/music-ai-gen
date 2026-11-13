@@ -4,6 +4,19 @@ class OrderAsset < ApplicationRecord
   has_one_attached :audio
   has_one_attached :campaign_audio
   has_one_attached :audition_audio
+  has_one_attached :full_audition_audio
+
+  # The whole track with the sound watermark. Bound to the exact original blob
+  # and watermark version, so a re-archived recording or a new mark invalidates it.
+  def full_audition_ready?
+    audio.attached? && full_audition_audio.attached? &&
+      full_audition_audio.blob.metadata["source_blob_id"] == audio.blob.id &&
+      full_audition_audio.blob.metadata["watermark_version"] == Campaigns::AudioAudition::VERSION
+  end
+
+  def full_playback_url
+    Rails.application.routes.url_helpers.order_audio_full_path(order, asset_id: id) if full_audition_ready?
+  end
 
   def audition_ready?
     campaign_preview_ready? && audition_audio.attached? &&
