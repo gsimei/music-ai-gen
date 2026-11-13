@@ -39,13 +39,28 @@ class CriarCssGuardTest < ActionDispatch::IntegrationTest
     assert_empty important, "ui.css vence por especificidade (.criar), não por !important"
   end
 
-  test "every ui.css selector is scoped by .criar or a ui- class" do
-    css = strip_comments(ui_css)
-    preludes = css.scan(/([^{};]+)\{/).flatten.map(&:strip).reject { |prelude| prelude.match?(AT_RULE_OR_KEYFRAME_STEP) }
-    assert_not_empty preludes, "ui.css não tem nenhuma regra ainda"
-    unscoped = preludes.flat_map { |prelude| prelude.split(/,(?![^(]*\))/).map(&:strip) }
-      .reject { |selector| selector.include?(".criar") || selector.include?(".ui-") }
-    assert_empty unscoped, "Seletores fora de .criar/.ui- podem vazar para o estúdio: #{unscoped.inspect}"
+  test "every ui.css selector starts with .criar, .estudio, a ui- class or html:has(.criar|.estudio)" do
+    selectors = selectors_of(strip_comments(ui_css))
+    assert_not_empty selectors, "ui.css não tem nenhuma regra ainda"
+    unscoped = selectors.reject { |selector| scoped_selector?(selector) }
+    assert_empty unscoped, "Seletores fora de .criar/.estudio/.ui- podem vazar para o resto do app: #{unscoped.inspect}"
+  end
+
+  test "the scope guard accepts the two roots and refuses selectors that only mention them later" do
+    accepted = [ ".criar .ui-field", ".estudio .ui-tile:has(input:checked)", ".ui-sr-only", ":is(.criar, .estudio) .ui-player",
+      "html:has(.criar)", "html:has(.estudio)", ".estudio[data-phase=\"2\"] .ui-seg" ]
+    refused = [ "body", ".studio-app .ui-player", "main .criar", ".estudio-legacy .x", ".criarx", "html:has(.studio-app)",
+      ":is(.criar, .studio-app) .ui-player" ]
+    assert_equal accepted, selectors_of(accepted.map { |selector| "#{selector} {}" }.join("\n")).select { |selector| scoped_selector?(selector) }
+    assert_empty refused.select { |selector| scoped_selector?(selector) }, "a guarda aceitou seletor sem escopo"
+  end
+
+  test "the player, tiles and segmented control are shared between .criar and .estudio" do
+    selectors = selectors_of(strip_comments(ui_css))
+    %w[ui-player ui-play ui-wave ui-tiles ui-tile ui-seg ui-seg-item ui-moods].each do |component|
+      assert selectors.any? { |selector| selector.include?(".estudio") && selector.match?(/\.#{component}(?![\w-])/) },
+        ".#{component} precisa valer também em .estudio (:is(.criar, .estudio))"
+    end
   end
 
   test "ui.css no longer carries the provisional bridge for the legacy offer class" do
@@ -146,7 +161,20 @@ class CriarCssGuardTest < ActionDispatch::IntegrationTest
   end
 
   def view_files
-    ([ VIEW_ROOT.join("new.html.erb") ] + Dir[VIEW_ROOT.join("new/**/*.erb")].map { |path| Pathname.new(path) }).select(&:file?)
+    # shared/ui entra junto: o player e os campos de som saíram de campaigns/new/ (tarefa 3 do estúdio).
+    paths = Dir[VIEW_ROOT.join("new/**/*.erb")] + Dir[Rails.root.join("app/views/shared/ui/**/*.erb")]
+    ([ VIEW_ROOT.join("new.html.erb") ] + paths.map { |path| Pathname.new(path) }).select(&:file?)
+  end
+
+  SCOPE = /\A(?:(?:\.criar|\.estudio|html:has\(\.(?:criar|estudio)\)|:is\(\s*\.(?:criar|estudio)(?:\s*,\s*\.(?:criar|estudio))*\s*\))(?![\w-])|\.ui-[\w-])/
+
+  def scoped_selector?(selector)
+    selector.match?(SCOPE)
+  end
+
+  def selectors_of(css)
+    css.scan(/([^{};]+)\{/).flatten.map(&:strip).reject { |prelude| prelude.match?(AT_RULE_OR_KEYFRAME_STEP) }
+      .flat_map { |prelude| prelude.split(/,(?![^(]*\))/).map(&:strip) }
   end
 
   def strip_comments(css)

@@ -1,7 +1,10 @@
-/* ui.css · componentes do Criar campanha ("caminho B").
+/* ui.css · Criar campanha e estúdio ("caminho B").
    Carregada depois de jinglepro.css. Regras:
-   - todo seletor contém `.criar` ou `.ui-` (nunca vaza para o estúdio, que ainda usa os CSS legados);
-   - cores só como var(--jp-*), sem !important (vence por especificidade, `.criar` + classe);
+   - todo seletor começa com `.criar`, `.estudio`, `:is(.criar, .estudio)`, `html:has(.criar|.estudio)` ou `.ui-`
+     (nunca vaza para as telas que ainda usam os CSS legados);
+   - o que o estúdio divide com o Criar (ícone, campos, chips, tiles, segmentado, clima, player) usa `:is(.criar, .estudio)`,
+     que tem a mesma especificidade de `.criar`;
+   - cores só como var(--jp-*), sem !important (vence por especificidade, raiz + classe);
    - animação só com transform/opacity, dentro de prefers-reduced-motion: no-preference,
      e o estado base é sempre o estado final.
    Seções: base · cabeçalho · avisos · identidade salva · formulário e barra de passos ·
@@ -19,7 +22,14 @@
   line-height: 1.6;
   min-height: 100dvh;
 }
-.criar :is(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+.estudio {
+  background: var(--jp-cream);
+  color: var(--jp-forest);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+:is(.criar, .estudio) :is(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--jp-forest);
   outline-offset: 3px;
 }
@@ -49,7 +59,7 @@ html:has(.criar) {
   margin-inline: auto;
   padding: 0 var(--ui-gutter) calc(168px + env(safe-area-inset-bottom, 0px));
 }
-.criar .ui-icon {
+:is(.criar, .estudio) .ui-icon {
   width: 20px;
   height: 20px;
   flex: none;
@@ -364,7 +374,7 @@ html:has(.criar) {
   font-size: 17px;
   line-height: 1.6;
 }
-.criar .ui-field {
+:is(.criar, .estudio) .ui-field {
   display: grid;
   gap: 10px;
   min-width: 0;
@@ -372,24 +382,24 @@ html:has(.criar) {
   padding: 0;
   border: 0;
 }
-.criar legend.ui-label {
+:is(.criar, .estudio) legend.ui-label {
   margin-bottom: 10px;
 }
-.criar .ui-label-row {
+:is(.criar, .estudio) .ui-label-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
-.criar .ui-label {
+:is(.criar, .estudio) .ui-label {
   padding: 0;
   color: var(--jp-forest);
   font-size: 15px;
   font-weight: 700;
   line-height: 1.4;
 }
-.criar .ui-optional,
-.criar .ui-hint {
+:is(.criar, .estudio) .ui-optional,
+:is(.criar, .estudio) .ui-hint {
   margin: 0;
   color: var(--jp-muted);
   font-size: 13px;
@@ -436,12 +446,12 @@ html:has(.criar) {
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-.criar .ui-chips {
+:is(.criar, .estudio) .ui-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-.criar .ui-chip {
+:is(.criar, .estudio) .ui-chip {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -457,11 +467,11 @@ html:has(.criar) {
   line-height: 1.3;
   cursor: pointer;
 }
-.criar .ui-chip:hover {
+:is(.criar, .estudio) .ui-chip:hover {
   border-color: var(--jp-field);
 }
 /* O rádio nativo fica escondido por recorte (não display:none): continua focável e o reportValidity chega nele. */
-.criar :is(.ui-chip, .ui-tile, .ui-seg-item) input {
+:is(.criar, .estudio) :is(.ui-chip, .ui-tile, .ui-seg-item) input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -471,12 +481,12 @@ html:has(.criar) {
   clip-path: inset(50%);
   pointer-events: none;
 }
-.criar .ui-chip:has(input:checked) {
+:is(.criar, .estudio) .ui-chip:has(input:checked) {
   border-color: var(--jp-forest);
   background: var(--jp-forest);
   color: var(--jp-cream);
 }
-.criar :is(.ui-chip, .ui-tile, .ui-seg-item):has(input:focus-visible) {
+:is(.criar, .estudio) :is(.ui-chip, .ui-tile, .ui-seg-item):has(input:focus-visible) {
   outline: 3px solid var(--jp-forest);
   outline-offset: 3px;
 }
@@ -918,22 +928,22 @@ html:has(.criar) {
 }
 
 /* ---------- Passo 2: ritmo (tiles), voz (segmentado), clima (chips) e detalhes ---------- */
-.criar .ui-tiles {
+:is(.criar, .estudio) .ui-tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 @media (min-width: 600px) {
-  .criar .ui-tiles {
+  :is(.criar, .estudio) .ui-tiles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (min-width: 1200px) {
-  .criar .ui-tiles {
+  :is(.criar, .estudio) .ui-tiles {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-.criar .ui-tile {
+:is(.criar, .estudio) .ui-tile {
   position: relative;
   display: grid;
   align-content: start;
@@ -946,33 +956,33 @@ html:has(.criar) {
   color: var(--jp-forest);
   cursor: pointer;
 }
-.criar .ui-tile:hover {
+:is(.criar, .estudio) .ui-tile:hover {
   border-color: var(--jp-field);
 }
-.criar .ui-tile-name {
+:is(.criar, .estudio) .ui-tile-name {
   font-size: 17px;
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
-.criar .ui-tile-desc {
+:is(.criar, .estudio) .ui-tile-desc {
   color: var(--jp-muted);
   font-size: 13px;
   line-height: 1.4;
 }
-.criar .ui-tile-icon {
+:is(.criar, .estudio) .ui-tile-icon {
   margin-bottom: 2px;
 }
-.criar .ui-tile:has(input:checked) {
+:is(.criar, .estudio) .ui-tile:has(input:checked) {
   border-color: var(--jp-forest);
   background: var(--jp-forest);
   color: var(--jp-cream);
 }
-.criar .ui-tile:has(input:checked) .ui-tile-desc {
+:is(.criar, .estudio) .ui-tile:has(input:checked) .ui-tile-desc {
   color: var(--jp-on-forest-muted);
 }
 
-.criar .ui-seg {
+:is(.criar, .estudio) .ui-seg {
   display: flex;
   width: fit-content;
   max-width: 100%;
@@ -981,7 +991,7 @@ html:has(.criar) {
   border-radius: 999px;
   background: var(--jp-mint);
 }
-.criar .ui-seg-item {
+:is(.criar, .estudio) .ui-seg-item {
   position: relative;
   display: flex;
   flex: 1 1 auto;
@@ -998,28 +1008,28 @@ html:has(.criar) {
   cursor: pointer;
 }
 @media (min-width: 640px) {
-  .criar .ui-seg-item {
+  :is(.criar, .estudio) .ui-seg-item {
     padding-inline: 22px;
   }
 }
-.criar .ui-seg-item:has(input:checked) {
+:is(.criar, .estudio) .ui-seg-item:has(input:checked) {
   background: var(--jp-surface);
   box-shadow: 0 2px 6px -2px color-mix(in srgb, var(--jp-forest) 35%, transparent);
   color: var(--jp-forest);
   font-weight: 700;
 }
 
-.criar .ui-moods {
+:is(.criar, .estudio) .ui-moods {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 @media (min-width: 640px) {
-  .criar .ui-moods {
+  :is(.criar, .estudio) .ui-moods {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.criar .ui-chip-mood {
+:is(.criar, .estudio) .ui-chip-mood {
   display: grid;
   align-content: start;
   gap: 2px;
@@ -1027,7 +1037,7 @@ html:has(.criar) {
   padding: 14px 18px;
   border-radius: 18px;
 }
-.criar .ui-mood-name {
+:is(.criar, .estudio) .ui-mood-name {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1036,26 +1046,26 @@ html:has(.criar) {
   font-weight: 700;
   line-height: 1.3;
 }
-.criar .ui-mood-check {
+:is(.criar, .estudio) .ui-mood-check {
   width: 18px;
   height: 18px;
   opacity: 0;
 }
-.criar .ui-mood-desc {
+:is(.criar, .estudio) .ui-mood-desc {
   color: var(--jp-muted);
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
 }
-.criar .ui-chip-mood:has(input:checked) {
+:is(.criar, .estudio) .ui-chip-mood:has(input:checked) {
   border-color: var(--jp-lime);
   background: var(--jp-lime);
   color: var(--jp-forest);
 }
-.criar .ui-chip-mood:has(input:checked) .ui-mood-check {
+:is(.criar, .estudio) .ui-chip-mood:has(input:checked) .ui-mood-check {
   opacity: 1;
 }
-.criar .ui-chip-mood:has(input:checked) .ui-mood-desc {
+:is(.criar, .estudio) .ui-chip-mood:has(input:checked) .ui-mood-desc {
   color: var(--jp-forest);
 }
 
@@ -1122,7 +1132,7 @@ html:has(.criar) {
 }
 
 /* ---------- Player da marca (cartão floresta do exemplo) ---------- */
-.criar .ui-player {
+:is(.criar, .estudio) .ui-player {
   margin: 8px 0 28px;
   padding: 22px;
   border-radius: 28px;
@@ -1130,21 +1140,21 @@ html:has(.criar) {
   color: var(--jp-cream);
 }
 @media (min-width: 640px) {
-  .criar .ui-player {
+  :is(.criar, .estudio) .ui-player {
     padding: 28px;
   }
 }
-.criar .ui-player p {
+:is(.criar, .estudio) .ui-player p {
   margin: 0;
 }
-.criar .ui-player-eyebrow {
+:is(.criar, .estudio) .ui-player-eyebrow {
   color: var(--jp-lime);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.criar .ui-player-name {
+:is(.criar, .estudio) .ui-player-name {
   margin: 14px 0 6px;
   font-size: clamp(2rem, 1.5rem + 1.6vw, 3.25rem);
   font-weight: 600;
@@ -1152,19 +1162,19 @@ html:has(.criar) {
   letter-spacing: -0.06em;
   text-wrap: balance;
 }
-.criar .ui-player-desc {
+:is(.criar, .estudio) .ui-player-desc {
   min-height: 1.5em;
   color: var(--jp-on-forest-muted);
   font-size: 15px;
 }
-.criar .ui-wave {
+:is(.criar, .estudio) .ui-wave {
   display: flex;
   align-items: center;
   gap: 3px;
   height: 72px;
   margin: 24px 0 20px;
 }
-.criar .ui-wave > i {
+:is(.criar, .estudio) .ui-wave > i {
   flex: 1;
   height: var(--h, 40%);
   min-height: 6px;
@@ -1172,36 +1182,36 @@ html:has(.criar) {
   background: var(--jp-on-forest-line);
   transform-origin: center;
 }
-.criar .ui-wave > i.is-played {
+:is(.criar, .estudio) .ui-wave > i.is-played {
   background: var(--jp-lime);
 }
-.criar .ui-wave > i:nth-child(7n + 1) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 1) {
   --h: 30%;
 }
-.criar .ui-wave > i:nth-child(7n + 2) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 2) {
   --h: 62%;
 }
-.criar .ui-wave > i:nth-child(7n + 3) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 3) {
   --h: 88%;
 }
-.criar .ui-wave > i:nth-child(7n + 4) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 4) {
   --h: 48%;
 }
-.criar .ui-wave > i:nth-child(7n + 5) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 5) {
   --h: 72%;
 }
-.criar .ui-wave > i:nth-child(7n + 6) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n + 6) {
   --h: 38%;
 }
-.criar .ui-wave > i:nth-child(7n) {
+:is(.criar, .estudio) .ui-wave > i:nth-child(7n) {
   --h: 56%;
 }
-.criar .ui-player-row {
+:is(.criar, .estudio) .ui-player-row {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-.criar .ui-play {
+:is(.criar, .estudio) .ui-play {
   display: grid;
   flex: none;
   place-items: center;
@@ -1214,54 +1224,54 @@ html:has(.criar) {
   color: var(--jp-forest);
   cursor: pointer;
 }
-.criar .ui-play .ui-icon {
+:is(.criar, .estudio) .ui-play .ui-icon {
   width: 22px;
   height: 22px;
 }
-.criar .ui-play .ui-pause-icon,
-.criar .ui-play[data-playing="true"] .ui-play-icon {
+:is(.criar, .estudio) .ui-play .ui-pause-icon,
+:is(.criar, .estudio) .ui-play[data-playing="true"] .ui-play-icon {
   display: none;
 }
-.criar .ui-play[data-playing="true"] .ui-pause-icon {
+:is(.criar, .estudio) .ui-play[data-playing="true"] .ui-pause-icon {
   display: block;
 }
-.criar .ui-player button:focus-visible {
+:is(.criar, .estudio) .ui-player button:focus-visible {
   outline-color: var(--jp-lime);
 }
-.criar .ui-time-clock {
+:is(.criar, .estudio) .ui-time-clock {
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.criar .ui-time-total {
+:is(.criar, .estudio) .ui-time-total {
   color: var(--jp-on-forest-muted);
   font-weight: 500;
 }
-.criar .ui-time-total::before {
+:is(.criar, .estudio) .ui-time-total::before {
   content: " / ";
 }
-.criar .ui-time-total:empty {
+:is(.criar, .estudio) .ui-time-total:empty {
   display: none;
 }
-.criar .ui-time-note {
+:is(.criar, .estudio) .ui-time-note {
   color: var(--jp-on-forest-muted);
   font-size: 13px;
   line-height: 1.5;
 }
 /* Sem exemplo (ou "Escolher por mim"): só a dica no lugar do botão. */
-.criar .ui-player:has(.ui-play[hidden]) :is(.ui-wave, .ui-time) {
+:is(.criar, .estudio) .ui-player:has(.ui-play[hidden]) :is(.ui-wave, .ui-time) {
   display: none;
 }
-.criar .ui-player-hint {
+:is(.criar, .estudio) .ui-player-hint {
   margin-top: 20px;
   color: var(--jp-on-forest-muted);
   font-size: 15px;
 }
-.criar .ui-player-error {
+:is(.criar, .estudio) .ui-player-error {
   margin-top: 14px;
   font-size: 14px;
 }
-.criar .ui-player-retry {
+:is(.criar, .estudio) .ui-player-retry {
   min-height: 44px;
   padding: 0 4px;
   border: 0;
@@ -1272,19 +1282,19 @@ html:has(.criar) {
   text-underline-offset: 4px;
   cursor: pointer;
 }
-.criar .ui-dir {
+:is(.criar, .estudio) .ui-dir {
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--jp-on-forest-line);
 }
-.criar .ui-dir-title {
+:is(.criar, .estudio) .ui-dir-title {
   color: var(--jp-on-forest-muted);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.criar .ui-dir-list {
+:is(.criar, .estudio) .ui-dir-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1292,7 +1302,7 @@ html:has(.criar) {
   padding: 0;
   list-style: none;
 }
-.criar .ui-dir-list li {
+:is(.criar, .estudio) .ui-dir-list li {
   padding: 6px 12px;
   border: 1px solid var(--jp-on-forest-line);
   border-radius: 999px;
@@ -1302,16 +1312,16 @@ html:has(.criar) {
 }
 /* A onda só anima enquanto toca e só sem prefers-reduced-motion; o estado base (parado) é o final. */
 @media (prefers-reduced-motion: no-preference) {
-  .criar .ui-player:has(.ui-play[data-playing="true"]) .ui-wave > i {
+  :is(.criar, .estudio) .ui-player:has(.ui-play[data-playing="true"]) .ui-wave > i {
     animation: ui-wave 0.9s ease-in-out infinite alternate;
   }
-  .criar .ui-wave > i:nth-child(4n + 2) {
+  :is(.criar, .estudio) .ui-wave > i:nth-child(4n + 2) {
     animation-delay: -0.25s;
   }
-  .criar .ui-wave > i:nth-child(4n + 3) {
+  :is(.criar, .estudio) .ui-wave > i:nth-child(4n + 3) {
     animation-delay: -0.5s;
   }
-  .criar .ui-wave > i:nth-child(4n) {
+  :is(.criar, .estudio) .ui-wave > i:nth-child(4n) {
     animation-delay: -0.7s;
   }
   @keyframes ui-wave {
