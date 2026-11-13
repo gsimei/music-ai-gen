@@ -3,6 +3,10 @@
 class OrderChatController < ApplicationController
   before_action :authenticate_user!
   before_action :set_order
+  # Both actions can enqueue ffmpeg renders; one shared bucket per user.
+  # The chip and timeline post excerpt_settings often in normal use.
+  AUDIO_RATE_LIMIT = 30
+  rate_limit to: AUDIO_RATE_LIMIT, within: 1.minute, only: %i[prepare_audio excerpt_settings], by: -> { current_user.id }, with: -> { head :too_many_requests }
 
   def show
     @messages = @order.briefing_messages

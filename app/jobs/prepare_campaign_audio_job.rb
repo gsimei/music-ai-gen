@@ -28,7 +28,7 @@ class PrepareCampaignAudioJob < ApplicationJob
         end
       end
       Campaigns::AudioAudition.render(source: destination, destination: audition_path,
-        start_seconds: metadata.fetch("start_seconds"), duration_seconds: metadata.fetch("duration_seconds"))
+        start_seconds: metadata.fetch("start_seconds"), duration_seconds: metadata.fetch("duration_seconds"), seed: asset.id.to_s)
       File.open(destination) do |audio|
         File.open(audition_path) do |audition|
           asset.order.with_lock do

@@ -10,6 +10,14 @@ class PrepareFullAuditionJobTest < ActiveJob::TestCase
     @asset.audio.attach(io: StringIO.new("private original"), filename: "original.mp3", content_type: "audio/mpeg")
   end
 
+  test "discards duplicate renders of the same asset while one is running" do
+    assert_equal 1, PrepareFullAuditionJob.concurrency_limit
+    assert_equal :discard, PrepareFullAuditionJob.concurrency_on_conflict
+    assert_equal 15.minutes, PrepareFullAuditionJob.concurrency_duration
+    assert_equal PrepareFullAuditionJob.new(@asset.id).concurrency_key, PrepareFullAuditionJob.new(@asset.id).concurrency_key
+    assert_not_equal PrepareFullAuditionJob.new(@asset.id).concurrency_key, PrepareFullAuditionJob.new(@asset.id + 1).concurrency_key
+  end
+
   test "attaches a marked full-length audition bound to the original recording" do
     calls = []
     render = ->(**kwargs) { calls << kwargs; File.binwrite(kwargs[:destination], "marked full") }
@@ -20,6 +28,7 @@ class PrepareFullAuditionJobTest < ActiveJob::TestCase
     end
     assert_equal 1, calls.size
     assert_equal 0, calls.first[:start_seconds]
+    assert_equal @asset.id.to_s, calls.first[:seed]
     assert_equal @asset.track_duration_seconds, calls.first[:duration_seconds]
     @asset.reload
     assert @asset.full_audition_audio.attached?

@@ -4,6 +4,8 @@ require "tmpdir"
 # clean recording stays behind approval (CampaignAudioController#final).
 class PrepareFullAuditionJob < ApplicationJob
   queue_as :default
+  # One render per asset at a time; extra enqueues (repeated clicks) are dropped, not queued.
+  limits_concurrency to: 1, key: ->(asset_id) { "full_audition/#{asset_id}" }, duration: 15.minutes, on_conflict: :discard
   retry_on StandardError, wait: :polynomially_longer, attempts: 3
 
   def perform(asset_id)
@@ -17,7 +19,8 @@ class PrepareFullAuditionJob < ApplicationJob
     Dir.mktmpdir("campaign-full-audition-") do |dir|
       destination = File.join(dir, "full.m4a")
       source_blob.open do |source|
-        Campaigns::AudioAudition.render(source: source.path, destination: destination, start_seconds: 0, duration_seconds: duration)
+        Campaigns::AudioAudition.render(source: source.path, destination: destination, start_seconds: 0, duration_seconds: duration,
+          seed: asset.id.to_s)
       end
       File.open(destination) do |audition|
         asset.with_lock do
