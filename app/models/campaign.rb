@@ -8,6 +8,7 @@ class Campaign < ApplicationRecord
   GENRES = {
     "auto" => { label: "Escolher por mim", prompt: nil },
     "pop" => { label: "Pop · alegre e versátil", prompt: "catchy Brazilian pop, melodic hooks, clean commercial arrangement" },
+    "natal" => { label: "Natal · sinos e clima de festa", prompt: "festive Christmas pop, sleigh bells, glockenspiel, warm piano, lush strings, catchy singalong chorus" },
     "sertanejo" => { label: "Sertanejo · violão e refrão forte", prompt: "Brazilian sertanejo, acoustic guitar, catchy singalong chorus" },
     "forro" => { label: "Forró · sanfona e alegria", prompt: "Brazilian forro, accordion, zabumba and triangle" },
     "piseiro" => { label: "Piseiro · teclado e batida dançante", prompt: "Brazilian piseiro, rhythmic keyboard, danceable percussion" },

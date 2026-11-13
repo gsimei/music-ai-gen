@@ -1,0 +1,90 @@
+[
+  {
+    "file": "video/virajingle-apresentacao-27s.mp4",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p"
+      },
+      {
+        "codec_name": "aac",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "27.000000",
+      "size": "9039715"
+    }
+  },
+  {
+    "file": "stories/01-sua-loja-tem-refrao.mp4",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p"
+      },
+      {
+        "codec_name": "aac",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "8.010884",
+      "size": "1333117"
+    }
+  },
+  {
+    "file": "stories/02-da-vitrine-para-o-play.mp4",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p"
+      },
+      {
+        "codec_name": "aac",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "10.010884",
+      "size": "1528660"
+    }
+  },
+  {
+    "file": "stories/03-campanha-completa.mp4",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1080,
+        "height": 1920,
+        "pix_fmt": "yuv420p"
+      },
+      {
+        "codec_name": "aac",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "9.000000",
+      "size": "1747482"
+    }
+  }
+]

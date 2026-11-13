@@ -105,7 +105,6 @@ body .studio-app .campaign-photo-list figcaption {font-size:13px;padding-block:8
 body .studio-app .campaign-photo-list button {min-height:44px;font-size:13px;color:var(--jp-forest)}
 body .studio-app .campaign-upload {border:1.5px dashed var(--jp-field);border-radius:20px;padding:20px;margin-top:24px}
 body .studio-app .campaign-photo-choose {border-radius:999px;background:var(--jp-mint);min-height:52px;font-size:15px}
-body .studio-app .campaign-checkout {gap:32px;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr)}
 body .studio-app .campaign-total {margin:24px 0;color:var(--jp-forest)}
 body .studio-app .campaign-total strong {font:800 52px/1.1 Manrope,sans-serif;letter-spacing:-.04em}
 body .studio-app .campaign-total :is(span,small) {font-size:14px}
@@ -300,7 +299,6 @@ body .landing-home .lp-footer p,body .landing-home .lp-footer>span {font-size:13
  .jp-versions {grid-template-columns:repeat(2,minmax(0,1fr))}
  body .studio-app .campaign-builder {grid-template-columns:1fr}
  body .studio-app .campaign-preview-wrap {position:static;max-width:360px;margin:auto}
- body .studio-app .campaign-checkout {grid-template-columns:1fr}
  body .landing-home .lp-hero {gap:24px}
  body .landing-home .lp-hero h1 {font-size:54px}
  body .landing-home .lp-stage {height:560px}
@@ -340,7 +338,6 @@ body .landing-home .lp-footer p,body .landing-home .lp-footer>span {font-size:13
  body .studio-app .campaign-form-actions {position:sticky;bottom:0;background:var(--jp-cream);padding:16px 0;margin-top:16px;z-index:3;box-shadow:0 -8px 12px var(--jp-cream)}
  body .studio-app .campaign-form-actions .studio-button {padding:12px 20px;min-height:54px}
  body .studio-app .campaign-form-actions .studio-button:last-child,body .studio-app .campaign-form-actions [data-campaign-form-target=next] {flex:1}
- body .studio-app .campaign-checkout {gap:20px}
  body .studio-app :is(.campaign-card,.jp-summary-card) {padding:22px}
  body .studio-app .studio-library-heading {display:block}
  body .studio-app .studio-library-heading>.studio-button {margin-top:24px;width:100%}
@@ -491,4 +488,48 @@ body .jp-guided-workspace :is(.creative-video-photos,.creative-video-appearance)
   body .jp-guided-workspace .creative-creation-form {padding:18px}
   .creative-form-actions {flex-direction:column;align-items:stretch;gap:8px}
   .creative-form-actions .studio-button,.creative-video-finish .studio-button {width:100%;white-space:normal}
+}
+
+/* The final check keeps the offer, price and payment action together on laptops. */
+.campaign-form-footer {display:contents}
+.campaign-app:not(.campaign-review) :is(.campaign-purchase,.campaign-payment-hint) {display:none}
+body .campaign-review .jp-creation-heading,body .campaign-review .campaign-main>.campaign-saved-sound {display:none}
+body .campaign-review .campaign-review-step h2 {margin:0 0 10px}
+body .campaign-review .campaign-review-step>p {margin:0 0 18px}
+body .campaign-review .campaign-review-step .campaign-note {padding:14px 18px}
+body .campaign-review .campaign-note p {margin:4px 0 0;line-height:1.5}
+body .campaign-review .campaign-included {margin:18px 0}
+body .campaign-review .campaign-included li {font-size:14px;line-height:1.5}
+body .campaign-review .campaign-total {gap:16px;margin-block:16px;padding-block:16px}
+body .campaign-review .campaign-total strong {font-size:40px}
+body .campaign-review .campaign-total :is(span,small) {font-size:13px}
+body .campaign-review .campaign-payment-hint {margin:10px 0 0;font-size:13px}
+
+@media (min-width:960px) {
+  body .campaign-review .studio-app-header {min-height:76px;padding-block:10px}
+  body .campaign-review .campaign-main {padding-block:24px}
+  body .campaign-review .campaign-main>.studio-notice {padding:10px 16px;margin-bottom:16px}
+  body .campaign-review .campaign-builder {--campaign-review-preview-width:clamp(210px,calc((100dvh - 380px)*9/16 + 32px),300px);grid-template-columns:minmax(0,1fr) var(--campaign-review-preview-width);gap:48px}
+  body .campaign-review .campaign-progress {padding-bottom:16px;margin-bottom:24px}
+  body .campaign-review .campaign-review-step h2 {font-size:32px}
+  body .campaign-review .campaign-included {display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+  body .campaign-review .campaign-included li {display:flex;align-items:baseline;padding-block:12px}
+  body .campaign-review .campaign-included li::before {flex-shrink:0;margin-right:10px}
+  body .campaign-review .campaign-form-footer {display:block;border-top:1px solid var(--jp-border);padding-top:18px;margin-top:18px}
+  body .campaign-review .campaign-total {margin:0;padding:0;border:0;justify-content:flex-start;gap:20px}
+  body .campaign-review .campaign-form-actions {border:0;padding:0;margin-top:16px}
+  body .campaign-review .campaign-preview-wrap {position:static;margin:0;padding:16px;width:100%}
+  body .campaign-review .campaign-preview-wrap>.studio-kicker {font-size:13px;max-width:none;line-height:1.5;margin-bottom:12px}
+  body .campaign-review .campaign-preview-wrap>.studio-field-hint {margin-bottom:0;font-size:13px;line-height:1.5}
+  body .campaign-review .campaign-poster {padding:16px;min-height:0;border-width:5px}
+  body .campaign-review .campaign-poster>strong {font-size:20px;padding-top:24px}
+  body .campaign-review .campaign-poster-business {font-size:15px}
+  body .campaign-review .campaign-poster-logo {max-width:120px;max-height:56px}
+  body .campaign-review .campaign-poster-contact {padding:10px;margin-top:12px;font-size:12px;line-height:1.4}
+  body .campaign-review .campaign-poster-contact b {font-size:12px}
+}
+@media (min-width:1100px) {
+  body .campaign-review .campaign-form-footer {display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:center}
+  body .campaign-review .campaign-form-actions {margin:0}
+  body .campaign-review .campaign-payment-hint {grid-column:1/-1}
 }

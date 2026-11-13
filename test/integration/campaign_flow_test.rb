@@ -5,6 +5,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
 
   setup do
     host! "b2b.lvh.me"
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_raise(Stripe::APIConnectionError.new("Checkout unavailable"))
     sign_in users(:customer_b2b)
     @attributes = { business_name: "Pizzaria da Vila", offer: "Duas pizzas por R$ 79,90, nesta terça", contact: "@pizzariadavila", call_to_action: "Peça pelo WhatsApp", style: "animado" }
   end
@@ -16,6 +17,8 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "form.campaign-builder"
     assert_select ".campaign-total strong", "R$ 29,90"
+    assert_select 'input[type="submit"][value="Pagar R$ 29,90"]'
+    assert_select 'form.campaign-builder[data-turbo="false"]'
   end
 
   test "submission creates pending order and a Portuguese vocal briefing with server price" do
@@ -54,7 +57,6 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_equal %w[first.jpg second.jpg third.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
     get campaign_path(campaign)
     assert_select ".campaign-photo-list img", count: 3
-    get edit_campaign_path(campaign)
     assert_response :success
     assert_select 'input[type=file][multiple][name="campaign[photos][]"]'
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ "" ]) }
@@ -98,7 +100,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to campaign_path(campaign)
     assert_equal chosen_order, campaign.reload.product_photos.map(&:id)
     assert_equal %w[third.jpg first.jpg second.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
-    get edit_campaign_path(campaign)
+    get campaign_path(campaign)
     assert_response :success
     assert_select 'input[name="campaign[photo_order][]"]' do |inputs|
       assert_equal chosen_order.map(&:to_s), inputs.map { |input| input["value"] }
@@ -142,18 +144,72 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "checkout uses BRL and cannot mark an order paid on its own" do
-    post campaigns_path, params: { campaign: @attributes }
-    campaign = Campaign.last
+  test "submission opens checkout directly with BRL and cannot mark an order paid on its own" do
     captured = nil
     Stripe::Checkout::Session.stub(:create, ->(**args) { captured = args; Struct.new(:id, :url).new("cs_campaign_test", "https://checkout.stripe.com/test") }) do
-      post checkout_order_path(campaign.order)
+      assert_no_enqueued_jobs only: GenerateLyricsJob do
+        post campaigns_path, params: { campaign: @attributes }
+      end
     end
+    campaign = Campaign.last
     assert_redirected_to "https://checkout.stripe.com/test"
+    assert_response :see_other
     assert_equal "brl", captured[:line_items][0][:price_data][:currency]
     assert_equal 2990, captured[:line_items][0][:price_data][:unit_amount]
     assert_equal "pt-BR", captured[:locale]
     assert_equal "pending", campaign.order.reload.status
+    assert_equal "cs_campaign_test", campaign.order.stripe_session_id
+    assert_equal campaign_url(campaign, payment: "processing"), captured[:success_url]
+    assert_equal campaign_url(campaign), captured[:cancel_url]
+  end
+
+  test "checkout failure returns to the same form and retries the saved campaign without another order" do
+    post campaigns_path, params: { campaign: @attributes.merge(photos: [ photo_upload("opener") ]) }
+    campaign = Campaign.last
+    follow_redirect!
+    assert_select 'form.campaign-builder[action=?][data-campaign-form-initial-step-value="2"]', campaign_path(campaign)
+    assert_select '[role="alert"]', text: /Sua campanha está salva/
+    assert_select ".campaign-photo-list img", count: 1
+    assert_select "textarea#campaign_offer", text: @attributes[:offer]
+    assert_select ".campaign-checkout", count: 0
+
+    session = Stripe::Checkout::Session.construct_from(id: "cs_retry_saved", url: "https://checkout.stripe.com/retry_saved")
+    Stripe::Checkout::Session.stub(:create, session) do
+      assert_no_difference [ "Campaign.count", "Order.count", "Briefing.count" ] do
+        patch campaign_path(campaign), params: { campaign: { offer: "Oferta corrigida" } }
+      end
+    end
+    assert_redirected_to session.url
+    assert_equal "Oferta corrigida", campaign.reload.offer
+    assert_equal [ "opener.jpg" ], campaign.product_photos.map { |photo| photo.filename.to_s }
+  end
+
+  test "cancelled checkout returns to the first screen and reuses the existing payment session" do
+    order = orders(:b2b_pending)
+    order.update!(stripe_session_id: "cs_cancelled")
+    campaign = Campaign.create!(@attributes.merge(order: order))
+    session = Stripe::Checkout::Session.construct_from(id: "cs_cancelled", status: "open", payment_status: "unpaid", url: "https://checkout.stripe.com/resume")
+    Stripe::Checkout::Session.stub(:retrieve, session) do
+      get campaign_path(campaign)
+      assert_select "form.campaign-builder[action=?]", checkout_order_path(order)
+      assert_select 'input[type="submit"][value=?]', "Pagar #{ApplicationController.helpers.campaign_price(order)}"
+      assert_select "h2", text: "Confira e comece."
+      assert_select ".campaign-checkout", count: 0
+      assert_select "input#campaign_offer, textarea#campaign_offer", count: 0
+      Stripe::Checkout::Session.stub(:create, ->(*) { flunk "must resume the saved checkout" }) do
+        assert_no_difference [ "Campaign.count", "Order.count" ] do
+          post checkout_order_path(order)
+        end
+      end
+      assert_redirected_to session.url
+    end
+    assert order.reload.pending?
+  end
+
+  test "removed review editing route is unavailable" do
+    campaign = Campaign.create!(@attributes.merge(order: orders(:b2b_pending)))
+    get "/campaigns/#{campaign.id}/edit"
+    assert_response :not_found
   end
 
   test "approval queues video exactly once and library links to the campaign" do

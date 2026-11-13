@@ -1,0 +1,58 @@
+VIRAJINGLE — PACOTE DE LANÇAMENTO
+Conceito: Sua promoção merece um refrão.
+Produção: 13/11/2026.
+
+CONTEÚDO PRINCIPAL
+
+audio/virajingle-jingle-27s.mp3 — jingle final para divulgação.
+audio/virajingle-jingle-27s.m4a — mesmo trecho em AAC.
+audio/virajingle-versao-a-completa.mp3 — primeira versão original.
+audio/virajingle-versao-b-completa.mp3 — segunda versão original, usada na campanha.
+video/virajingle-apresentacao-27s.mp4 — apresentação final, 1080 × 1920, com jingle e seis cenas.
+video/virajingle-apresentacao-27s.srt — legenda opcional do jingle.
+video/virajingle-video-sistema.mp4 — montagem feita pelo renderizador do próprio ViraJingle, preservada como versão adicional.
+posts/ — três posts em PNG, 1080 × 1350, e seus arquivos SVG.
+stories/ — três Stories em PNG, 1080 × 1920, e em MP4 com música, além dos arquivos SVG.
+LEGENDAS.txt — textos do Reel e dos três posts, textos alternativos e orientação para os Stories.
+
+SEGMENTOS REPRESENTADOS
+
+Os posts e Stories destacam roupas, calçados, acessórios e beleza/serviços. O vídeo reúne esses segmentos e inclui alimentação na abertura, mostrando a variedade do comércio local.
+
+JINGLE NO PRÓPRIO SISTEMA
+
+Campanha local: 22.
+Pedido: ORD-2026-DZ1XN.
+Geração musical: 36, duas versões produzidas pela integração Mureka do ViraJingle.
+Variante escolhida: B. Trecho de 19,60 s a 46,60 s da gravação original.
+Letra escrita para esta campanha e salva no sistema. Foi usada a simulação interna de checkout para esta campanha de divulgação da própria marca, sem transação na Stripe.
+O vídeo final de apresentação também está salvo na campanha local.
+
+IDENTIDADE E PRODUÇÃO
+
+Logo oficial musical do ViraJingle, sem redesenho.
+Cores: verde #173E32, creme #F6F5ED e lima #C1F66B.
+Tipografia: Manrope e Cormorant Garamond.
+As três fotos de comércio foram criadas com o gerador de imagens integrado a este ambiente. São imagens ilustrativas, sem depoimentos atribuídos a clientes.
+Prompts, fontes com licenças, cenas, registros e arquivos de produção ficam em fontes/ e assets/ na pasta de trabalho.
+
+ORDEM SUGERIDA DE PUBLICAÇÃO
+
+Dia 1: vídeo de apresentação e os três Stories em sequência.
+Dia 2: post de loja de roupas.
+Dia 4: post de calçados e acessórios.
+Dia 6: post de lojas, salões e serviços.
+
+Use as legendas de LEGENDAS.txt e o endereço real do ViraJingle no link da bio. Para Stories com adesivo de link, posicione o adesivo junto à chamada inferior, sem cobrir o preço.
+
+FORMATOS
+
+Vídeos MP4: H.264, áudio AAC, 30 quadros por segundo, formato vertical 9:16.
+Posts PNG: formato 4:5.
+Stories PNG/MP4: formato 9:16. O conteúdo foi mantido com margens para a interface da rede social.
+
+VERIFICAÇÃO
+
+Jingle conferido por transcrição independente.
+Textos, acentos, logo, enquadramento e contraste das artes revisados visualmente.
+Vídeos verificados quanto a resolução, duração, presença de áudio e leitura integral dos arquivos.

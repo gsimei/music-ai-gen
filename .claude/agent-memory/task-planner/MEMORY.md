@@ -6,3 +6,4 @@
 - [Conversational chat interface plan](project_chat_interface.md) — BriefingMessage migration, ConversationalBriefingService, OrderChatController, Turbo Stream cards, Stimulus controllers — planned 2026-05-29
 - [Soundtrack feature plan](project_soundtrack_feature.md) — Pro-only, SoundtrackInput model, Mureka /v1/soundtrack/generate, skip-lyrics flow, video upload, GDPR deletion
 - [JinglePro redesign plan](project_jinglepro_redesign.md) — Slices 0-5, verified seams (OrderChatBroadcaster, dual CSS, class-coupled tests), pending user decisions — planned 2026-11-09
+- [Criar caminho B plan](project_criar_caminho_b.md) — ui.css/.criar isolation, shared Stimulus risks, "Sem faixa" decision — planned 2026-11-13

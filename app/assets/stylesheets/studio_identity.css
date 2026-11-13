@@ -83,11 +83,8 @@ body.studio-page { background:#f6f5ed; }
 .studio-app .campaign-included li { font-size:13px; padding-block:13px; }
 .studio-app .campaign-included li::before { color:#4c793c; }
 .studio-app .campaign-card { background:#fffef9; border-color:#c4cfbc; border-radius:14px; padding:32px; }
-.studio-app .campaign-checkout > aside { background:#e5eadc; }
 .studio-app .campaign-total { margin-block:22px; }
 .studio-app .campaign-total strong { font-size:56px; font-weight:500; }
-.studio-app .campaign-checkout .campaign-total { border-color:#b7c6ab; }
-.studio-app .campaign-checkout .studio-button { width:100%; justify-content:space-between; text-align:left; }
 .studio-app .campaign-video { background:#e2e8d8; border-radius:80px 80px 12px 12px; padding:28px; }
 .studio-app .campaign-video video { border:5px solid #fffef9; border-radius:12px; box-shadow:0 12px 28px #173e3220; }
 .studio-app .campaign-photo-list figcaption { color:#3a613e; }
@@ -221,7 +218,7 @@ body.studio-page { background:#f6f5ed; }
 .campaign-profile-option { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--studio-line); border-radius: 12px; text-decoration: none; }
 .campaign-profile-option span { font-size: 12px; color: var(--studio-muted); }
 .campaign-profile-option:hover, .campaign-profile-option:focus-visible { border-color: currentColor; background: #e8eddc; }
-.campaign-delivery + .campaign-saved-sound, .campaign-checkout + .campaign-saved-sound { margin-top: 32px; }
+.campaign-delivery + .campaign-saved-sound { margin-top: 32px; }
 
 .excerpt-editor input[type=range] { width: 100%; min-height: 44px; accent-color: #355d47; padding: 0; }
 .excerpt-time-input { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }

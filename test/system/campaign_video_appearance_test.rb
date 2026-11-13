@@ -5,12 +5,39 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
   include Warden::Test::Helpers
 
   setup do
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_raise(Stripe::APIConnectionError.new("Checkout unavailable"))
     Warden.test_mode!
     login_as users(:customer_b2b), scope: :user
   end
   teardown do
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     Warden.test_reset!
+  end
+
+  test "cancelled checkout uses the same payment screen and resumes the saved session" do
+    order = orders(:b2b_pending)
+    order.update!(stripe_session_id: "cs_cancelled_browser", currency: "BRL", price_cents: 2990)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 5", show_cta: false)
+    campaign.photos.attach(io: StringIO.new(File.binread(Rails.root.join("public/icon.png"))), filename: "cafe.png", content_type: "image/png")
+    session = Stripe::Checkout::Session.construct_from(id: "cs_cancelled_browser", status: "open", payment_status: "unpaid",
+      url: campaign_path(campaign, checkout: "resumed"))
+    Stripe::Checkout::Session.stub(:retrieve, session) do
+      visit campaign_path(campaign)
+      assert_text "Confira e comece."
+      assert_text campaign.sound_summary
+      assert_button "Pagar R$ 29,90"
+      assert_selector '[data-campaign-form-target="previewPhoto"][src*="rails/active_storage"]'
+      assert_no_button "Continuar"
+      assert_no_javascript_errors
+      page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+      assert_no_difference [ "Campaign.count", "Order.count" ] do
+        click_button "Pagar R$ 29,90"
+        assert_current_path campaign_path(campaign, checkout: "resumed")
+      end
+      assert_button "Pagar R$ 29,90", disabled: false
+      assert_no_javascript_errors
+    end
   end
 
   test "merchant can use only a logo or leave both branding fields empty on mobile" do
@@ -33,21 +60,22 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     page.save_screenshot("/tmp/virajingle-company-logo-mobile.png")
     click_button "Continuar"
     click_button "Continuar"
-    click_button "Revisar minha campanha"
-    assert_text "Confira sua promoção.", normalize_ws: true
+    click_button "Pagar R$ 29,90"
+    assert_text "Sua campanha está salva"
     campaign = Campaign.last
     assert_equal "", campaign.business_name
     assert campaign.logo.attached?
     assert_empty campaign.product_photos
-    click_link "Editar os dados"
+    click_button "Voltar"
+    click_button "Voltar"
     assert_selector '[data-campaign-form-target="previewLogo"][src*="rails/active_storage"]'
     check "Remover logo do vídeo"
     assert_no_selector '[data-campaign-form-target="previewLogo"]'
     assert_no_selector '[data-campaign-form-target="previewBusiness"]'
     click_button "Continuar"
     click_button "Continuar"
-    click_button "Revisar minha campanha"
-    assert_text "Confira sua promoção.", normalize_ws: true
+    click_button "Pagar R$ 29,90"
+    assert_text "Sua campanha está salva"
     refute campaign.reload.logo.attached?
     assert_equal "", campaign.business_name
     assert_equal campaign.offer, campaign.caption
@@ -115,14 +143,15 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     click_button "Continuar"
     assert_text "Como sua promoção deve soar?"
     click_button "Continuar"
-    click_button "Revisar minha campanha"
-    assert_text "Confira sua promoção.", normalize_ws: true
+    click_button "Pagar R$ 29,90"
+    assert_text "Sua campanha está salva"
     campaign = Campaign.find_by!(business_name: "Landel")
     refute campaign.show_cta?
     assert_equal "#6b21a8", campaign.cta_color
     assert_equal "Casa com 03 quartos\nR$ 750.000", campaign.offer
     assert_equal "", campaign.contact
-    click_link "Editar os dados"
+    click_button "Voltar"
+    click_button "Voltar"
     assert_unchecked_field "Incluir faixa de contato no vídeo"
     assert_no_selector '[data-campaign-form-target="previewCtaPanel"]'
     check "Incluir faixa de contato no vídeo"

@@ -5,6 +5,7 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
 
   setup do
     host! "b2b.lvh.me"
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_raise(Stripe::APIConnectionError.new("Checkout unavailable"))
     sign_in users(:customer_b2b)
     @attributes = { business_name: "", offer: "Casa com 03 quartos\nR$ 750.000", show_cta: "0", style: "animado" }
     @headers = { "ACCEPT" => "text/vnd.turbo-stream.html" }
@@ -21,10 +22,9 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     assert_nil campaign.order.briefing.recipient
     get campaign_path(campaign)
     assert_response :success
-    assert_select 'img.jp-summary-logo[alt="Logo da empresa"]'
-    assert_select "h1", text: /Campanha #{campaign.order.reference}/
+    assert_select '[data-campaign-form-target="previewLogo"][src]'
+    assert_select "h1", text: /Sua próxima campanha/
     assert_select "form[action=?]", save_music_profile_campaign_path(campaign), count: 0
-    get edit_campaign_path(campaign)
     assert_select "#campaign_business_name:not([required])"
     assert_select 'input#campaign_logo[type="file"]'
     assert_select '[data-campaign-form-target="previewBusiness"][hidden]'
@@ -47,7 +47,7 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     assert_redirected_to campaign_path(campaign)
     assert_equal "", campaign.business_name
     refute campaign.logo.attached?
-    get edit_campaign_path(campaign)
+    get campaign_path(campaign)
     assert_response :success
     assert_select '[data-campaign-form-target="previewBusiness"][hidden]'
     assert_select '[data-campaign-form-target="previewLogo"][hidden]'

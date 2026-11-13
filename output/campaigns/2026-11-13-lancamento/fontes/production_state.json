@@ -1,0 +1,18 @@
+{
+  "campaign_id": 22,
+  "order_id": 68,
+  "order_reference": "ORD-2026-DZ1XN",
+  "generation_id": 36,
+  "music_provider": "mureka",
+  "model": "mureka-9",
+  "requested_variants": 2,
+  "production_batch": "2026-11-13-lancamento",
+  "selected_asset_id": 69,
+  "selected_variant": "b",
+  "excerpt_start_seconds": 19.6,
+  "excerpt_duration_seconds": 27,
+  "final_video": "video/virajingle-apresentacao-27s.mp4",
+  "final_video_status": "ready",
+  "final_video_bytes": 9039715,
+  "saved_at": "2026-11-13T00:34:37Z"
+}

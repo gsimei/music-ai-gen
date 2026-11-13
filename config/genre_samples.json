@@ -172,6 +172,25 @@
       "source_duration_seconds": 144.63,
       "sha256": "5e42ee7f997479cc5e558c13b8d6a34a0e5028e2d8c5ea0badb14ac74d96945e",
       "generated_at": "2026-11-09T01:42:53Z"
+    },
+    "natal": {
+      "status": "ready",
+      "model": "mureka-9",
+      "n": 1,
+      "gender": "female",
+      "prompt": "Brazilian Portuguese commercial jingle. festive Christmas pop, sleigh bells, glockenspiel, warm piano, lush strings, catchy singalong chorus. Clearly recognizable genre, joyful, vocals immediately, no instrumental intro, no solos, short catchy hook, natural female singing voice. Original melody.",
+      "lyrics": "[Verse]\nHoje tem novidade, vem aproveitar!\n[Chorus]\nSua próxima oferta merece tocar!",
+      "estimated_usd": 0.045,
+      "pricing_version": "2026-11-09",
+      "usd_brl": 6.0,
+      "requested_at": "2026-11-13T00:08:16Z",
+      "job_id": "171652092788737",
+      "file": "/demos/genres/natal-v1.mp3",
+      "duration_seconds": 12.0,
+      "start_seconds": 129.75,
+      "source_duration_seconds": 166.71,
+      "sha256": "632fb87bea8d20ce00686649f71c07e44657a1ce5032a3603cb1583d171c1ecc",
+      "generated_at": "2026-11-13T00:09:20Z"
     }
   },
   "uncertain_attempts": [

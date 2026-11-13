@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   post "stripe/webhook", to: "stripe#webhook", as: :stripe_webhook
 
   root "pages#home"
-  resources :campaigns, only: %i[new create show edit update] do
+  resources :campaigns, only: %i[new create show update] do
     get :status, on: :member
     post :render_video, on: :member
     post :retry_generation, on: :member

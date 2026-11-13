@@ -5,6 +5,7 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
 
   setup do
     host! "b2b.lvh.me"
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_raise(Stripe::APIConnectionError.new("Checkout unavailable"))
     sign_in users(:customer_b2b)
     @order = orders(:b2b_pending)
     @order.update!(status: "lyrics_ready", music_regen_limit: 2, lyrics_regen_limit: 20)
@@ -15,7 +16,7 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
     @headers = { "ACCEPT" => "text/vnd.turbo-stream.html" }
   end
 
-  test "merchant chooses sound before checkout and sees it in the review" do
+  test "merchant chooses sound before checkout and sees it in the saved form" do
     post campaigns_path, params: { campaign: @campaign.attributes.slice("business_name", "offer", "contact", "call_to_action", "style").merge(
       musical_genre: "forro", vocal_gender: "female", music_notes: "Sanfona em destaque") }
     created = Campaign.last
@@ -25,7 +26,6 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
     assert_includes created.order.briefing.music_style, "accordion"
     follow_redirect!
     assert_includes response.body, "Forró · Voz feminina · Animado"
-    get edit_campaign_path(created)
     assert_select 'input[type="radio"][name="campaign[musical_genre]"][checked][value="forro"]'
     assert_select 'input[type="radio"][name="campaign[vocal_gender]"][checked][value="female"]'
     assert_select 'textarea[name="campaign[music_notes]"]', text: "Sanfona em destaque"

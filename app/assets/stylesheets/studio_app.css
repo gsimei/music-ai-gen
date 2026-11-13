@@ -228,7 +228,7 @@
 .campaign-included { list-style: none; padding: 0; margin: 24px 0; }
 .campaign-included li { padding: 10px 0; border-bottom: 1px solid var(--studio-line); }
 .campaign-included li::before { content: '✓'; color: var(--studio-green); margin-right: 12px; }
-.campaign-checkout, .campaign-delivery { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+.campaign-delivery { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
 .campaign-card { border: 1px solid var(--studio-line); padding: 32px; border-radius: 6px; }
 .campaign-card > .studio-text-link { display: block; margin-top: 20px; }
 .campaign-card h2, .campaign-card p { overflow-wrap: anywhere; }
@@ -243,7 +243,7 @@
 .campaign-single-plan .studio-plan { width: 100%; }
 @media(max-width: 760px) {
   .campaign-main { padding: 28px 20px 60px; }
-  .campaign-builder, .campaign-checkout, .campaign-delivery { grid-template-columns: 1fr; gap: 32px; }
+  .campaign-builder, .campaign-delivery { grid-template-columns: 1fr; gap: 32px; }
   .campaign-preview-wrap { position: static; max-width: 270px; }
   .campaign-two-fields { grid-template-columns: 1fr; gap: 0; }
   .campaign-progress { gap: 12px; justify-content: space-between; }

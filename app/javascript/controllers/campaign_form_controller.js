@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static values = { photoLimit: { type: Number, default: 5 } }
+  static values = { photoLimit: { type: Number, default: 5 }, initialStep: { type: Number, default: 0 } }
   static targets = ["step", "indicator", "back", "next", "submit", "business", "offer", "logoInput", "removeLogo", "logoRemoval", "logoStatus", "previewLogo", "brandSample", "cta", "contact", "showCta", "ctaColor", "ctaFields", "previewCtaPanel", "previewBusiness", "previewOffer", "previewCta", "previewContact", "previewPhoto", "previewPhotoTitle", "photoInput", "photoList", "photoStatus", "caption", "soundSummary"]
   connect() {
-    this.index = 0
+    this.index = this.initialStepValue
+    this.resetSubmission()
     if (this.hasStepTarget) {
       this.savedPhotos = Array.from(this.photoListTarget.querySelectorAll('figure[data-photo-id]:not([data-photo-id=""])')).map(figure => ({
         key: `saved-${figure.dataset.photoId}`, id: figure.dataset.photoId,
@@ -28,6 +29,7 @@ export default class extends Controller {
   next() { if (this.valid()) { this.index = Math.min(this.index + 1, this.stepTargets.length - 1); this.show(true) } }
   back() { this.index = Math.max(0, this.index - 1); this.show(true) }
   show(focus = false) {
+    this.element.closest(".campaign-app")?.classList.toggle("campaign-review", this.index === this.stepTargets.length - 1)
     this.element.querySelectorAll("audio").forEach(audio => audio.pause())
     if (this.hasSoundSummaryTarget) {
       const genre = this.element.querySelector('[data-sound-setting="genre"]:checked')
@@ -53,11 +55,24 @@ export default class extends Controller {
     }
   }
   validate(event) {
-    if (!this.hasStepTarget) return
-    if (this.index < this.stepTargets.length - 1) { event.preventDefault(); this.next(); return }
-    this.stepTargets.forEach(step => step.querySelectorAll("input,textarea,select").forEach(input => { input.disabled = false }))
-    const invalidIndex = this.stepTargets.findIndex(step => Array.from(step.querySelectorAll("input,textarea,select")).some(input => !input.checkValidity()))
-    if (invalidIndex >= 0) { event.preventDefault(); this.index = invalidIndex; this.show(); this.valid() }
+    if (this.submitting) { event.preventDefault(); return }
+    if (this.hasStepTarget) {
+      if (this.index < this.stepTargets.length - 1) { event.preventDefault(); this.next(); return }
+      this.stepTargets.forEach(step => step.querySelectorAll("input,textarea,select").forEach(input => { input.disabled = false }))
+      const invalidIndex = this.stepTargets.findIndex(step => Array.from(step.querySelectorAll("input,textarea,select")).some(input => !input.checkValidity()))
+      if (invalidIndex >= 0) { event.preventDefault(); this.index = invalidIndex; this.show(); this.valid(); return }
+    }
+    this.submitting = true
+    this.submitTarget.disabled = true
+    this.submitTarget.value = "Abrindo pagamento…"
+  }
+  resetSubmission() {
+    this.submitting = false
+    if (this.hasSubmitTarget) {
+      this.submitTarget.dataset.label ||= this.submitTarget.value
+      this.submitTarget.disabled = false
+      this.submitTarget.value = this.submitTarget.dataset.label
+    }
   }
   preview() {
     if (this.hasBusinessTarget) {

@@ -1,0 +1,7 @@
+<% content_for :title, "Confirmando pagamento · #{brand_name}" %>
+<% content_for :body_class, "studio-page" %>
+<div class="studio-home studio-app campaign-app"><%= render "shared/studio_header" %>
+  <main class="campaign-main"><%= render "shared/studio_flash" %>
+    <div class="campaign-note" role="status"><strong><%= @payment_check_unavailable ? "A confirmação está demorando um pouco." : "Aguardando a confirmação do pagamento." %></strong><p>Se você acabou de pagar, não precisa pagar novamente. A confirmação pode levar alguns instantes.</p><%= link_to "Verificar confirmação", campaign_path(@campaign, payment: "processing"), class: "studio-text-link" %></div>
+  </main>
+</div>

@@ -1,0 +1,20 @@
+1
+00:00:00,700 --> 00:00:07,400
+ViraJingle, ViraJingle, ViraJingle,
+sua marca pronta pra tocar!
+
+2
+00:00:08,000 --> 00:00:12,800
+Roupas, sapatos, beleza e sabor,
+
+3
+00:00:12,800 --> 00:00:17,300
+sua oferta com ritmo e cor.
+
+4
+00:00:18,000 --> 00:00:22,000
+Manda as fotos, conta a promoção,
+
+5
+00:00:22,000 --> 00:00:25,700
+vira música, vídeo e refrão.

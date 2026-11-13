@@ -28,6 +28,8 @@ class MerchantJourneyTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert order.reload.pending?
       assert_select "[role=status]", text: /Aguardando/
+      assert_select "form.campaign-builder", count: 0
+      assert_select 'input[type="submit"]', count: 0
     end
     paid = Stripe::Checkout::Session.construct_from(id: "cs_return_test", payment_status: "paid", amount_total: 7900, currency: "brl", payment_intent: "pi_test")
     Stripe::Checkout::Session.stub(:retrieve, paid) do

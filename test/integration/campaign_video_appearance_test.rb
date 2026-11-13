@@ -5,6 +5,7 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
 
   setup do
     host! "b2b.lvh.me"
+    stub_request(:post, "https://api.stripe.com/v1/checkout/sessions").to_raise(Stripe::APIConnectionError.new("Checkout unavailable"))
     sign_in users(:customer_b2b)
     @attributes = { business_name: "Landel", offer: "Casa com 03 quartos\nR$ 750.000", contact: "@landel",
       call_to_action: "Saiba mais no Instagram", style: "animado", cta_color: "#6b21a8" }
@@ -21,9 +22,8 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     assert_equal "#6b21a8", created.cta_color
     assert_equal @attributes[:offer], created.offer
     get campaign_path(created)
-    assert_equal created.display_offer, css_select("h2.campaign-offer-text").first.text
+    assert_equal created.display_offer, css_select('[data-campaign-form-target="previewOffer"]').first.text
     refute_includes response.body, "Saiba mais no Instagram:"
-    get edit_campaign_path(created)
     assert_select "#campaign_show_cta:not([checked])"
     assert_select '#campaign_cta_color[value="#6b21a8"]'
     assert_select '[data-campaign-form-target="previewCtaPanel"][hidden]'
@@ -33,7 +33,8 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     assert created.reload.show_cta?
     assert_equal "#101010", created.cta_color
     get campaign_path(created)
-    assert_select "p", text: "Reserve seu horário: @nova"
+    assert_select '[data-campaign-form-target="previewCta"]', text: "Reserve seu horário"
+    assert_select '[data-campaign-form-target="previewContact"]', text: "@nova"
   end
 
   test "invalid colors cannot create campaigns or leak into a failed preview" do

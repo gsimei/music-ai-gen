@@ -1,0 +1,14 @@
+Use case: ads-marketing.
+Asset type: finished Brazilian Portuguese Instagram feed launch poster, portrait 4:5, high resolution.
+Primary request: Create the first polished promotional artwork for ViraJingle, a Brazilian service that turns a small business owner's product photos and offer into a sung jingle, a vertical video, and a suggested caption.
+Input image: the supplied PNG is the OFFICIAL ViraJingle wordmark. Treat it as the logo asset for this composition, preserve its spelling, curved musical J, proportions and forest-green color faithfully. Build the poster around it; this is not a request to redesign the logo.
+Art direction: sophisticated, warm, approachable editorial advertising for small local businesses. Warm ivory paper-like background (#F6F5ED), deep forest green (#173E32), controlled lime-green (#C1F66B) accents. Bold clean rounded sans typography with a large elegant italic serif only for the word "refrão". Strong hierarchy, generous breathing room, no clutter.
+Composition: official logo moderately small at the upper left, big readable headline below in upper half. In the lower middle, a beautiful realistic overhead/three-quarter photo of a Brazilian-style mozzarella pizza with basil and a blistered crust on a round plate on a small warm surface, like a local pizzeria product photo. A restrained graphic lime soundwave flows from the photo toward a small play icon, communicating a product photo becoming music; these should feel like flat editorial graphic elements. Avoid fake screenshots and fake app controls. A simple ivory footer has the product bundle, price and CTA. This is an advertisement FOR ViraJingle, not an advertisement selling the pictured pizza.
+Text in image, verbatim and with correct Portuguese accents:
+Headline: "Sua promoção\nmerece um\nrefrão."
+Small supporting line: "Suas fotos. Sua oferta. Sua marca na música."
+Product line: "Música + vídeo + legenda"
+Price: "R$ 29,90 por campanha"
+Price qualifier: "Pagamento único. Sem assinatura."
+CTA: "Coloque sua loja pra tocar."
+Constraints: exact official wordmark; legible type; all texts entirely inside comfortable margins; no website URL or fabricated social handle; no testimonial, no inflated results, no additional claims; no extra text, no watermark, no collage grid, no black background. Finish as one cohesive, production-quality campaign image. Opaque background.

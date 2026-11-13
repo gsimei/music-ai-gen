@@ -21,7 +21,7 @@ class CampaignsController < ApplicationController
     )
     if @campaign.valid?
       Campaign.transaction { @campaign.save!; @campaign.sync_briefing! }
-      redirect_to @campaign
+      start_checkout
     else
       render :new, status: :unprocessable_entity
     end
@@ -33,7 +33,10 @@ class CampaignsController < ApplicationController
       @payment_check_unavailable = result.errors == "payment_check_unavailable" if result.failure?
     end
     if params[:payment] == "processing" && %w[paid lyrics_drafting lyrics_ready lyrics_approved music_generating preview_ready].include?(@campaign.order.reload.status)
-      redirect_to order_chat_path(order_id: @campaign.order_id), notice: "Pagamento confirmado! Vamos criar sua campanha."
+      return redirect_to order_chat_path(order_id: @campaign.order_id), notice: "Pagamento confirmado! Vamos criar sua campanha."
+    end
+    if @campaign.order.pending? || @campaign.order.payment_failed?
+      render(params[:payment] == "processing" && !@campaign.order.payment_failed? ? :payment : :new)
     end
   end
 
@@ -46,16 +49,11 @@ class CampaignsController < ApplicationController
     render turbo_stream: turbo_stream.replace("campaign-delivery", partial: "campaigns/delivery", locals: { campaign: @campaign })
   end
 
-  def edit
-    return redirect_to @campaign unless @campaign.order.pending? && @campaign.order.stripe_session_id.blank?
-    render :new
-  end
-
   def update
-    return head :conflict unless @campaign.order.pending? && @campaign.order.stripe_session_id.blank?
+    return head :conflict unless (@campaign.order.pending? || @campaign.order.payment_failed?) && @campaign.order.stripe_session_id.blank?
     if @campaign.update(campaign_params)
       @campaign.sync_briefing!
-      redirect_to @campaign
+      start_checkout
     else
       render :new, status: :unprocessable_entity
     end
@@ -108,6 +106,15 @@ class CampaignsController < ApplicationController
   end
 
   private
+
+  def start_checkout
+    result = Stripe::CheckoutBuilder.call(order: @campaign.order, host: request.host_with_port)
+    if result.success?
+      redirect_to result.value[:url], allow_other_host: true, status: :see_other
+    else
+      redirect_to @campaign, alert: "Não conseguimos abrir o pagamento agora. Sua campanha está salva; tente novamente."
+    end
+  end
 
   def set_campaign
     @campaign = Campaign.joins(:order).where(orders: { user_id: current_user.id }).find(params[:id])

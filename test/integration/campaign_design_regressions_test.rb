@@ -25,7 +25,8 @@ class CampaignDesignRegressionsTest < ActionDispatch::IntegrationTest
     get campaign_path(campaign)
     assert_response :success
     assert_select "a[href=?]", order_chat_path(order_id: order.id), count: 0
-    assert_select "form[action=?]", checkout_order_path(order), minimum: 1
+    assert_select "form.campaign-builder[action=?]", campaign_path(campaign)
+    assert_select 'input[type="submit"][value=?]', "Pagar #{ApplicationController.helpers.campaign_price(order)}"
   end
 end
 
