@@ -6,7 +6,10 @@ class CampaignVideoPersonalizationSystemTest < ApplicationSystemTestCase
   include Warden::Test::Helpers
 
   setup { Warden.test_mode! }
-  teardown { Warden.test_reset! }
+  teardown do
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    Warden.test_reset!
+  end
 
   test "merchant edits photos and auditions a longer video before approving on mobile" do
     order = orders(:b2b_preview_ready)

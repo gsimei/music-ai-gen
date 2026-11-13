@@ -1,0 +1,68 @@
+<%# locals: f. Passo 2: ritmo (tiles), cartão do player, voz (segmentado), clima (chips) e detalhes. O escopo genre-preview é a própria section:
+    os tiles, o cartão e o <audio> dividem o mesmo controller. O catálogo tolera item sem duration_seconds e catálogo vazio. %>
+<% catalog = Campaigns::GenreSamples.catalog %>
+<% notes_open = f.object.music_notes.present? %>
+<%= tag.section class: "ui-step ui-step-sound", data: { campaign_form_target: "step", controller: "genre-preview", genre_preview_catalog_value: catalog.to_json,
+      action: "change->campaign-form#sound visibilitychange@document->genre-preview#visibilityChanged" } do %>
+  <p class="ui-eyebrow">Sua música</p>
+  <h2>Como sua promoção deve <em>soar?</em></h2>
+  <p class="ui-lead">Escolha o ritmo e a voz. A música será cantada em português, com a sua oferta.</p>
+
+  <fieldset class="ui-field">
+    <legend class="ui-label">Qual ritmo combina com seu negócio?</legend>
+    <div class="ui-tiles">
+      <% Campaign::GENRES.each do |key, genre| %>
+        <% name, description = genre[:label].split(" · ", 2) %>
+        <label class="ui-tile">
+          <%= f.radio_button :musical_genre, key, required: true, data: { sound_setting: "genre", genre_preview_target: "genre", sound_label: name, genre_description: description, action: "change->genre-preview#select" } %>
+          <% if key == "auto" %><svg class="ui-icon ui-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v4m0 10v4M3 12h4m10 0h4M6.3 6.3l2.4 2.4m6.6 6.6 2.4 2.4m0-11.4-2.4 2.4m-6.6 6.6-2.4 2.4"/></svg><% end %>
+          <span class="ui-tile-name"><%= name %></span>
+          <% if description %><span class="ui-tile-desc"><%= description %></span><% end %>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <%= render "campaigns/new/player", campaign: f.object, catalog: catalog %>
+
+  <fieldset class="ui-field">
+    <legend class="ui-label">Como você imagina a voz?</legend>
+    <div class="ui-seg">
+      <% Campaign::VOCAL_GENDERS.each do |key, label| %>
+        <label class="ui-seg-item">
+          <%= f.radio_button :vocal_gender, key, required: true, data: { sound_setting: "voice", sound_label: label } %>
+          <span><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+    <p class="ui-hint">A voz é uma preferência; você confere o resultado antes de aprovar.</p>
+  </fieldset>
+
+  <fieldset class="ui-field">
+    <legend class="ui-label">Qual é o clima?</legend>
+    <div class="ui-moods">
+      <% Campaign::STYLES.each do |key, style| %>
+        <label class="ui-chip ui-chip-mood">
+          <%= f.radio_button :style, key, required: true, data: { sound_setting: "climate", sound_label: style[:label] } %>
+          <span class="ui-mood-name"><%= style[:label] %><svg class="ui-icon ui-mood-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="ui-mood-desc"><%= style[:description] %></span>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <div class="ui-field ui-details">
+    <div class="ui-details-row">
+      <button type="button" class="ui-more" aria-expanded="<%= notes_open %>" aria-controls="campaign-sound-details" data-action="campaign-form#toggleDetails"><span aria-hidden="true"><%= notes_open ? "−" : "+" %></span> Detalhes do som</button>
+      <span class="ui-optional">Opcional</span>
+    </div>
+    <div id="campaign-sound-details" class="ui-field" <%= "hidden" unless notes_open %>>
+      <%= f.label :music_notes, "Detalhes do som", class: "ui-label" %>
+      <%= f.text_area :music_notes, rows: 3, maxlength: 240, class: "ui-input ui-notes", placeholder: "Ex.: sanfona em destaque, voz suave, refrão fácil de cantar. Sem solos longos.", aria: criar_field_aria(f.object, :music_notes, "campaign-notes-help") %>
+      <p id="campaign-notes-help" class="ui-hint">Descreva os instrumentos, a interpretação ou o que prefere evitar. Até 240 caracteres.</p>
+      <%= criar_field_error(f.object, :music_notes) %>
+    </div>
+  </div>
+
+  <p class="ui-note">Você poderá revisar a letra e essas escolhas antes da primeira geração. Depois, ouvirá duas versões para comparar.</p>
+<% end %>

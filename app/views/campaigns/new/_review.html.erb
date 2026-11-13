@@ -1,0 +1,43 @@
+<%# locals: checkout_started, saved_photos, contact_strip. Passo 3: resumo em três blocos com "Editar" (volta ao passo; ausente com o checkout iniciado,
+    quando só o servidor sabe o que foi salvo). Com os passos presentes, o JS reescreve o resumo a cada troca de passo, sempre com textContent.
+    O cartão de preço fica na coluna da direita (_price_card). %>
+<% summary_photos = saved_photos.first(Campaigns::PhotoLimit::MAX) %>
+<%= tag.section class: "ui-step", data: { campaign_form_target: ("step" unless checkout_started) } do %>
+  <p class="ui-eyebrow">Tudo certo?</p>
+  <h2>Confira e <em>comece.</em></h2>
+  <p class="ui-lead">Depois do pagamento você revisa a letra e ouve duas versões de música.</p>
+
+  <div class="ui-summary">
+    <div class="ui-sum" data-summary="promotion">
+      <h3 class="ui-sum-title">Promoção</h3>
+      <div class="ui-sum-body">
+        <p class="ui-sum-offer" data-campaign-form-target="summaryOffer"><%= @campaign.display_offer %></p>
+        <p class="ui-sum-sub ui-sum-business" data-campaign-form-target="summaryBusiness" <%= "hidden" if @campaign.business_name.blank? %>><%= @campaign.business_name %></p>
+        <p class="ui-sum-sub" data-campaign-form-target="summaryContact"><%= contact_strip ? [ @campaign.call_to_action, @campaign.contact.presence ].compact.join(" · ") : "Sem faixa de contato" %></p>
+      </div>
+      <% unless checkout_started %><button type="button" class="ui-edit" aria-label="Editar promoção" data-action="campaign-form#goToStep" data-campaign-form-step-param="0">Editar</button><% end %>
+    </div>
+
+    <div class="ui-sum" data-summary="sound">
+      <h3 class="ui-sum-title">Som</h3>
+      <div class="ui-sum-body">
+        <p class="ui-sum-offer ui-sum-sound" data-campaign-form-target="soundSummary"><%= @campaign.sound_summary %></p>
+        <p class="ui-sum-sub">Cantada em português do Brasil.</p>
+      </div>
+      <% unless checkout_started %><button type="button" class="ui-edit" aria-label="Editar som" data-action="campaign-form#goToStep" data-campaign-form-step-param="1">Editar</button><% end %>
+    </div>
+
+    <div class="ui-sum" data-summary="photos">
+      <h3 class="ui-sum-title">Fotos</h3>
+      <div class="ui-sum-body" data-campaign-form-target="summaryPhotos">
+        <% if summary_photos.any? %>
+          <div class="ui-sum-thumbs"><% summary_photos.each_with_index do |photo, index| %><img src="<%= rails_blob_path(photo) %>" alt="Foto <%= index + 1 %>"><% end %></div>
+          <p class="ui-sum-sub"><%= summary_photos.size %> <%= summary_photos.size == 1 ? "foto" : "fotos" %> · a primeira abre o vídeo</p>
+        <% else %>
+          <p class="ui-sum-sub">Sem fotos: criamos uma arte com a sua oferta.</p>
+        <% end %>
+      </div>
+      <% unless checkout_started %><button type="button" class="ui-edit" aria-label="Editar fotos" data-action="campaign-form#goToStep" data-campaign-form-step-param="0">Editar</button><% end %>
+    </div>
+  </div>
+<% end %>

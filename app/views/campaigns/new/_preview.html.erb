@@ -1,0 +1,27 @@
+<%# locals: saved_photos, contact_strip. Um único <dialog>: aberto (não modal) na coluna da direita a partir de 960 px e folha
+    modal "Ver prévia" no celular. Um só conjunto de alvos preview*; o texto do lojista entra por textContent no JS. %>
+<% first_photo = saved_photos.first %>
+<% logo_url = campaign_logo_url(@campaign) %>
+<dialog class="ui-stage" aria-label="Prévia do vídeo" data-campaign-form-target="stage" data-action="close->campaign-form#previewClosed">
+  <div class="ui-arc">
+    <p class="ui-stage-tag"><span class="ui-dot" aria-hidden="true"></span>Prévia · 9:16</p>
+    <p class="ui-stage-note"><span>Suas fotos.</span><b>Sua marca no refrão.</b></p>
+    <div class="ui-phone">
+      <div class="ui-phone-art" aria-hidden="true"></div>
+      <img class="ui-phone-photo" alt="Foto da campanha" data-campaign-form-target="previewPhoto" <% if first_photo %>src="<%= rails_blob_path(first_photo) %>"<% else %>hidden<% end %>>
+      <div class="ui-phone-body">
+        <div class="ui-phone-top">
+          <img class="ui-phone-logo" alt="Logo da empresa" data-campaign-form-target="previewLogo" <% if logo_url %>src="<%= logo_url %>"<% else %>hidden<% end %>>
+          <span class="ui-phone-name" data-campaign-form-target="previewBusiness" <%= "hidden" if @campaign.business_name.blank? %>><%= @campaign.business_name %></span>
+        </div>
+        <p class="ui-phone-offer" data-campaign-form-target="previewOffer"><%= @campaign.display_offer.presence || "Sua próxima grande oferta." %></p>
+        <div class="ui-phone-cta" data-campaign-form-target="previewCtaPanel" style="--campaign-cta-color: <%= @campaign.cta_background_color %>; --campaign-cta-text-color: <%= @campaign.cta_text_color %>;" <%= "hidden" unless contact_strip %>>
+          <small data-campaign-form-target="previewCta"><%= @campaign.call_to_action.presence || Campaign::CTA_OPTIONS.first %></small>
+          <b data-campaign-form-target="previewContact"><%= @campaign.contact.presence || "Seu contato aqui" %></b>
+        </div>
+      </div>
+    </div>
+    <p class="ui-stage-cap">No vídeo, as fotos ganham movimento.</p>
+  </div>
+  <button type="button" class="ui-btn ui-btn-ghost ui-stage-close" data-action="campaign-form#closePreview">Voltar a preencher</button>
+</dialog>

@@ -17,4 +17,19 @@ class Campaigns::GenreSamplesTest < ActiveSupport::TestCase
       assert_equal 1, record.fetch("n")
     end
   end
+
+  # O cartão do player (tarefa 6 do plano "caminho B") mostra a duração antes de o áudio carregar:
+  # ela vem do catálogo, que a lê do manifesto. Nada de "12 segundos" escrito na view.
+  test "every catalog item carries the duration_seconds of its manifest record" do
+    catalog = Campaigns::GenreSamples.catalog
+    assert_not_empty catalog
+    manifest = JSON.parse(Rails.root.join("config/genre_samples.json").read)
+    catalog.each do |key, sample|
+      assert sample.key?(:duration_seconds), "#{key}: o catálogo precisa expor duration_seconds"
+      assert_kind_of Numeric, sample.fetch(:duration_seconds), key
+      assert_in_delta 12, sample.fetch(:duration_seconds), 0.5, key
+      assert_equal manifest.fetch("samples").fetch(key).fetch("duration_seconds").to_f, sample.fetch(:duration_seconds).to_f, key
+      assert_equal %i[duration_seconds label url], sample.keys.sort, "#{key}: chaves do item do catálogo"
+    end
+  end
 end

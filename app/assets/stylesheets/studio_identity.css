@@ -203,11 +203,6 @@ body.studio-page { background:#f6f5ed; }
 .creative-sound-direction .campaign-two-fields { grid-template-columns: 1fr; gap: 0; }
 .creative-sound-direction .campaign-sound-fields { margin-block: 16px; }
 
-.campaign-genre-preview { margin: 4px 0 20px; padding: 20px; border: 1px solid var(--studio-line); border-radius: 16px; background: #e8eddc; }
-.campaign-genre-preview[hidden], .campaign-genre-preview [hidden] { display: none; }
-.campaign-genre-preview > div { display: grid; gap: 4px; margin-bottom: 14px; }
-.campaign-genre-preview > div span { font-size: 12px; color: var(--studio-muted); }
-.campaign-genre-preview audio { width: 100%; }
 .campaign-saved-sound { padding: 24px; margin: 0 0 32px; border: 1px solid var(--studio-line); border-radius: 18px; }
 .campaign-saved-sound > p { margin-block: 12px; }
 .campaign-saved-sound > h2 { font-size: 24px; }

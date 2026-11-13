@@ -24,9 +24,8 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     get campaign_path(created)
     assert_equal created.display_offer, css_select('[data-campaign-form-target="previewOffer"]').first.text
     refute_includes response.body, "Saiba mais no Instagram:"
-    assert_select "#campaign_show_cta:not([checked])"
-    assert_select '#campaign_cta_color[value="#6b21a8"]'
     assert_select '[data-campaign-form-target="previewCtaPanel"][hidden]'
+    assert_select '[data-campaign-form-target="previewCtaPanel"][style*="--campaign-cta-color: #6b21a8"]'
     assert_select "input#campaign_contact:not([required])"
     patch campaign_path(created), params: { campaign: { show_cta: "1", contact: "@nova", call_to_action: "Reserve seu horário", cta_color: "#101010" } }
     assert_redirected_to campaign_path(created)
@@ -42,7 +41,7 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
       post campaigns_path, params: { campaign: @attributes.merge(cta_color: "#ffffff;position:fixed") }
     end
     assert_response :unprocessable_entity
-    assert_select '#campaign_cta_color[value="#d6f36b"]'
+    assert_select '[data-campaign-form-target="previewCtaPanel"][style*="--campaign-cta-color: #d6f36b"]'
     refute_includes response.body, "position:fixed"
   end
 
@@ -50,6 +49,8 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     @campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     get order_chat_path(order_id: @order.id)
     assert_select 'form[action=?] input[name="video_revision"][value="0"]', order_chat_video_appearance_path(order_id: @order.id)
+    assert_select '.creative-video-appearance input#campaign_show_cta[checked]'
+    assert_select '.creative-video-appearance input#campaign_cta_color[value="#6b21a8"]'
     assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
       assert_no_enqueued_jobs do
         save_appearance(cta_color: "#101010", contact: "@novo")
@@ -66,6 +67,8 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     assert_equal 2, @campaign.video_revision
     get order_chat_path(order_id: @order.id)
     assert_select ".jp-summary-contact", count: 0
+    assert_select '.creative-video-appearance input#campaign_show_cta:not([checked])'
+    assert_select '.creative-video-appearance input#campaign_cta_color[value="#101010"]'
     assert_select '.creative-video-appearance [data-campaign-form-target="previewCtaPanel"][hidden]'
   end
 

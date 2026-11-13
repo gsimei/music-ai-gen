@@ -41,7 +41,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_response :success
-    assert_select "form.campaign-builder"
+    assert_select "form.ui-form"
     assert_select "textarea[name=\"campaign[offer]\"]"
   end
 end

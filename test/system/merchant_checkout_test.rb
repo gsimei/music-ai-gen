@@ -7,19 +7,40 @@ class MerchantCheckoutTest < ApplicationSystemTestCase
     fill_in "Senha", with: "Campaign-Browser-123!", exact: true
     fill_in "Confirme a senha", with: "Campaign-Browser-123!"
     click_button "Criar conta"
-    assert_text "O que vamos divulgar?"
+    assert_selector ".criar[data-step='1']"
     fill_in "Nome do seu negócio", with: "Café do Bairro"
     fill_in "Qual é a oferta ou novidade?", with: "Café com pão por R$ 12 nesta terça."
+    assert_selector '[data-campaign-form-target="offerCount"]', text: "#{"Café com pão por R$ 12 nesta terça.".length}/#{Campaign::OFFER_MAX_LENGTH}"
+    assert_checked_field "Peça pelo WhatsApp", visible: :all
     fill_in "WhatsApp, endereço ou @Instagram", with: "@cafedobairro"
     attach_file "Fotos do produto ou do negócio (opcional)", Rails.root.join("public/icon.png"), make_visible: true
+    assert_selector ".ui-slots figure.ui-slot img", count: 1
+    assert_selector ".ui-slots label.ui-slot-empty", count: Campaigns::PhotoLimit::INITIAL - 1
     assert_selector 'img[data-campaign-form-target="previewPhoto"][src^="blob:"]'
     click_button "Continuar"
     assert_text "Como sua promoção deve soar?"
     click_button "Continuar"
     assert_text "Confira e comece."
     assert_text "Você seguirá para o pagamento seguro pelo Stripe."
+    within('[data-summary="promotion"]') do
+      assert_text "Café do Bairro"
+      assert_text(/Café com pão por R\$[[:space:]]12 nesta terça\./)
+      assert_text "Peça pelo WhatsApp · @cafedobairro"
+    end
+    within('[data-summary="sound"]') do
+      assert_text "Pop · Escolher por mim · Animado"
+      assert_text "Cantada em português do Brasil"
+    end
+    within('[data-summary="photos"]') do
+      assert_selector "img", count: 1
+      assert_text "1 foto"
+    end
+    within(".ui-price") do
+      assert_text "R$ 29,90"
+      assert_text "Até #{Campaigns::MusicRounds::LIMIT} rodadas"
+    end
     assert_button "Pagar R$ 29,90"
-    page.scroll_to(find(".campaign-form-actions"), align: :bottom)
+    page.scroll_to(find(".ui-actionbar"), align: :bottom)
     page.save_screenshot("/tmp/virajingle-direct-checkout.png")
     checkout_params = nil
     checkout = ->(**args) do
@@ -40,6 +61,10 @@ class MerchantCheckoutTest < ApplicationSystemTestCase
     end
     campaign = Campaign.joins(:order).find_by!(business_name: "Café do Bairro")
     assert_current_path order_chat_path(order_id: campaign.order_id)
+    assert campaign.show_cta?
+    assert_equal "Peça pelo WhatsApp", campaign.call_to_action
+    assert_equal "@cafedobairro", campaign.contact
+    assert_equal [ "icon.png" ], campaign.product_photos.map { |photo| photo.filename.to_s }
     assert_equal 2990, checkout_params.fetch(:line_items).first.dig(:price_data, :unit_amount)
     assert_equal "cs_browser", campaign.order.stripe_session_id
     assert_equal 0, campaign.order.music_generations.count

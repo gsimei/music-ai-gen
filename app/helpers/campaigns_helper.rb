@@ -1,4 +1,17 @@
 module CampaignsHelper
+  PHONE_HINT = { placeholder: "Ex.: (11) 99999-9999", inputmode: "tel" }.freeze
+  CONTACT_HINTS = {
+    "Peça pelo WhatsApp" => PHONE_HINT,
+    "Reserve seu horário" => PHONE_HINT,
+    "Venha nos visitar" => { placeholder: "Ex.: Rua das Flores, 123", inputmode: "text" }.freeze,
+    "Saiba mais no Instagram" => { placeholder: "Ex.: @seunegocio", inputmode: "text" }.freeze
+  }.freeze
+  GENERIC_CONTACT_HINT = { placeholder: "Ex.: telefone, endereço ou @perfil", inputmode: "text" }.freeze
+
+  def campaign_contact_hint(call_to_action)
+    CONTACT_HINTS.fetch(call_to_action, GENERIC_CONTACT_HINT)
+  end
+
   def campaign_logo_url(campaign)
     rails_blob_path(campaign.logo) if campaign.logo.attached? && campaign.logo.blob.persisted?
   end

@@ -1,0 +1,10 @@
+<%# locals: current (índice 0-based do passo inicial). O JS mantém aria-current e o rótulo ao trocar de passo. %>
+<% titles = [ "Sua promoção", "Sua música", "Conferir" ] %>
+<nav class="ui-steps" aria-label="Etapas da campanha">
+  <ol class="ui-track">
+    <% titles.each_with_index do |title, index| %>
+      <li data-campaign-form-target="indicator" data-title="<%= title %>" aria-current="<%= index == current ? 'step' : 'false' %>"><span class="ui-sr-only"><%= title %></span></li>
+    <% end %>
+  </ol>
+</nav>
+<p class="ui-steplabel" data-campaign-form-target="stepLabel">Passo <%= current + 1 %> de <%= titles.size %> · <%= titles[current] %></p>

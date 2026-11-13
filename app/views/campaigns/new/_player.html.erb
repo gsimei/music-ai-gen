@@ -1,0 +1,30 @@
+<%# locals: campaign, catalog. Cartão floresta do exemplo do ritmo, dentro do escopo genre-preview do passo 2. Um só <audio>, sem autoplay e sem controls:
+    quem toca é o botão. O genre-preview reescreve nome, descrição, duração e dica ao trocar de ritmo. %>
+<% genre_key = Campaign::GENRES.key?(campaign.musical_genre) ? campaign.musical_genre : "auto" %>
+<% name, description = Campaign::GENRES.fetch(genre_key)[:label].split(" · ", 2) %>
+<% sample = catalog[genre_key] %>
+<div class="ui-player">
+  <p class="ui-player-eyebrow">Ouça antes de escolher</p>
+  <p class="ui-player-name" data-genre-preview-target="name"><%= name %></p>
+  <p class="ui-player-desc" data-genre-preview-target="description"><%= description %></p>
+  <div class="ui-wave" data-genre-preview-target="wave" aria-hidden="true"><% 36.times do %><i></i><% end %></div>
+  <div class="ui-player-row">
+    <button type="button" class="ui-play" aria-label="Tocar exemplo" data-playing="false" data-genre-preview-target="toggle" data-action="genre-preview#toggle" <%= "hidden" unless sample %>>
+      <svg class="ui-icon ui-play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>
+      <svg class="ui-icon ui-pause-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    </button>
+    <div class="ui-time">
+      <p class="ui-time-clock"><span data-genre-preview-target="current">0:00</span><span class="ui-time-total" data-genre-preview-target="duration"><%= campaign_media_time(sample[:duration_seconds]) if sample&.dig(:duration_seconds) %></span></p>
+      <p class="ui-time-note">Exemplo com voz ilustrativa. Não gasta rodada.</p>
+    </div>
+  </div>
+  <p class="ui-player-hint" data-genre-preview-target="hint" <%= "hidden" if sample %>><%= genre_key == "auto" ? "Escolha um ritmo para ouvir um exemplo antes de decidir." : "O exemplo deste ritmo ainda está sendo preparado. Você pode escolher normalmente." %></p>
+  <p class="ui-player-error" role="status" data-genre-preview-target="error" hidden>Não foi possível tocar o exemplo. <button type="button" class="ui-player-retry" data-action="genre-preview#retry">Tentar de novo</button></p>
+  <audio preload="none" data-genre-preview-target="player" data-action="play->genre-preview#play pause->genre-preview#paused ended->genre-preview#paused timeupdate->genre-preview#tick loadedmetadata->genre-preview#metadata error->genre-preview#error"></audio>
+  <div class="ui-dir">
+    <p class="ui-dir-title" id="ui-dir-title">Sua direção</p>
+    <ul class="ui-dir-list" role="list" aria-labelledby="ui-dir-title" data-campaign-form-target="direction">
+      <% campaign.sound_summary.split(" · ").each do |part| %><li><%= part %></li><% end %>
+    </ul>
+  </div>
+</div>

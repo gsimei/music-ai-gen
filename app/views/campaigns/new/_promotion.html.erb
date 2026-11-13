@@ -1,0 +1,31 @@
+<%# locals: f, saved_photos, contact_strip. Passo 1: nome, oferta, contato (chips) e fotos (espaços). Logo e cor da faixa ficam no estúdio. %>
+<section data-campaign-form-target="step" class="ui-step">
+  <p class="ui-eyebrow">Sua promoção</p>
+  <h2>O que vamos <em>divulgar?</em></h2>
+  <p class="ui-lead">Conte a oferta. A gente transforma em música e vídeo.</p>
+
+  <div class="ui-field">
+    <div class="ui-label-row">
+      <%= f.label :business_name, "Nome do seu negócio", class: "ui-label" %>
+      <span class="ui-optional">Opcional</span>
+    </div>
+    <%= f.text_field :business_name, class: "ui-input", placeholder: "Ex.: Pizzaria da Vila", maxlength: Campaign::BUSINESS_NAME_MAX_LENGTH, autocomplete: "organization", aria: criar_field_aria(f.object, :business_name, "campaign-business-help"), data: { campaign_form_target: "business", action: "input->campaign-form#preview" } %>
+    <p id="campaign-business-help" class="ui-hint">Aparece no vídeo e é cantado na música.</p>
+    <%= criar_field_error(f.object, :business_name) %>
+  </div>
+
+  <div class="ui-field">
+    <%= f.label :offer, "Qual é a oferta ou novidade?", class: "ui-label" %>
+    <div class="ui-offer">
+      <%= f.text_area :offer, class: "ui-input ui-offer-input", placeholder: "Ex.: Terça da pizza! Duas grandes por R$ 79,90. Só nesta terça.", required: true, maxlength: Campaign::OFFER_MAX_LENGTH, rows: 3, aria: criar_field_aria(f.object, :offer, "campaign-offer-help"), data: { campaign_form_target: "offer", action: "input->campaign-form#preview" } %>
+      <span class="ui-count" data-campaign-form-target="offerCount"><%= f.object.offer.to_s.length %>/<%= Campaign::OFFER_MAX_LENGTH %></span>
+    </div>
+    <p id="campaign-offer-help" class="ui-hint">Inclua preço, condições e validade, se houver. Use Enter para separar as linhas.</p>
+    <%= criar_field_error(f.object, :offer) %>
+  </div>
+
+  <%= render "campaigns/new/contact_chips", f: f, contact_strip: contact_strip %>
+  <%= render "campaigns/new/photo_slots", f: f, saved_photos: saved_photos %>
+
+  <p class="ui-note">Logo e cor da faixa você ajusta no estúdio, ao montar o vídeo, sem gastar rodada.</p>
+</section>

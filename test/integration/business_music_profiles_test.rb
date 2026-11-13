@@ -95,9 +95,14 @@ class BusinessMusicProfilesTest < ActionDispatch::IntegrationTest
       assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
         get new_campaign_path
       end
-      assert_select '[data-controller="genre-preview"]'
-      assert_select 'audio[controls][preload="none"][data-genre-preview-target="player"]'
-      assert_includes response.body, "Exemplo do ritmo, com voz ilustrativa"
+      # Criar (tarefa 6): o player é o cartão da marca; o <audio> nativo fica por baixo, sem controles e sem autoplay.
+      # O catálogo deste teste não traz duration_seconds: a view precisa tolerar a ausência.
+      assert_response :success
+      assert_select '[data-controller~="genre-preview"]', count: 1
+      assert_select 'audio[preload="none"][data-genre-preview-target="player"]', count: 1
+      assert_select "audio[controls]", count: 0
+      assert_select "audio[autoplay]", count: 0
+      assert_not_includes response.body, "Exemplo do ritmo, com voz ilustrativa"
       assert_includes response.body, "/demos/genres/forro-v1.mp3"
     end
   end
