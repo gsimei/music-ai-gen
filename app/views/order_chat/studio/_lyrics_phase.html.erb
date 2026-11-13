@@ -44,7 +44,7 @@
               <%= text_area_tag :lyrics_feedback, nil, rows: 2, maxlength: 1000, class: "ui-input ui-notes",
                     placeholder: "Ex.: mantenha a oferta e deixe o refrão mais curto." %>
               <p class="ui-hint">Você confere o novo texto antes de aprovar.</p>
-              <button type="submit" name="intent" value="rewrite" class="ui-btn ui-btn-ghost">Reescrever com IA · <%= order.lyrics_regen_remaining %> ajustes</button>
+              <button type="submit" name="intent" value="rewrite" class="ui-btn ui-btn-ghost">Reescrever com IA · <%= pluralize(order.lyrics_regen_remaining, "ajuste", plural: "ajustes") %></button>
             </div>
           </details>
         <% end %>

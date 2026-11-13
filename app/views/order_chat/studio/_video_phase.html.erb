@@ -32,7 +32,7 @@
             description: "Com marca sonora. O vídeo final sai sem a marca.", label: "trecho do vídeo",
             note: "de #{campaign_media_time(asset.track_duration_seconds)} da música", duration_seconds: sample["duration_seconds"],
             audio_action: "play->creative-editor#play" %>
-    <% elsif queued %>
+    <% elsif asset.audition_preparing? %>
       <p class="ui-hint ui-preparing" role="status">Preparando o trecho…</p>
     <% else %>
       <div class="ui-field">

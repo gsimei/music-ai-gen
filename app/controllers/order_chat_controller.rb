@@ -151,8 +151,8 @@ class OrderChatController < ApplicationController
     asset = @order.all_music_assets.find(params[:asset_id])
     asset.with_lock do
       return head :conflict if asset.approved_for_delivery? && !asset.campaign_preview_ready?
-      unless asset.audition_ready? || asset.campaign_preview_status == "queued"
-        asset.update!(campaign_preview_status: "queued") unless asset.campaign_preview_ready?
+      unless asset.audition_ready? || asset.audition_preparing?
+        asset.campaign_preview_ready? ? asset.touch : asset.update!(campaign_preview_status: "queued")
         ArchiveCampaignAudioJob.perform_later(asset.id)
       end
       # Versions archived before the full marked preview existed.

@@ -53,6 +53,32 @@ class EstudioMobileSystemTest < ApplicationSystemTestCase
     assert_no_studio_errors
   end
 
+  test "a broadcast while the Ver prévia sheet is open keeps the sheet (M10)" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.update!(selected_music_asset: order_assets(:music_variant_a))
+    visit order_chat_path(order_id: order.id)
+    assert_selector "h1", text: "Monte o seu vídeo."
+    # Controle: com a folha fechada, o broadcast troca o painel.
+    page.execute_script("document.getElementById('chat-lyrics-panel').dataset.sentinel = 'old'")
+    OrderChatBroadcaster.call(order)
+    assert_no_selector "#chat-lyrics-panel[data-sentinel]"
+    # Conta os broadcasts do painel que chegaram e foram barrados (o guard do creative-editor roda antes deste ouvinte).
+    page.execute_script(<<~JS)
+      document.addEventListener("turbo:before-stream-render", event => {
+        if (event.target.getAttribute("target") === "chat-lyrics-panel" && event.defaultPrevented)
+          document.documentElement.dataset.blocked = Number(document.documentElement.dataset.blocked || 0) + 1
+      })
+    JS
+    click_button "Ver prévia"
+    assert_selector "dialog.ui-stage[open]"
+    page.execute_script("document.getElementById('chat-lyrics-panel').dataset.sentinel = 'old'")
+    OrderChatBroadcaster.call(order)
+    assert_selector "html[data-blocked='1']", visible: :all
+    assert_selector "#chat-lyrics-panel[data-sentinel=old] dialog.ui-stage[open]"
+    assert_no_studio_errors
+  end
+
   private
 
   def assert_mobile_phase(primary, changes)

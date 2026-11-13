@@ -154,6 +154,37 @@ class EstudioMusicPhaseTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] button", retry_generation_campaign_path(@campaign), text: "Tentar novamente"
   end
 
+  test "a sample marked with an older watermark shows Preparando after Preparar amostra, and a second click queues nothing (I1)" do
+    @b.audition_audio.blob.update!(metadata: @b.audition_audio.blob.metadata.merge("watermark_version" => Campaigns::AudioAudition::VERSION - 1))
+    @b.update_column(:updated_at, 1.day.ago)
+    get order_chat_path(order_id: @order.id)
+    assert_select "#music-version-#{@b.id} button", text: "Preparar amostra"
+    headers = { "ACCEPT" => "text/vnd.turbo-stream.html" }
+    assert_enqueued_with(job: ArchiveCampaignAudioJob, args: [ @b.id ]) do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: @b.id }, headers: headers
+    end
+    assert_includes response.body, "Preparando a amostra…"
+    get order_chat_path(order_id: @order.id)
+    assert_select "#music-version-#{@b.id} [role=status]", text: "Preparando a amostra…"
+    assert_select "#music-version-#{@b.id} button", text: "Preparar amostra", count: 0
+    assert_no_enqueued_jobs only: ArchiveCampaignAudioJob do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: @b.id }, headers: headers
+    end
+    # Passados 10 minutos sem a amostra nova, o botão volta.
+    @b.update_column(:updated_at, 11.minutes.ago)
+    get order_chat_path(order_id: @order.id)
+    assert_select "#music-version-#{@b.id} button", text: "Preparar amostra"
+  end
+
+  test "a failed first round offers only the retry, not more versions (M9)" do
+    @order.music_generations.update_all(status: "failed")
+    @order.update!(status: "music_failed")
+    get order_chat_path(order_id: @order.id)
+    assert_select "form[action=?] button", retry_generation_campaign_path(@campaign), text: "Tentar novamente"
+    assert_select "#music-changes", count: 0
+    assert_select "button", text: "Criar mais duas versões", count: 0
+  end
+
   test "while the first round is created the phase shows the wait card and no pick form" do
     @order.music_generations.update_all(status: "processing")
     @order.update!(status: "music_generating")

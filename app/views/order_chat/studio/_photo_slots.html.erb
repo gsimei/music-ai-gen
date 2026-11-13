@@ -13,7 +13,7 @@
   <%= hidden_field_tag "photo_sequence[]", "", id: nil %>
   <div class="ui-label-row">
     <label for="video-photos-input" class="ui-label">Fotos do vídeo</label>
-    <% if extra.positive? %><span class="ui-badge">+<%= extra %> espaços liberados</span><% end %>
+    <% if extra.positive? %><span class="ui-badge">+<%= pluralize(extra, "espaço liberado", plural: "espaços liberados") %></span><% end %>
   </div>
   <%= file_field_tag "photos[]", multiple: true, accept: "image/jpeg,image/png,image/webp", id: "video-photos-input", class: "ui-sr-only",
         aria: { label: "Fotos do vídeo", describedby: "video-photos-help video-photos-status" },

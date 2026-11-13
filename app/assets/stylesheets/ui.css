@@ -1833,6 +1833,27 @@ html:has(.estudio) {
 .estudio .ui-phase .ui-alert {
   margin: 0;
 }
+/* Linhas de erro (#creative-errors) e de aviso ("Alterações salvas…") do estúdio, com a mesma cara do ui-alert. */
+.estudio .creative-errors,
+.estudio .creative-working {
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.estudio .creative-errors {
+  border: 1px solid var(--jp-error-border);
+  background: var(--jp-error-bg);
+  color: var(--jp-error);
+}
+.estudio .creative-errors:empty {
+  display: none;
+}
+.estudio .creative-working {
+  background: var(--jp-mint);
+  color: var(--jp-forest);
+}
 @media (max-width: 639px) {
   .estudio .ui-phase-actions .ui-btn-primary {
     justify-self: stretch;

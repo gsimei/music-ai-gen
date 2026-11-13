@@ -362,8 +362,11 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
   - [x] Imagens em broadcasts Turbo usam URL só com o caminho; antes saíam com o host `example.org` do renderizador
   - [ ] Fora da fatia: a Biblioteca (`songs#index`) ainda não usa `Campaigns::StudioPhase` (fatia 1)
   - [ ] O estúdio segue sob a rota legada `/orders/:id/chat` (`order_chat`), que só sai com a fatia 5
-  - [ ] "Prévia completa sendo preparada" usa uma heurística de 10 minutos; se aparecerem casos travados, criar `full_audition_status`
-  - [ ] Apagar ~21 regras mortas `.creative-video-*` em `jinglepro.css`
+  - [ ] **Deploy:** depois de subir a marca d'água `Campaigns::AudioAudition::VERSION` 2, rodar `bin/rails campaigns:prepare_auditions`. Sem isso, os pedidos ainda não aprovados ficam com "Prepare a amostra para ouvir" em cada versão e "Gerar meu vídeo" desligado até o lojista preparar cartão por cartão. A task só pega campanhas não aprovadas e versões sem a amostra da versão atual, e pode rodar de novo
+  - [ ] "Prévia completa sendo preparada" usa uma heurística de 10 minutos; se aparecerem casos travados, criar `full_audition_status`. Ela também dá falso positivo logo depois de trocar o trecho na fase 3 (o `ExcerptSettings` refaz a `audition_audio` pelo `PrepareCampaignAudioJob`): por até 10 minutos uma versão antiga sem prévia completa não mostra o link nem "Preparar música completa" (revisão final, M7)
+  - [ ] Várias versões se chamam "Versão A" em `h2` (uma por rodada); a rodada só aparece no texto sr-only do rádio. Pôr a rodada no título das rodadas anteriores (revisão final, M11)
+  - [ ] Sem teste de sistema para um broadcast durante a reprodução (RF 1 só cobre digitação; revisão final, M4)
+  - [ ] O ramo `"custom"` de `order_chat#excerpt_settings` não tem mais UI; sai com a fatia 5, junto com os testes legados que ainda o usam
   - [ ] Borda rara: `video_status` `ready` sem vídeo anexado mostra "Entrega" no topo e "Montando" no corpo, sem polling
   - [ ] Prompt da Mureka: no teste real de 13/11/2026 a faixa veio com cerca de 16 s de introdução sem voz, e faixas de 66 s e 163 s para um pedido de 30 s. Investigar o prompt e a duração antes de prometer o trecho ao lojista
 - [ ] **Fatia 4, conta e pagamento no passo 3**

@@ -146,6 +146,44 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     assert_field "editable-lyrics", with: "Texto que o lojista está digitando"
   end
 
+  test "tapping sound tiles and returning to the saved one does not lock Usar a Versão (I2)" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.sync_briefing!
+    order.all_music_assets.each { |asset| prepare_sample(asset) }
+    visit order_chat_path(order_id: order.id)
+    assert_selector "h1", text: "Escolha a sua versão."
+    find("#music-changes > summary").click
+    find("#creation-sound summary").click
+    saved = campaign.musical_genre
+    refute_equal "forro", saved
+    find("#creation-sound label.ui-tile", text: "Forró").click
+    find("#creation-sound label.ui-tile:has(input[value='#{saved}'])").click
+    assert_no_selector "#chat-lyrics-panel[data-creative-editor-dirty]"
+    click_button "Usar a Versão A e montar o vídeo"
+    assert_selector "h1", text: "Monte o seu vídeo."
+    assert_equal order.all_music_assets.order(:variant_index).first.id, campaign.reload.selected_music_asset_id
+  end
+
+  test "Ouvir completa swaps the card player to the full track and clicking again returns to the sample (M8)" do
+    order = orders(:b2b_preview_ready)
+    Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false).sync_briefing!
+    asset = order.all_music_assets.order(:variant_index).first
+    order.all_music_assets.each { |each_asset| prepare_sample(each_asset) }
+    asset.update!(duration_ms: 75_000)
+    asset.audio.attach(io: StringIO.new("original"), filename: "original.mp3", content_type: "audio/mpeg")
+    asset.full_audition_audio.attach(io: StringIO.new("marked full"), filename: "full.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION })
+    visit order_chat_path(order_id: order.id)
+    src = "document.querySelector('#music-version-#{asset.id} audio').getAttribute('src')"
+    sample = page.evaluate_script(src)
+    within("#music-version-#{asset.id}") { click_link "Ouvir completa" }
+    assert_equal order_audio_full_path(order, asset_id: asset.id), URI(page.evaluate_script("document.querySelector('#music-version-#{asset.id} audio').src")).path
+    within("#music-version-#{asset.id}") { click_link "Voltar à amostra" }
+    assert_equal sample, page.evaluate_script(src)
+    within("#music-version-#{asset.id}") { assert_link "Ouvir completa" }
+  end
+
   private
 
   def prepare_sample(asset)

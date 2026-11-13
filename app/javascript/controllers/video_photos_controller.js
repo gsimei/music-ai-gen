@@ -38,6 +38,7 @@ export default class extends Controller {
   }
 
   changed() {
+    this.element.dataset.changed = "true" // creative-editor: a ordem das fotos vive em hidden, sem default para comparar
     this.inputTarget.dispatchEvent(new Event("input", { bubbles: true }))
     this.describe()
   }

@@ -209,7 +209,7 @@ end
 - O botão "Testar sem cobrança" (`POST /campaigns/:id/test_payment`) só existe em development
 
 ### Storage
-- Hoje: ActiveStorage com serviço Disk. O vídeo é baixado por `GET /campaigns/:id/download`, que exige o dono da campanha, pedido `approved` e `video_status == "ready"` e redireciona para o blob do ActiveStorage; a música aprovada é servida por `OrderAsset#playback_url`. Antes da aprovação, a prévia completa da faixa, sempre com marca sonora, sai por `campaign_audio#full` (`GET /campaigns/:id/audio/:asset_id/full`) a partir de `OrderAsset#full_audition_audio`
+- Hoje: ActiveStorage com serviço Disk. O vídeo é baixado por `GET /campaigns/:id/download`, que exige o dono da campanha, pedido `approved` e `video_status == "ready"` e redireciona para o blob do ActiveStorage; a música aprovada é servida por `OrderAsset#playback_url`. Antes da aprovação, a prévia completa da faixa, sempre com marca sonora, sai por `campaign_audio#full` (`GET /orders/:order_id/audio/:asset_id/full`) a partir de `OrderAsset#full_audition_audio`
 - Meta ao migrar para R2 (ROADMAP, M-4), ainda não implementada: bucket público (previews, samples) com URLs diretas; bucket privado (MP3 completo, vídeo) com signed URLs de 1h; cliente nunca recebe URL direta do bucket privado
 
 ### Testes

@@ -48,7 +48,6 @@ class CampaignsHelperTest < ActionView::TestCase
     assert_equal "até #{Campaigns::PhotoLimit.for_duration(60)} fotos", chips.second[:hint]
     assert_equal "Música inteira 1:06", chips.last[:label]
     assert_equal "até #{Campaigns::PhotoLimit.for_duration(66)} fotos", chips.last[:hint]
-    assert_equal Campaigns::PhotoLimit.for_duration(60), chips.second[:photos]
   end
 
   test "a track shorter than 30 s offers only the whole song (RF 4)" do

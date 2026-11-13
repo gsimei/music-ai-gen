@@ -39,8 +39,10 @@ class OrderChatRateLimitTest < ActionDispatch::IntegrationTest
   test "the limit is per user" do
     @limit.times { post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: @asset.id }, headers: @headers }
     sign_out users(:customer_b2b)
+    # O mesmo pedido passa a ser do outro lojista: uma chave global ou por pedido daria 429; por usuário, não.
+    @order.update_column(:user_id, users(:customer_other).id)
     sign_in users(:customer_other)
     post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: @asset.id }, headers: @headers
-    assert_not_equal 429, response.status
+    assert_response :success
   end
 end

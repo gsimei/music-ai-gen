@@ -53,6 +53,12 @@ class EstudioLyricsPhaseTest < ActionDispatch::IntegrationTest
     assert_select "#chat-lyrics-panel audio[controls]", count: 0
   end
 
+  test "the rewrite button pluralizes the adjustments left (M2)" do
+    @order.update_column(:lyrics_regen_used, @order.lyrics_regen_limit - 1)
+    get order_chat_path(order_id: @order.id)
+    assert_select "button[name=intent][value=rewrite]", text: "Reescrever com IA · 1 ajuste"
+  end
+
   test "the lyrics form keeps the creative-editor dirty guard wiring" do
     get order_chat_path(order_id: @order.id)
     form = css_select("#chat-lyrics-panel form[action='#{order_chat_creation_path(order_id: @order.id)}']").first

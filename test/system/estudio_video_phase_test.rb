@@ -53,6 +53,39 @@ class EstudioVideoPhaseSystemTest < ApplicationSystemTestCase
     assert_equal 0, page.evaluate_script("Array.from(document.querySelectorAll('audio')).filter(a => !a.closest('#video-start') && a.currentTime > 0).length")
   end
 
+  test "moving the start and back to the suggested one does not lock Gerar meu vídeo; a real move still does (I2)" do
+    @asset.full_audition_audio.attach(io: StringIO.new("marked full"), filename: "full.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: @asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION })
+    visit order_chat_path(order_id: @order.id)
+    find("#video-changes > summary").click
+    find("#video-start > summary").click
+    range = find("#video-start-range")
+    range.send_keys(:right, :right)
+    assert_equal "2", page.evaluate_script("document.getElementById('video-start-range').value")
+    click_button "Gerar meu vídeo"
+    assert_text "Salve ou envie a alteração"
+    range.send_keys(:left, :left)
+    assert_equal "0", page.evaluate_script("document.getElementById('video-start-range').value")
+    click_button "Ouvir a partir daqui"
+    assert_no_selector "#chat-lyrics-panel[data-creative-editor-dirty]"
+    click_button "Gerar meu vídeo"
+    assert_current_path campaign_path(@campaign)
+    assert @order.reload.approved?
+    assert_no_javascript_errors
+  end
+
+  test "a suggested start off the 0.01 step does not lock Gerar meu vídeo on load" do
+    @asset.update!(excerpt_start_seconds: nil)
+    @asset.campaign_audio.blob.update!(metadata: @asset.campaign_audio.blob.metadata.merge("start_seconds" => 15.433))
+    visit order_chat_path(order_id: @order.id)
+    # O navegador arredonda o value ao step; o default (atributo) guarda o valor exato.
+    assert_equal ["15.433", "15.43"], page.evaluate_script("(r => [r.defaultValue, r.value])(document.getElementById('video-start-range'))")
+    click_button "Gerar meu vídeo"
+    assert_current_path campaign_path(@campaign)
+    assert @order.reload.approved?
+    assert_no_javascript_errors
+  end
+
   private
 
   def assert_no_javascript_errors

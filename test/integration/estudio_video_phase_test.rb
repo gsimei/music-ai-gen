@@ -80,6 +80,13 @@ class EstudioVideoPhaseTest < ActionDispatch::IntegrationTest
     assert_select "[role=status]", text: "Preparando o trecho…"
   end
 
+  test "one extra photo slot is announced in the singular (M2)" do
+    ready!(@asset, duration: 36)
+    assert_equal Campaigns::PhotoLimit::INITIAL + 1, @campaign.reload.photo_limit
+    get order_chat_path(order_id: @order.id)
+    assert_select ".ui-photos .ui-badge", text: "+1 espaço liberado"
+  end
+
   test "photo slots match the limit and announce the extra slots of a longer cut" do
     get order_chat_path(order_id: @order.id)
     assert_select "form[action=?] .ui-slot", order_chat_video_photos_path(order_id: @order.id), count: @campaign.reload.photo_limit

@@ -25,6 +25,13 @@ class OrderAsset < ApplicationRecord
       audition_audio.blob.metadata["watermark_version"] == Campaigns::AudioAudition::VERSION
   end
 
+  # Amostra a caminho: o trecho limpo está na fila, ou já existe e só falta a marca sonora da versão atual.
+  # ponytail: o segundo caso não tem status próprio; order_chat#prepare_audio toca updated_at ao enfileirar e isso conta
+  # como "preparando" por 10 minutos (mesmo heurístico da prévia completa). Coluna de status se travar.
+  def audition_preparing?
+    campaign_preview_status == "queued" || (campaign_preview_ready? && !audition_ready? && updated_at > 10.minutes.ago)
+  end
+
   def approved_for_delivery?
     music_variant? && music_generation_id.present? && variant_index.in?([ 0, 1 ]) &&
       order.approved? && order.approved_music_generation_id == music_generation_id &&

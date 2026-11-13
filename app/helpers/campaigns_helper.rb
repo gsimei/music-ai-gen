@@ -36,10 +36,9 @@ module CampaignsHelper
       minutes, rest = seconds.divmod(60)
       label = minutes.zero? ? "#{rest} s" : [ "#{minutes} min", (rest if rest.positive?) ].compact.join(" ")
       hint = seconds == Campaigns::AudioPreview::DEFAULT_DURATION ? "ideal para Reels e Status" : "até #{Campaigns::PhotoLimit.for_duration(seconds)} fotos"
-      { value: seconds.to_s, label: label, hint: hint, photos: Campaigns::PhotoLimit.for_duration(seconds) }
+      { value: seconds.to_s, label: label, hint: hint }
     end
-    chips << { value: "full", label: "Música inteira #{campaign_media_time(track)}", hint: "até #{Campaigns::PhotoLimit.for_duration(track)} fotos",
-      photos: Campaigns::PhotoLimit.for_duration(track) }
+    chips << { value: "full", label: "Música inteira #{campaign_media_time(track)}", hint: "até #{Campaigns::PhotoLimit.for_duration(track)} fotos" }
   end
 
   SECTION_LABELS = { "intro" => "Introdução", "verse" => "Verso", "pre-chorus" => "Pré-refrão", "chorus" => "Refrão",

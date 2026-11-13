@@ -63,6 +63,20 @@ class CriarCssGuardTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the studio styles its error and notice lines in ui.css, not with the legacy hand-written colors (M1)" do
+    selectors = selectors_of(strip_comments(ui_css))
+    %w[creative-errors creative-working].each do |line|
+      assert selectors.any? { |selector| selector.include?(".estudio") && selector.match?(/\.#{line}(?![\w-])/) },
+        ".#{line} precisa de regra .estudio em ui.css"
+    end
+  end
+
+  test "jinglepro.css no longer carries the dead workspace and video rules (M5)" do
+    css = File.read(JINGLEPRO_CSS)
+    assert_no_match(/\.jp-workspace\s/, css)
+    assert_no_match(/\.creative-video-/, css)
+  end
+
   test "ui.css no longer carries the provisional bridge for the legacy offer class" do
     assert_no_match(/campaign-offer-text/, strip_comments(ui_css),
       "A prévia nova (tarefa 5) estiliza previewOffer com classe ui-; a ponte .campaign-offer-text sai de ui.css")

@@ -21,13 +21,23 @@ export default class extends Controller {
     this.tick()
   }
   // "Ouvir completa": troca a amostra pela música completa (também com marca) no mesmo player e toca. É um link
-  // para a mesma rota, então sem JS o navegador abre o áudio.
+  // para a mesma rota, então sem JS o navegador abre o áudio. Clicar de novo ("Voltar à amostra") devolve a amostra.
   listen(event) {
     event.preventDefault()
-    const audio = this.playerTarget
-    if (audio.src === event.currentTarget.href) { this.toggle(); return }
-    audio.src = event.currentTarget.href
+    const audio = this.playerTarget, link = event.currentTarget
+    if (this.sample) {
+      audio.pause()
+      audio.src = this.sample.src
+      this.durationTarget.textContent = this.sample.duration
+      link.textContent = this.sample.label
+      this.sample = null
+      this.tick()
+      return
+    }
+    this.sample = { src: audio.getAttribute("src"), duration: this.durationTarget.textContent, label: link.textContent }
+    audio.src = link.href
     this.durationTarget.textContent = ""
+    link.textContent = "Voltar à amostra"
     audio.play().catch(error => { if (error.name !== "AbortError") this.error() })
   }
   play() {
