@@ -126,7 +126,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 
 ---
 
-### Tarefa 1: `Campaigns::StudioPhase`
+### Task 1: `Campaigns::StudioPhase`
 
 **Arquivos:**
 - criar `app/services/campaigns/studio_phase.rb`;
@@ -141,7 +141,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar o teste e confirmar que passa.
 - [ ] **Passo 5.** Commit: `feat: deriva a fase do estúdio em um só lugar`.
 
-### Tarefa 2: prévia completa com marca sonora (backend)
+### Task 2: prévia completa com marca sonora (backend)
 
 **Arquivos:**
 - modificar: `app/models/order_asset.rb`, `app/controllers/campaign_audio_controller.rb`, `config/routes.rb` (linha 28, ao lado de `audio_final`), `app/jobs/archive_campaign_audio_job.rb` (linhas 11 e 25) e `app/controllers/order_chat_controller.rb#prepare_audio` (linhas 145 a 156);
@@ -168,7 +168,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar os testes e confirmar que passam. Depois, `test/integration/campaign_excerpt_test.rb` e `test/jobs` inteiros, sem falha nova.
 - [ ] **Passo 5.** Commit: `feat: prévia da música inteira com marca sonora`.
 
-### Tarefa 3: base `.estudio` e componentes compartilhados
+### Task 3: base `.estudio` e componentes compartilhados
 
 **Arquivos:**
 - modificar: `app/assets/stylesheets/ui.css`, `test/integration/criar_css_guard_test.rb`, `app/views/campaigns/new/_sound.html.erb` e `app/views/campaigns/new/_player.html.erb` (vira chamada ao shared);
@@ -184,7 +184,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar a guarda e os testes do Criar: `test/integration/criar_*_test.rb test/system/criar_sound_step_test.rb test/integration/campaign_flow_test.rb`. Tudo passa.
 - [ ] **Passo 5.** Commit: `refactor: player e campos de som compartilhados entre Criar e estúdio`.
 
-### Tarefa 4: casca, barra de fases e contadores
+### Task 4: casca, barra de fases e contadores
 
 **Arquivos:**
 - modificar: `app/views/order_chat/show.html.erb` e `app/views/order_chat/_campaign_studio.html.erb`;
@@ -205,7 +205,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar o teste novo e os de estúdio: `campaign_guided_studio_test`, `studio_interface_test`, `campaign_creative_flow_test`, `campaign_chat_direction_test` e `chat_creation_flow_test`, migrando só seletores.
 - [ ] **Passo 5.** Commit: `feat: casca do estúdio com fases e contadores`.
 
-### Tarefa 5: fase 1 · Letra
+### Task 5: fase 1 · Letra
 
 **Arquivos:**
 - criar: `app/views/order_chat/studio/_lyrics_phase.html.erb`;
@@ -237,7 +237,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar os testes da tarefa e os de estúdio da tarefa 4.
 - [ ] **Passo 5.** Commit: `feat: fase da letra no estúdio`.
 
-### Tarefa 6: fase 2 · Músicas
+### Task 6: fase 2 · Músicas
 
 **Arquivos:**
 - criar: `app/views/order_chat/studio/_music_phase.html.erb`, `_version_card.html.erb` e `_more_versions.html.erb`;
@@ -267,7 +267,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar os testes da tarefa e os de estúdio da tarefa 4.
 - [ ] **Passo 5.** Commit: `feat: fase das músicas no estúdio`.
 
-### Tarefa 7: fase 3 · Vídeo (duração, trecho, fotos e aparência)
+### Task 7: fase 3 · Vídeo (duração, trecho, fotos e aparência)
 
 **Arquivos:**
 - criar:
@@ -315,7 +315,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar os testes da tarefa e todos os de estúdio, incluindo os de sistema (`campaign_video_*`).
 - [ ] **Passo 5.** Commit: `feat: fase do vídeo com duração em primeira linha`.
 
-### Tarefa 8: montando, falha do vídeo e Entrega em `campaigns/show`
+### Task 8: montando, falha do vídeo e Entrega em `campaigns/show`
 
 **Arquivos:**
 - modificar: `app/views/campaigns/show.html.erb` e `app/views/campaigns/_delivery.html.erb`;
@@ -335,7 +335,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 4.** Rodar os testes da tarefa e `test/system/campaign_*`.
 - [ ] **Passo 5.** Commit: `feat: acompanhamento e entrega com a casca do estúdio`.
 
-### Tarefa 9: celular e revisão visual
+### Task 9: celular e revisão visual
 
 **Arquivos:**
 - modificar: `ui.css` (bloco `.estudio`, menor que 960 px);
@@ -352,7 +352,7 @@ Cada item tem um teste na tarefa dona, marcado com **(RF n)**.
 - [ ] **Passo 5.** `frontend-analyzer`: comparar com `design/jinglepro/Estudio.dc.html`, `Estudio-Mobile.dc.html` e `Entrega.dc.html`, usando os pedidos locais 69 (`lyrics_ready`) e 71 (`preview_ready`). Verificar contraste, foco visível e `prefers-reduced-motion`. Corrigir o que ele apontar, na mesma tarefa.
 - [ ] **Passo 6.** Commit: `feat: estúdio no celular`.
 
-### Tarefa 10: segurança, suíte completa e documentação
+### Task 10: segurança, suíte completa e documentação
 
 - [ ] **Passo 1.** `security-engineer` sobre a tarefa 2 e as views novas:
   - a prévia completa sempre tem marca e cobre a faixa inteira;
