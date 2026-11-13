@@ -1,19 +1,63 @@
-<section id="campaign-delivery" class="campaign-delivery" aria-live="polite"
+<%# locals: (campaign:) %>
+<%# Montando, falha do vídeo e Entrega (Decisão 8). A barra de fases e o único h1 ficam aqui dentro para o replace
+    de #campaign-delivery (polling de campaigns#status e broadcast em campaign_<id>) nunca deixá-los velhos. %>
+<% order = campaign.order %>
+<% phase = Campaigns::StudioPhase.for(order) %>
+<% asset = approved_music_asset(order) %>
+<section id="campaign-delivery" class="ui-delivery" aria-live="polite"
   <% if %w[queued rendering].include?(campaign.video_status) %>
     data-controller="creation-status" data-creation-status-url-value="<%= status_campaign_path(campaign) %>" data-creation-status-version-value="<%= campaign.video_status %>"
   <% end %>>
-  <% if campaign.video_status == "ready" && campaign.video.attached? %>
-    <div class="campaign-video"><video controls playsinline preload="metadata" poster="<%= rails_blob_path(campaign.poster) if campaign.poster.attached? %>" aria-label="Vídeo: <%= campaign.title %>"><source src="<%= download_campaign_path(campaign, preview: 1) %>" type="video/mp4"></video></div>
-    <% asset = approved_music_asset(campaign.order) %>
-    <% duration = campaign.video.blob.metadata['duration_seconds'] || (asset.campaign_audio.blob.metadata['duration_seconds'] if asset&.campaign_preview_ready?) %>
-    <div class="campaign-card"><p class="studio-kicker">PODE DAR O PLAY. E POSTAR.</p><h2>Sua campanha está pronta.</h2><p>Seu vídeo<%= " de #{campaign_media_time(duration)}" if duration %> está pronto, com encerramento suave. Baixe no celular e publique nas suas redes.</p><%= link_to "Baixar vídeo MP4", download_campaign_path(campaign), class: "studio-button studio-button-green", data: { turbo: false } %>
-      <% if asset&.playback_url.present? %><%= link_to "Baixar música MP3", asset.playback_url, class: "studio-text-link", target: "_blank", rel: "noopener", download: true %><% end %>
-      <div class="studio-field" data-controller="campaign-form"><label for="campaign-caption-<%= campaign.id %>">Legenda sugerida para a publicação</label><textarea id="campaign-caption-<%= campaign.id %>" rows="5" readonly data-campaign-form-target="caption"><%= campaign.caption %></textarea><button type="button" class="studio-button studio-button-outline" data-action="campaign-form#copy">Copiar legenda</button></div>
-      <%= link_to "Criar outra promoção", new_order_path, class: "studio-text-link" %>
+  <%= render "order_chat/studio/head", order: order, phase: phase, counters: false %>
+  <% if phase == :delivered && campaign.video.attached? %>
+    <% duration = campaign.video.blob.metadata["duration_seconds"] || (asset.campaign_audio.blob.metadata["duration_seconds"] if asset&.campaign_preview_ready?) %>
+    <p class="ui-badge">Pronta</p>
+    <h1 class="ui-phase-title" tabindex="-1">Sua campanha está pronta.</h1>
+    <p class="ui-lead">Baixe no celular e publique no Reels, nos Stories ou no Status do WhatsApp.</p>
+    <div class="ui-delivery-grid">
+      <div class="ui-delivery-video"><video controls playsinline preload="metadata" poster="<%= rails_blob_path(campaign.poster) if campaign.poster.attached? %>" aria-label="Vídeo: <%= campaign.title %>"><source src="<%= download_campaign_path(campaign, preview: 1) %>" type="video/mp4"></video></div>
+      <div class="ui-delivery-cards">
+        <section class="ui-delivery-card" aria-labelledby="delivery-download">
+          <h2 id="delivery-download">Baixar</h2>
+          <p class="ui-hint">Vídeo MP4 vertical (9:16)<%= " · #{campaign_media_time(duration)}" if duration %></p>
+          <%= link_to "Baixar vídeo MP4", download_campaign_path(campaign), class: "ui-btn ui-btn-primary", data: { turbo: false } %>
+          <% if asset&.playback_url.present? %><%= link_to "Baixar música MP3", asset.playback_url, class: "ui-btn ui-btn-ghost", target: "_blank", rel: "noopener", download: true %><% end %>
+        </section>
+        <section class="ui-delivery-card" aria-labelledby="delivery-caption" data-controller="campaign-form">
+          <h2 id="delivery-caption">Legenda sugerida</h2>
+          <label class="ui-hint" for="campaign-caption-<%= campaign.id %>">Cole na hora de publicar.</label>
+          <textarea id="campaign-caption-<%= campaign.id %>" class="ui-input" rows="5" readonly data-campaign-form-target="caption"><%= campaign.caption %></textarea>
+          <button type="button" class="ui-btn ui-btn-ghost" data-action="campaign-form#copy">Copiar legenda</button>
+        </section>
+        <section class="ui-delivery-card is-soft" aria-labelledby="delivery-howto">
+          <h2 id="delivery-howto">Como postar</h2>
+          <ol class="ui-checklist"><li><span class="ui-phase-dot" aria-hidden="true">1</span>Baixe o vídeo no celular.</li><li><span class="ui-phase-dot" aria-hidden="true">2</span>Abra o Reels, os Stories ou o Status do WhatsApp.</li><li><span class="ui-phase-dot" aria-hidden="true">3</span>Escolha o vídeo e cole a legenda.</li></ol>
+        </section>
+        <%= link_to "Criar outra promoção", new_order_path, class: "ui-link" %>
+      </div>
     </div>
-  <% elsif campaign.video_status == "failed" %>
-    <div class="campaign-card"><h2>A música está salva.</h2><p role="alert"><%= campaign.video_error %></p><%= button_to "Tentar montar o vídeo novamente", render_video_campaign_path(campaign), class: "studio-button studio-button-green" %></div>
+  <% elsif phase == :failed_video %>
+    <section class="ui-phase" aria-labelledby="delivery-title">
+      <p class="ui-eyebrow">Fase <%= Campaigns::StudioPhase.step(phase) %> de 3</p>
+      <h1 id="delivery-title" class="ui-phase-title" tabindex="-1">A música está salva.</h1>
+      <p class="ui-alert" role="alert"><%= campaign.video_error %></p>
+      <%= button_to "Tentar montar o vídeo novamente", render_video_campaign_path(campaign), class: "ui-btn ui-btn-primary" %>
+    </section>
   <% else %>
-    <div class="campaign-card"><p class="studio-kicker">ÚLTIMO PASSO / SEU VÍDEO</p><h2>Montando sua campanha.</h2><p>Estamos juntando sua arte com a música escolhida. Pode levar alguns minutos. Você pode sair e voltar pela biblioteca.</p><%= link_to "Verificar andamento", campaign_path(campaign), class: "studio-text-link" %><% if campaign.video_status == "pending" %><%= button_to "Montar meu vídeo", render_video_campaign_path(campaign), class: "studio-button studio-button-green" %><% end %></div>
+    <section class="ui-phase" aria-labelledby="delivery-title">
+      <p class="ui-eyebrow">Fase <%= Campaigns::StudioPhase.step(:rendering) %> de 3</p>
+      <h1 id="delivery-title" class="ui-phase-title" tabindex="-1">Montando o seu vídeo.</h1>
+      <p class="ui-lead">Estamos juntando as fotos, as transições e a música escolhida. Pode levar alguns minutos. Você pode sair e voltar pela biblioteca.</p>
+      <ol class="ui-checklist">
+        <li class="is-done"><span class="ui-phase-dot" aria-hidden="true">✓</span>Música escolhida<%= " · trecho de #{campaign_media_time(asset.video_duration_seconds)}" if asset %></li>
+        <li aria-current="step"><span class="ui-phase-dot" aria-hidden="true">2</span>Montando o vídeo com as fotos e a oferta</li>
+        <li><span class="ui-phase-dot" aria-hidden="true">3</span>Pronto para baixar e postar</li>
+      </ol>
+      <div class="ui-phase-actions">
+        <% if campaign.video_status == "pending" %><%= button_to "Montar meu vídeo", render_video_campaign_path(campaign), class: "ui-btn ui-btn-primary" %><% end %>
+        <%= link_to "Verificar andamento", campaign_path(campaign), class: "ui-link" %>
+        <%= link_to "Ir para minhas campanhas", songs_path, class: "ui-link" %>
+      </div>
+    </section>
   <% end %>
 </section>

@@ -1,14 +1,24 @@
 <% content_for :title, "#{@campaign.title} · #{brand_name}" %>
 <% content_for :body_class, "studio-page" %>
 <%= turbo_stream_from "campaign_#{@campaign.id}" %>
-<div class="studio-home studio-app campaign-app"><%= render "shared/studio_header" %>
-  <main class="campaign-main"><%= render "shared/studio_flash" %>
-    <div class="campaign-heading"><p class="studio-kicker">SUA CAMPANHA / <%= @campaign.order.reference %></p><% if @campaign.logo.attached? %><%= image_tag @campaign.logo, alt: "Logo da empresa", class: "jp-summary-logo" %><% end %><h1><%= @campaign.title %><% unless @campaign.order.approved? %><br><span>Sua campanha está a caminho.</span><% end %></h1></div>
-    <% if @campaign.order.approved? %>
+<% order = @campaign.order %>
+<div class="studio-home estudio">
+  <%= render "shared/studio_header" %>
+  <main class="ui-main"><%= render "shared/studio_flash" %>
+    <div class="ui-project">
+      <div><p class="ui-kicker">Sua campanha · <%= order.reference %></p><strong><%= @campaign.title %></strong></div>
+      <% if @campaign.logo.attached? %><%= image_tag @campaign.logo, alt: "Logo da empresa", class: "ui-project-logo" %><% end %>
+    </div>
+    <% if order.approved? %>
       <%= render "campaigns/delivery", campaign: @campaign %>
+      <%= render "campaigns/music_profile", campaign: @campaign %>
     <% else %>
-      <section class="campaign-card"><h2>Sua campanha está em criação.</h2><p>Revise a letra, ouça as opções e escolha a sua música. Depois, confira as fotos e gere seu vídeo.</p><%= link_to "Acompanhar e escolher a música", order_chat_path(order_id: @campaign.order_id), class: "studio-button studio-button-green" %></section>
+      <%= render "order_chat/studio/head", order: order, phase: Campaigns::StudioPhase.for(order), counters: false %>
+      <section class="ui-phase" aria-labelledby="campaign-progress-title">
+        <h1 id="campaign-progress-title" class="ui-phase-title">Sua campanha está em criação.</h1>
+        <p class="ui-lead">Revise a letra, ouça as opções e escolha a sua música. Depois, confira as fotos e gere seu vídeo.</p>
+        <%= link_to "Acompanhar e escolher a música", order_chat_path(order_id: @campaign.order_id), class: "ui-btn ui-btn-primary" %>
+      </section>
     <% end %>
-    <% if @campaign.order.approved? %><%= render "campaigns/music_profile", campaign: @campaign %><% end %>
   </main>
 </div>

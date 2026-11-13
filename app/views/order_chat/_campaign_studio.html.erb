@@ -1,17 +1,11 @@
 <% busy = order.paid? || order.lyrics_drafting? || order.music_generating? || order.lyrics_approved? || order.lyrics_revision_token.present? %>
 <% phase = Campaigns::StudioPhase.for(order) %>
-<%# ponytail: a classe legada sai por fase; as fases 1, 2 e 3 já não dependem de studio_identity.css. %>
-<div id="chat-lyrics-panel" class="<%= "creative-studio" if phase.in?(%i[rendering failed_video delivered]) %>" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>" data-phase="<%= Campaigns::StudioPhase.step(phase) %>">
-  <%= render "order_chat/studio/head", order: order, phase: phase %>
+<% delivery = phase.in?(%i[rendering failed_video delivered]) %>
+<div id="chat-lyrics-panel" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>" data-phase="<%= Campaigns::StudioPhase.step(phase) %>">
+  <%# Na montagem/Entrega a barra e o h1 vêm de campaigns/_delivery, igual em campaigns/show (R7). %>
+  <% unless delivery %><%= render "order_chat/studio/head", order: order, phase: phase %><% end %>
   <div id="creative-errors" class="creative-errors" role="alert" tabindex="-1"><%= order.lyrics_revision_error %></div>
   <% if @creation_notice.present? %><p class="creative-working" role="status"><%= @creation_notice %></p><% end %>
-  <%# O título de cada fase é o único h1 (R7); o cabeçalho legado fica só no acompanhamento do vídeo (tarefa 8). %>
-  <% if phase.in?(%i[rendering failed_video delivered]) %>
-  <header class="creative-progress">
-    <h1 tabindex="-1"><%= order.campaign.video_status == "ready" ? "Seu vídeo está pronto." : "Estamos montando seu vídeo." %></h1>
-    <p>Confira o resultado e ajuste o que quiser.</p>
-  </header>
-  <% end %>
   <% case phase %>
   <% when :lyrics %>
     <%= render "order_chat/studio/lyrics_phase", order: order, draft: draft %>

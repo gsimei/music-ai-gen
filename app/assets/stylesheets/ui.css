@@ -2067,3 +2067,140 @@ html:has(.criar) {
   margin: 0;
   accent-color: var(--jp-forest);
 }
+
+/* ---------- Estúdio · montando, falha do vídeo e Entrega (campaigns/_delivery) ---------- */
+.estudio .ui-project-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.estudio .ui-delivery {
+  display: grid;
+  gap: 12px;
+}
+.estudio .ui-delivery > .ui-badge {
+  justify-self: start;
+}
+.estudio .ui-checklist {
+  display: grid;
+  margin: 20px 0 0;
+  padding: 0;
+  border: 1px solid var(--jp-border);
+  border-radius: 24px;
+  background: var(--jp-surface);
+  list-style: none;
+  overflow: hidden;
+}
+.estudio .ui-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  color: var(--jp-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+.estudio .ui-checklist li + li {
+  border-top: 1px solid var(--jp-border);
+}
+.estudio .ui-checklist .ui-phase-dot {
+  flex: none;
+}
+.estudio .ui-checklist li.is-done {
+  color: var(--jp-forest);
+}
+.estudio .ui-checklist li.is-done .ui-phase-dot {
+  border-color: var(--jp-lime);
+  background: var(--jp-lime);
+  color: var(--jp-forest);
+}
+.estudio .ui-checklist li[aria-current="step"] {
+  background: var(--jp-mint);
+  color: var(--jp-forest);
+  font-weight: 800;
+}
+.estudio .ui-checklist li[aria-current="step"] .ui-phase-dot {
+  border-color: var(--jp-forest);
+  background: var(--jp-forest);
+  color: var(--jp-lime);
+}
+.estudio .ui-delivery-grid {
+  display: grid;
+  gap: 32px;
+  margin-top: 24px;
+}
+@media (min-width: 960px) {
+  .estudio .ui-delivery-grid {
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    align-items: start;
+    gap: 56px;
+  }
+}
+.estudio .ui-delivery-video {
+  display: flex;
+  justify-content: center;
+  padding: 56px 24px 32px;
+  border-radius: 200px 200px 24px 24px;
+  background: var(--jp-mint);
+}
+.estudio .ui-delivery-video video {
+  width: min(288px, 100%);
+  aspect-ratio: 9 / 16;
+  border: 6px solid var(--jp-forest);
+  border-radius: 32px;
+  background: var(--jp-forest);
+  object-fit: cover;
+}
+.estudio .ui-delivery-cards {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.estudio .ui-delivery-card {
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid var(--jp-border);
+  border-radius: 28px;
+  background: var(--jp-surface);
+}
+.estudio .ui-delivery-card.is-soft {
+  border-color: transparent;
+  background: var(--jp-mint);
+}
+.estudio .ui-delivery-card.is-dashed {
+  margin-top: 24px;
+  border: 1.5px dashed var(--jp-field);
+  background: transparent;
+}
+.estudio .ui-delivery-card :is(h2, p) {
+  margin: 0;
+}
+.estudio .ui-delivery-card h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.estudio .ui-delivery-card .ui-hint {
+  font-size: 15px;
+}
+.estudio .ui-delivery-card .ui-btn {
+  justify-content: center;
+}
+.estudio .ui-delivery-card textarea {
+  padding: 14px 18px;
+  font-size: 16px;
+  resize: none;
+}
+.estudio .ui-delivery-card .ui-checklist {
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.estudio .ui-delivery-card .ui-checklist li {
+  padding: 6px 0;
+  border: 0;
+  color: var(--jp-forest);
+  font-weight: 500;
+}
