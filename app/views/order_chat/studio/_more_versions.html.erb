@@ -1,0 +1,41 @@
+<%# locals: (order:, draft:, completed:) %>
+<%# "Quero mudar algo" da fase 2: um só form para order_chat#creation. "Criar mais duas versões" (generate) salva a letra
+    e o som deste form antes de pedir a rodada, com o pedido em feedback. "← Voltar à letra" abre #estudio-change
+    (creative-editor#reveal). Os ids são os que o creative-editor reabre depois de um broadcast. %>
+<details id="music-changes" class="ui-more-box">
+  <summary>Quero mudar algo</summary>
+  <%= form_with url: order_chat_creation_path(order_id: order.id), class: "ui-lyrics-form",
+        data: { turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" } do %>
+    <%= hidden_field_tag :draft_id, draft.id %>
+    <div class="ui-field">
+      <p id="music-quick-label" class="ui-label">Pedir mais duas versões</p>
+      <div class="ui-chips" role="group" aria-labelledby="music-quick-label">
+        <% [ "Mais animada", "Mais calma", "Refrão mais marcante", "Outra voz" ].each do |request| %>
+          <button type="button" class="ui-chip" data-action="creative-editor#suggest" data-feedback="<%= request %>"><%= request %></button>
+        <% end %>
+      </div>
+      <%= label_tag :feedback, "Conte o que você quer diferente", class: "ui-label" %>
+      <%= text_area_tag :feedback, nil, rows: 3, maxlength: 400, class: "ui-input ui-notes", data: { creative_editor_target: "feedback" },
+            placeholder: "Ex.: refrão mais marcante e menos instrumentos." %>
+      <p class="ui-hint">Criamos uma nova interpretação e guardamos as anteriores. A melodia pode mudar.</p>
+    </div>
+
+    <%= render "order_chat/studio/sound_change", order: order %>
+
+    <details id="estudio-change" class="ui-more-box">
+      <summary>Editar letra</summary>
+      <div class="ui-field">
+        <%= label_tag "editable-lyrics", "Letra · versão #{draft.version}", class: "ui-label" %>
+        <%= text_area_tag :content, draft.content, id: "editable-lyrics", rows: 10, maxlength: 5000, required: true,
+              class: "ui-input ui-lyrics", aria: { describedby: "lyrics-help" } %>
+        <p id="lyrics-help" class="ui-hint">A letra nova vale para as próximas versões. As anteriores continuam iguais.</p>
+        <button type="submit" name="intent" value="save" class="ui-btn ui-btn-ghost">Salvar letra</button>
+      </div>
+    </details>
+
+    <div class="ui-phase-actions">
+      <button type="submit" name="intent" value="generate" class="ui-btn" aria-describedby="music-round-note">Criar mais duas versões</button>
+      <p id="music-round-note" class="ui-hint">Isso usa a rodada <%= completed + 1 %> de <%= Campaigns::MusicRounds::LIMIT %>.</p>
+    </div>
+  <% end %>
+</details>

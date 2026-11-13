@@ -155,8 +155,9 @@ class CampaignVideoPersonalizationTest < ActionDispatch::IntegrationTest
     @campaign.update!(selected_music_asset: @asset)
     get order_chat_path(order_id: @order.id)
     assert_response :success
-    assert_select "select#excerpt-duration-#{@asset.id} option", text: "1 minuto e meio"
-    assert_select "select#excerpt-duration-#{@asset.id} option[value=full]"
+    assert_select '.ui-duration button[name=duration_seconds][value="90"]', text: /1 min 30/
+    assert_select ".ui-duration button[name=duration_seconds][value=full]", text: /Música inteira 2:00/
+    assert_select "#chat-lyrics-panel select", count: 0
     assert_select "form[action=?]", order_chat_video_photos_path(order_id: @order.id)
     sign_out :user
     sign_in users(:customer_other)
@@ -175,8 +176,9 @@ class CampaignVideoPersonalizationTest < ActionDispatch::IntegrationTest
     end
     assert_response :success
     assert_equal files.map(&:original_filename), @campaign.reload.product_photos.map { |photo| photo.filename.to_s }
-    assert_select '.creative-video-photos form[data-video-photos-limit-value="20"]'
-    assert_select ".creative-video-photos summary", text: "Ajustar fotos · 20 de 20"
+    assert_select 'form#video-photos[data-video-photos-limit-value="20"]'
+    assert_select "#video-photos .ui-slot", count: 20
+    assert_select "#video-photos .ui-slot-empty", count: 0
     previous_ids = @campaign.product_photos.map(&:id)
     save_photos([ *previous_ids.map { |id| "saved:#{id}" }, "upload:0" ], photos: [ upload("extra.png") ], revision: 1)
     assert_response :unprocessable_entity
@@ -198,10 +200,10 @@ class CampaignVideoPersonalizationTest < ActionDispatch::IntegrationTest
     assert @order.reload.preview_ready?
     @campaign.update!(selected_music_asset: other)
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-video-finish button[disabled]", text: "Gerar meu vídeo"
+    assert_select "form[action=?] button[disabled]", order_chat_approve_music_path(order_id: @order.id), text: "Gerar meu vídeo"
     @campaign.update!(selected_music_asset: @asset)
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-video-finish button:not([disabled])", text: "Gerar meu vídeo"
+    assert_select "form[action=?] button:not([disabled])", order_chat_approve_music_path(order_id: @order.id), text: "Gerar meu vídeo"
     post order_chat_approve_music_path(order_id: @order.id), params: {
       asset_id: @asset.id, preview_revision: 1, video_revision: 1 }, headers: @headers
     assert_response :see_other

@@ -1,0 +1,17 @@
+<%# locals: campaign, catalog. Cartão do exemplo do ritmo no passo 2, dentro do escopo genre-preview da section (shared/ui/_player).
+    O genre-preview reescreve nome, descrição, duração e dica ao trocar de ritmo; o src inicial fica com ele (connect -> select). %>
+<% genre_key = Campaign::GENRES.key?(campaign.musical_genre) ? campaign.musical_genre : "auto" %>
+<% name, description = Campaign::GENRES.fetch(genre_key)[:label].split(" · ", 2) %>
+<% sample = catalog[genre_key] %>
+<% direction = capture do %>
+  <div class="ui-dir">
+    <p class="ui-dir-title" id="ui-dir-title">Sua direção</p>
+    <ul class="ui-dir-list" role="list" aria-labelledby="ui-dir-title" data-campaign-form-target="direction">
+      <% campaign.sound_summary.split(" · ").each do |part| %><li><%= part %></li><% end %>
+    </ul>
+  </div>
+<% end %>
+<%= render "shared/ui/player", controller: "genre-preview", src: sample&.dig(:url), title: name, description: description,
+      eyebrow: "Ouça antes de escolher", note: "Exemplo com voz ilustrativa. Não gasta rodada.", duration_seconds: sample&.dig(:duration_seconds),
+      hint: genre_key == "auto" ? "Escolha um ritmo para ouvir um exemplo antes de decidir." : "O exemplo deste ritmo ainda está sendo preparado. Você pode escolher normalmente.",
+      label: "exemplo", error: "Não foi possível tocar o exemplo.", footer: direction %>

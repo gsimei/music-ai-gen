@@ -6,7 +6,10 @@ class CampaignVideoPersonalizationSystemTest < ApplicationSystemTestCase
   include Warden::Test::Helpers
 
   setup { Warden.test_mode! }
-  teardown { Warden.test_reset! }
+  teardown do
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    Warden.test_reset!
+  end
 
   test "merchant edits photos and auditions a longer video before approving on mobile" do
     order = orders(:b2b_preview_ready)
@@ -23,112 +26,123 @@ class CampaignVideoPersonalizationSystemTest < ApplicationSystemTestCase
     campaign.update!(selected_music_asset: asset)
     login_as users(:customer_b2b), scope: :user
     visit order_chat_path(order_id: order.id)
-    assert_text "Fotos do seu vídeo"
-    find(".creative-video-photos summary").click unless find(".creative-video-photos summary").find(:xpath, "..").matches_css?("details[open]")
-    assert_selector ".creative-video-photos details[open] .campaign-photo-choose"
-    page.scroll_to(find(".creative-video-photos .campaign-photo-choose"), align: :center)
-    attach_file "Adicionar fotos ao vídeo", Rails.root.join("public/icon.png"), make_visible: true
-    within ".creative-video-photos" do
-      assert_selector ".campaign-photo-list figure", count: 2
+    assert_selector "h1", text: "Monte o seu vídeo."
+    assert_selector "#video-photos .ui-slot", count: Campaigns::PhotoLimit::INITIAL
+    page.scroll_to(find("#video-photos"), align: :center)
+    attach_file "Fotos do vídeo", Rails.root.join("public/icon.png"), make_visible: true
+    within "#video-photos" do
+      assert_selector "figure.ui-slot", count: 2
+      assert_selector ".ui-slot", count: Campaigns::PhotoLimit::INITIAL
       find('button[aria-label="Mover foto 2 para antes"]').click
       find('button[aria-label="Remover foto 2"]').click
-      assert_selector ".campaign-photo-list figure", count: 1
+      assert_selector "figure.ui-slot", count: 1
       click_button "Salvar fotos do vídeo"
     end
-    assert_selector ".creative-video-photos summary", text: "Ajustar fotos · 1 de 5"
-    assert_selector '.creative-video-photos input[name="video_revision"][value="1"]', visible: :all
+    assert_selector '#video-photos input[name="video_revision"][value="1"]', visible: :all
+    assert_text "1 foto salva"
     assert_equal "icon.png", campaign.reload.product_photos.first.filename.to_s
     assert_equal 1, campaign.video_revision
 
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
-    within ".creative-video-setup" do
-      find("summary", text: "Personalizar duração e trecho").click unless find("summary", text: "Personalizar duração e trecho").find(:xpath, "..").matches_css?("details[open]")
-      select "Personalizar duração", from: "Duração do vídeo"
-      fill_in "Duração personalizada em segundos", with: "75.5"
-      fill_in "Segundo inicial", with: "40"
-      select "1 minuto e meio", from: "Duração do vídeo"
-      assert_field "Segundo inicial", with: "30.25"
-      assert_text "Vídeo de 1:30.0"
-      assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
-      take_screenshot
-      click_button "Gerar meu vídeo"
-    end
+    open_change("#video-exact")
+    fill_in "Duração do vídeo (minutos:segundos)", with: "1:30"
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+    take_screenshot
+    click_button "Gerar meu vídeo"
     assert_text "Salve ou envie a alteração"
-    within ".creative-video-setup" do
-      click_button "Preparar e ouvir este trecho"
-      assert_text "Preparando o trecho do vídeo"
-    end
+    within("#video-exact") { click_button "Preparar com esta duração" }
+    assert_text "Preparando o trecho…"
+    assert_selector ".ui-duration button[disabled]", count: 4
+    assert_equal BigDecimal("90"), asset.reload.excerpt_duration_seconds
     perform_enqueued_jobs(only: PrepareCampaignAudioJob)
-    within ".creative-video-setup" do
-      assert_text "Trecho do vídeo de 1:30"
-      find("summary", text: "Personalizar duração e trecho").click unless find("summary", text: "Personalizar duração e trecho").find(:xpath, "..").matches_css?("details[open]")
-      select "Música inteira (2:00)", from: "Duração do vídeo"
-      assert_field "Segundo inicial", with: "0"
-      assert find_field("Segundo inicial").readonly?
-      assert_text "Vídeo de 2:00.3"
-      click_button "Preparar e ouvir este trecho"
-      assert_text "Preparando o trecho do vídeo"
-    end
+    assert_selector '.ui-duration button[value="90"][aria-pressed="true"]'
+    assert_selector ".ui-player", text: "Trecho do vídeo"
+
+    click_button "Música inteira 2:00"
+    assert_text "Preparando o trecho…"
     perform_enqueued_jobs(only: PrepareCampaignAudioJob)
-    within ".creative-video-setup" do
-      assert_text "Trecho do vídeo de 2:00"
-      assert_button "Gerar meu vídeo"
-    end
-    assert_selector ".creative-video-photos summary", text: "Ajustar fotos · 1 de 20"
-    find(".creative-video-photos summary").click unless find(".creative-video-photos summary").find(:xpath, "..").matches_css?("details[open]")
-    page.scroll_to(find(".creative-video-photos .campaign-photo-choose"), align: :center)
+    assert_selector '.ui-duration button[value="full"][aria-pressed="true"]'
+    assert_button "Gerar meu vídeo", disabled: false
+    assert_selector "#video-photos .ui-slot", count: 20
+    assert_selector "#video-photos .ui-badge", text: "+15 espaços liberados"
+    page.scroll_to(find("#video-photos"), align: :center)
     Dir.mktmpdir do |dir|
       paths = Array.new(19) do |index|
         path = File.join(dir, "photo-#{index}.png")
         FileUtils.cp(Rails.root.join("public/icon.png"), path)
         path
       end
-      attach_file "Adicionar fotos ao vídeo", paths, make_visible: true
-      within ".creative-video-photos" do
-        assert_selector ".campaign-photo-list figure", count: 20
+      attach_file "Fotos do vídeo", paths, make_visible: true
+      within "#video-photos" do
+        assert_selector "figure.ui-slot", count: 20
         assert_text "20 de 20 fotos"
         find('button[aria-label="Mover foto 20 para antes"]').click
       end
-      attach_file "Adicionar fotos ao vídeo", Rails.root.join("public/icon.png"), make_visible: true
-      within ".creative-video-photos" do
+      attach_file "Fotos do vídeo", Rails.root.join("public/icon.png"), make_visible: true
+      within "#video-photos" do
         assert_text "Esta duração permite até 20 fotos"
-        assert_selector ".campaign-photo-list figure", count: 20
+        assert_selector "figure.ui-slot", count: 20
         click_button "Salvar fotos do vídeo"
       end
-      assert_selector '.creative-video-photos input[name="video_revision"][value="2"]', visible: :all
+      assert_selector '#video-photos input[name="video_revision"][value="2"]', visible: :all
     end
     assert_equal 20, campaign.reload.product_photos.size
     assert_equal "photo-18.png", campaign.product_photos[-2].filename.to_s
-    within ".creative-video-setup" do
-      find("summary", text: "Personalizar duração e trecho").click unless find("summary", text: "Personalizar duração e trecho").find(:xpath, "..").matches_css?("details[open]")
-      select "30 segundos", from: "Duração do vídeo"
-      assert_text "Esta duração permite até 5 fotos"
-      click_button "Preparar e ouvir este trecho"
-      assert_text "Preparando o trecho do vídeo"
-    end
+
+    click_button "30 s"
+    assert_text "Preparando o trecho…"
     perform_enqueued_jobs(only: PrepareCampaignAudioJob)
-    within ".creative-video-setup" do
-      assert_text "Você salvou 20 fotos"
-      assert_button "Gerar meu vídeo", disabled: true
-      find("summary", text: "Personalizar duração e trecho").click unless find("summary", text: "Personalizar duração e trecho").find(:xpath, "..").matches_css?("details[open]")
-      select "Música inteira (2:00)", from: "Duração do vídeo"
-      click_button "Preparar e ouvir este trecho"
-      assert_text "Preparando o trecho do vídeo"
-    end
+    assert_selector "#video-finish-reason", text: "Você salvou 20 fotos"
+    assert_button "Gerar meu vídeo", disabled: true
+    click_button "Música inteira 2:00"
+    assert_text "Preparando o trecho…"
     perform_enqueued_jobs(only: PrepareCampaignAudioJob)
-    assert_selector ".creative-video-photos summary", text: "Ajustar fotos · 20 de 20"
+    assert_selector "#video-photos figure.ui-slot", count: 20
     assert_equal 390, page.evaluate_script("window.innerWidth")
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     assert_nil asset.reload.excerpt_duration_seconds
     assert_in_delta 120.25, asset.campaign_audio.blob.metadata.fetch("duration_seconds"), 0.001
-    within ".creative-video-setup" do
-      click_button "Gerar meu vídeo"
-    end
+    click_button "Gerar meu vídeo"
     assert_current_path campaign_path(campaign)
     assert order.reload.approved?
     assert_equal 1, order.completed_music_rounds
     assert_equal 0, order.generation_costs.where(operation: "music").count
     errors = page.driver.browser.logs.get(:browser).select { |entry| entry.level == "SEVERE" && entry.message.match?(/Uncaught|Error connecting controller|Error invoking action/) }
     assert_empty errors, errors.map(&:message).join("\n")
+  end
+
+  # P6: o poll de creation-status guardava a versão da página carregada; depois de um envio que já trocou o painel,
+  # o poll seguinte via versão "nova" e trocava o painel de novo, deixando elementos velhos (StaleElementReferenceError).
+  test "polling after a save does not replace the panel the save already rendered" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.update!(selected_music_asset: order_assets(:music_variant_a))
+    login_as users(:customer_b2b), scope: :user
+    visit order_chat_path(order_id: order.id)
+    assert_selector "h1", text: "Monte o seu vídeo."
+    attach_file "Fotos do vídeo", Rails.root.join("public/icon.png"), make_visible: true
+    within("#video-photos") do
+      assert_selector "figure.ui-slot", count: 1
+      click_button "Salvar fotos do vídeo"
+    end
+    assert_selector '#video-photos input[name="video_revision"][value="1"]', visible: :all
+    page.execute_script("document.getElementById('chat-lyrics-panel').dataset.sameNode = 'yes'")
+    page.evaluate_async_script(<<~JS)
+      const done = arguments[arguments.length - 1]
+      // Conta o pedido de status: sem ele o teste passaria à toa (refresh sai cedo com a aba oculta ou alteração pendente).
+      const fetch = window.fetch
+      window.__statusRequests = 0
+      window.fetch = (url, options) => { if (String(url).includes("/status")) window.__statusRequests++; return fetch(url, options) }
+      Stimulus.getControllerForElementAndIdentifier(document.querySelector(".estudio"), "creation-status").refresh().then(done)
+    JS
+    assert_equal 1, page.evaluate_script("window.__statusRequests"), "o poll precisa ter consultado o status"
+    refute page.has_css?("#chat-lyrics-panel:not([data-same-node])", wait: 1), "o poll trocou de novo o painel que o envio já tinha trocado"
+  end
+
+  private
+
+  def open_change(id)
+    find("#video-changes > summary").click unless page.has_css?("#video-changes[open]", wait: 0)
+    find("#{id} > summary").click unless page.has_css?("#{id}[open]", wait: 0)
   end
 end

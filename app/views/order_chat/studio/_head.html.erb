@@ -1,0 +1,19 @@
+<%# locals: (order:, phase:, counters: true) %>
+<%# Barra de fases + contadores. Em :rendering e :delivered só a barra (E7). "Entrega" só aparece como 4º item na fase 4. %>
+<% step = Campaigns::StudioPhase.step(phase) %>
+<div class="ui-head">
+  <nav class="ui-phases" aria-label="Fases da criação">
+    <ol>
+      <% [ "Letra", "Músicas", "Vídeo", ("Entrega" if step == 4) ].compact.each.with_index(1) do |label, n| %>
+        <% done = step.present? && n < step %>
+        <li aria-current="<%= n == step ? 'step' : 'false' %>" class="<%= 'is-done' if done %>">
+          <span class="ui-phase-dot" aria-hidden="true"><%= done ? "✓" : n %></span>
+          <span class="ui-phase-name"><%= label %><% if done %><span class="ui-sr-only"> (concluída)</span><% end %></span>
+        </li>
+      <% end %>
+    </ol>
+  </nav>
+  <% if counters && !phase.in?(%i[rendering delivered]) %>
+    <p class="ui-counters">Rodadas: <b><%= order.completed_music_rounds %> de <%= Campaigns::MusicRounds::LIMIT %></b> · Ajustes de letra com IA: <b><%= order.lyrics_regen_remaining %></b></p>
+  <% end %>
+</div>

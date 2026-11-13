@@ -15,10 +15,11 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
       get new_campaign_path
     end
     assert_response :success
-    assert_select "form.campaign-builder"
-    assert_select ".campaign-total strong", "R$ 29,90"
-    assert_select 'input[type="submit"][value="Pagar R$ 29,90"]'
-    assert_select 'form.campaign-builder[data-turbo="false"]'
+    assert_select "form.ui-form"
+    assert_select "form.ui-form .ui-price .ui-price-amount", text: "R$ 29,90"
+    assert_select 'form.ui-form .ui-actionbar button[type="submit"]', text: "Pagar R$ 29,90 e criar campanha"
+    assert_select 'form.ui-form input[type="submit"]', count: 0
+    assert_select 'form.ui-form[data-turbo="false"]'
   end
 
   test "submission creates pending order and a Portuguese vocal briefing with server price" do
@@ -56,7 +57,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to campaign_path(campaign)
     assert_equal %w[first.jpg second.jpg third.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
     get campaign_path(campaign)
-    assert_select ".campaign-photo-list img", count: 3
+    assert_select '.ui-slots[data-campaign-form-target="photoList"] figure.ui-slot[data-photo-id] img', count: 3
     assert_response :success
     assert_select 'input[type=file][multiple][name="campaign[photos][]"]'
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ "" ]) }
@@ -167,9 +168,9 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     post campaigns_path, params: { campaign: @attributes.merge(photos: [ photo_upload("opener") ]) }
     campaign = Campaign.last
     follow_redirect!
-    assert_select 'form.campaign-builder[action=?][data-campaign-form-initial-step-value="2"]', campaign_path(campaign)
+    assert_select 'form.ui-form[action=?][data-campaign-form-initial-step-value="2"]', campaign_path(campaign)
     assert_select '[role="alert"]', text: /Sua campanha está salva/
-    assert_select ".campaign-photo-list img", count: 1
+    assert_select '.ui-slots[data-campaign-form-target="photoList"] figure.ui-slot[data-photo-id] img', count: 1
     assert_select "textarea#campaign_offer", text: @attributes[:offer]
     assert_select ".campaign-checkout", count: 0
 
@@ -191,8 +192,9 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     session = Stripe::Checkout::Session.construct_from(id: "cs_cancelled", status: "open", payment_status: "unpaid", url: "https://checkout.stripe.com/resume")
     Stripe::Checkout::Session.stub(:retrieve, session) do
       get campaign_path(campaign)
-      assert_select "form.campaign-builder[action=?]", checkout_order_path(order)
-      assert_select 'input[type="submit"][value=?]', "Pagar #{ApplicationController.helpers.campaign_price(order)}"
+      assert_select "form.ui-form[action=?]", checkout_order_path(order)
+      assert_select 'form.ui-form button[type="submit"]', text: "Pagar #{ApplicationController.helpers.campaign_price(order)} e criar campanha"
+      assert_select 'form.ui-form input[type="submit"]', count: 0
       assert_select "h2", text: "Confira e comece."
       assert_select ".campaign-checkout", count: 0
       assert_select "input#campaign_offer, textarea#campaign_offer", count: 0

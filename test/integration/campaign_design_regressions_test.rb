@@ -25,8 +25,9 @@ class CampaignDesignRegressionsTest < ActionDispatch::IntegrationTest
     get campaign_path(campaign)
     assert_response :success
     assert_select "a[href=?]", order_chat_path(order_id: order.id), count: 0
-    assert_select "form.campaign-builder[action=?]", campaign_path(campaign)
-    assert_select 'input[type="submit"][value=?]', "Pagar #{ApplicationController.helpers.campaign_price(order)}"
+    assert_select "form.ui-form[action=?]", campaign_path(campaign)
+    assert_select 'form.ui-form button[type="submit"]', text: "Pagar #{ApplicationController.helpers.campaign_price(order)} e criar campanha"
+    assert_select 'form.ui-form input[type="submit"]', count: 0
   end
 end
 
@@ -54,11 +55,11 @@ class CampaignDesignRegressionsTest
     draft = order.lyrics_drafts.create!(version: 1, source: "user_edited", content: "Nossa oferta da semana")
     get order_chat_path(order_id: order.id)
     assert_response :success
-    assert_select '.jp-phases [aria-current="step"]', text: /Letra/
+    assert_select '.ui-phases [aria-current="step"]', text: /Letra/
     assert_select "#chat-lyrics-panel", count: 1
     assert_select "textarea#editable-lyrics", text: draft.content
     assert_select ".jp-assistant", count: 0
     assert_select 'form[action=?] input[name="draft_id"][value=?]', order_chat_creation_path(order_id: order.id), draft.id.to_s
-    assert_select 'select[name="campaign[musical_genre]"] option', count: Campaign::GENRES.size
+    assert_select 'input[type="radio"][name="campaign[musical_genre]"]', count: Campaign::GENRES.size
   end
 end

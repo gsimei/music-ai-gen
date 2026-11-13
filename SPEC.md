@@ -19,10 +19,10 @@ Descreve o código atual (fatia 0 do redesign). Onde o redesign muda o fluxo, a 
 1. **Entrada.** `GET /` (`pages#home`). O CTA vai para `GET /orders/new`, que **não cria pedido**: visitante sem sessão é enviado ao cadastro (`/users/sign_up`) com `/campaigns/new` guardado como destino; usuário logado vai direto para `/campaigns/new`. (Fatia 4: conta e pagamento passam para o passo 3 do Criar.)
 2. **Criar.** `GET /campaigns/new` → `POST /campaigns`. Campos: nome do negócio (até 60 caracteres), oferta (180), contato (70), chamada para ação (40, padrão "Peça pelo WhatsApp"), até 5 fotos (JPG, PNG ou WebP, até 10 MB cada, com ordem escolhida), ritmo (11 opções, incluindo Natal com sinos e clima de festa, + "escolher por mim"), voz (automática, feminina ou masculina), clima (`style`: animado, acolhedor ou marcante) e direção adicional (até 240). Cria `Order` em `pending`, `Campaign` e `Briefing` (`Campaign#sync_briefing!`) e abre o checkout diretamente. A edição (`campaigns#update`) só é aceita enquanto o pedido está `pending` ou `payment_failed` e sem `stripe_session_id`.
 3. **Pagar.** O último passo do formulário contém a conferência e o botão “Pagar” com o preço do pedido. O envio abre o Stripe Checkout (`mode: payment`, cartão, um item "JinglePro — Campanha com música e vídeo"), sem outra tela de revisão. Cancelamentos e falhas retornam ao mesmo formulário em `GET /campaigns/:id`, já no último passo. Sem sessão Stripe, `PATCH /campaigns/:id` salva correções e abre o checkout; com sessão, o formulário faz `POST /orders/:id/checkout` para retomá-la, sem alterar o pedido ou criar outra campanha. O pagamento é confirmado pelo webhook `checkout.session.completed` ou pela reconciliação em `campaigns#show` (`Stripe::PaymentReconciler`); ambos chamam `Stripe::CheckoutFulfillment` → `mark_paid!` → `GenerateLyricsJob`. Enquanto aguarda a confirmação em `?payment=processing`, a página não oferece outro pagamento. Visitar a URL de sucesso não confirma pagamento. Em development existe `POST /campaigns/:id/test_payment` ("Testar sem cobrança").
-4. **Estúdio.** Renderizado em `/orders/:order_id/chat` (`order_chat#show`). As fases 1 e 2 compartilham o mesmo ambiente **Letra e música**; a preparação do vídeo aparece após escolher uma música.
-   - **Letra e música.** A letra inicial pode ser editada diretamente ou reescrita com IA. Um único formulário (`Campaigns::CreationChanges`) salva letra e estilo juntos e permite salvar, reescrever ou gerar duas músicas. As alterações são aplicadas de forma atômica; uma solicitação inválida não salva apenas parte do formulário. Editar à mão não consome geração musical; reescritas mantêm o limite próprio. Após ouvir, o lojista pode mudar novamente a letra e o som enquanto houver gerações disponíveis. Cada par conserva o texto usado na sua criação.
-   - **Escolha.** Os players vêm primeiro, com amostras protegidas identificadas. O painel “Quero ajustar a letra ou a música” e as opções anteriores ficam recolhidos. Não há favorito na interface. “Usar esta música” guarda `Campaign#selected_music_asset_id`, sem aprovar nem iniciar renderização, e abre a preparação do vídeo. A seleção pode ser desfeita para voltar à letra e às músicas.
-   - **Vídeo.** A pessoa confere a imagem de abertura sugerida e o trecho exato, podendo ajustar fotos, logo, contato, duração e início. Só “Gerar meu vídeo” aprova a música, fixa a letra correspondente e chama `Campaign#queue_video!` → `RenderCampaignVideoJob`. A seleção faz parte de `video_revision`, evitando finalizar uma composição de uma aba desatualizada. O vídeo passa de `queued` a `rendering` e termina em `ready` ou `failed`.
+4. **Estúdio.** Renderizado em `/orders/:order_id/chat` (`order_chat#show`, views em `app/views/order_chat/studio/`) em 3 fases com barra de progresso: **1 Letra**, **2 Músicas** e **3 Vídeo**. A fase vem de `Campaigns::StudioPhase` (ver 0.4). Depois de aprovado o vídeo, o acompanhamento e a **Entrega** continuam em `/campaigns/:id`, com a mesma casca do estúdio.
+   - **Letra (fase 1) e Músicas (fase 2).** A letra inicial pode ser editada diretamente ou reescrita com IA. Um único formulário (`Campaigns::CreationChanges`) salva letra e estilo juntos e permite salvar, reescrever ou gerar duas músicas. As alterações são aplicadas de forma atômica; uma solicitação inválida não salva apenas parte do formulário. Editar à mão não consome geração musical; reescritas mantêm o limite próprio. Após ouvir, o lojista pode mudar novamente a letra e o som enquanto houver gerações disponíveis. Cada par conserva o texto usado na sua criação.
+   - **Escolha.** Os players vêm primeiro, com amostras protegidas identificadas. Cada versão também tem a **prévia da música inteira com marca sonora** (`GET /orders/:order_id/audio/:asset_id/full`, `OrderAsset#full_audition_audio`, renderizada por `Campaigns::AudioAudition` sobre a faixa toda); a marca só some na faixa aprovada (`OrderAsset#playback_url`). O painel “Quero ajustar a letra ou a música” e as opções anteriores ficam recolhidos. Não há favorito na interface. “Usar esta música” guarda `Campaign#selected_music_asset_id`, sem aprovar nem iniciar renderização, e abre a preparação do vídeo. A seleção pode ser desfeita para voltar à letra e às músicas.
+   - **Vídeo (fase 3).** A pessoa confere a imagem de abertura sugerida e o trecho exato, podendo ajustar fotos, logo, contato, duração e início (a duração é a primeira escolha da fase; "Ouvir a partir daqui" usa a prévia completa). Só “Gerar meu vídeo” aprova a música, fixa a letra correspondente e chama `Campaign#queue_video!` → `RenderCampaignVideoJob`. A seleção faz parte de `video_revision`, evitando finalizar uma composição de uma aba desatualizada. O vídeo passa de `queued` a `rendering` e termina em `ready` ou `failed`.
 5. **Entrega.** `campaigns/_delivery` mostra o vídeo, o link `GET /campaigns/:id/download` (MP4), o MP3 da versão aprovada e a legenda sugerida (`Campaign#caption`). `GET /campaigns/:id/status` serve o polling enquanto o vídeo é montado.
 6. **Biblioteca.** `GET /songs` (`songs#index`) lista as campanhas do usuário. Ver 0.4.
 
@@ -44,34 +44,35 @@ Falhas de geração não consomem rodada: só uma rodada com 2 músicas válidas
 
 ### 0.4 Mapeamento de estados: Order + `video_status` → estúdio e Biblioteca
 
-Quando `Campaign#selected_music_asset_id` está preenchido e o pedido ainda não foi aprovado, o estúdio mostra a preparação do vídeo e a Biblioteca mostra “Prepare seu vídeo”. O estado do pedido continua `preview_ready` (ou `music_failed` se a pessoa escolheu uma música anterior após uma falha).
+Quando `Campaign#selected_music_asset_id` está preenchido e o pedido ainda não foi aprovado, o estúdio mostra a fase 3 (preparação do vídeo) e a Biblioteca mostra “Prepare seu vídeo”. O estado do pedido continua `preview_ready` (ou `music_failed` se a pessoa escolheu uma música anterior após uma falha).
 
 `Order::STATUSES` tem 13 valores. O vídeo tem estado próprio em `campaigns.video_status` (`pending`, `queued`, `rendering`, `ready`, `failed`). O estado `approved` **não basta** para saber se a campanha está pronta: sempre cruze com `video_status`.
 
-| `Order.status` | `video_status` | Fase do estúdio | Estado na Biblioteca |
+| `Order.status` | `video_status` | Fase do estúdio (`Campaigns::StudioPhase`) | Estado na Biblioteca |
 |---|---|---|---|
 | `pending` | `pending` | Fora do estúdio: mesmo formulário de criação em `/campaigns/:id` (com `?payment=processing`: "Aguardando a confirmação do pagamento") | **Aguardando pagamento** ("Conferir e pagar") |
 | `payment_failed` | `pending` | Fora do estúdio | **Aguardando pagamento** |
-| `paid` | `pending` | Fase 1 de 3, "preparando a letra" | **Em criação**, fase 1 de 3 |
-| `lyrics_drafting` | `pending` | Fase 1 de 3, "preparando a letra" | **Em criação**, fase 1 de 3 |
-| `lyrics_ready` | `pending` | Letra e música: revisar, editar, reescrever e gerar | **Em criação**, fase 1 de 3 |
-| `lyrics_approved` | `pending` | Fase 2 de 3, "criando duas versões" | **Em criação**, fase 2 de 3 |
-| `music_generating` | `pending` | Fase 2 de 3, "criando duas versões" | **Em criação**, fase 2 de 3 |
-| `preview_ready` | `pending` | Letra e música: ouvir, ajustar a letra e o som, gerar novamente ou escolher | **Em criação**, fase 2 de 3 |
-| `approved` | `pending`, `queued` ou `rendering` | Fase 3 de 3, "montando o vídeo" | **Em criação**, fase 3 de 3 |
-| `approved` | `ready` | Entrega ("Campanha pronta") | **Pronta** ("Baixar vídeo" e "Ver campanha") |
-| `approved` | `failed` | Fase 3 de 3, falha do vídeo ("A música está salva"; tentar montar de novo) | **Precisa de atenção** |
-| `lyrics_failed` | `pending` | Fase 1 de 3, "a letra não ficou pronta"; `POST /campaigns/:id/retry_generation` | **Precisa de atenção** |
-| `music_failed` | `pending` | Fase 2 de 3, falha da rodada; "Tentar novamente" / "Verificar tentativa", ou aprovar uma versão já pronta | **Precisa de atenção** |
+| `paid` | `pending` | Fase 1, **Letra**: "preparando a letra" | **Em criação**, fase 1 de 3 |
+| `lyrics_drafting` | `pending` | Fase 1, **Letra**: "preparando a letra" | **Em criação**, fase 1 de 3 |
+| `lyrics_ready` | `pending` | Fase 1, **Letra**: revisar, editar, reescrever e gerar | **Em criação**, fase 1 de 3 |
+| `lyrics_approved` | `pending` | Fase 2, **Músicas**: "criando duas versões" | **Em criação**, fase 2 de 3 |
+| `music_generating` | `pending` | Fase 2, **Músicas**: "criando duas versões" | **Em criação**, fase 2 de 3 |
+| `preview_ready` | `pending` | Fase 2, **Músicas**: ouvir (amostra e prévia completa com marca), ajustar, gerar novamente ou escolher; com versão escolhida, fase 3, **Vídeo** | **Em criação**, fase 2 de 3 |
+| `approved` | `pending`, `queued` ou `rendering` | Fase 3, **Vídeo**: "montando o vídeo" | **Em criação**, fase 3 de 3 |
+| `approved` | `ready` | **Entrega** ("Campanha pronta"), passo 4 do estúdio | **Pronta** ("Baixar vídeo" e "Ver campanha") |
+| `approved` | `failed` | Fase 3, **Vídeo**: falha do vídeo ("A música está salva"; tentar montar de novo) | **Precisa de atenção** |
+| `lyrics_failed` | `pending` | Fase 1, **Letra**: "a letra não ficou pronta"; `POST /campaigns/:id/retry_generation` | **Precisa de atenção** |
+| `music_failed` | `pending` | Fase 2, **Músicas**: falha da rodada (com versão escolhida, fase 3); "Tentar novamente" / "Verificar tentativa", ou aprovar uma versão já pronta | **Precisa de atenção** |
 | `cancelled`, `refunded` | qualquer | n/a | **Oculto** (não aparece na Biblioteca) |
 
 Notas:
-- `paid` e `lyrics_approved` são estados transitórios; a atribuição de `lyrics_approved` à fase 2 é decisão de apresentação, a confirmar na fatia 3.
+- `paid` e `lyrics_approved` são estados transitórios; a atribuição de `lyrics_approved` à fase 2 é decisão de apresentação, confirmada na fatia 3.
+- `preview_ready` e `music_failed` com `selected_music_asset` caem na fase 3; sem versão escolhida, na fase 2.
 - `approved` com `video_status == "pending"` é transitório (o aprovador chama `queue_video!` logo depois) e deve ser tratado como fase 3.
 - Quando `music_failed` ou `lyrics_failed` ocorre numa campanha com rodadas anteriores, as versões anteriores continuam disponíveis; "precisa de atenção" não significa "perdido".
 - **Hoje (fatia 0)**, `SongsController#index` lista pedidos `approved` e qualquer pedido com campanha fora de `cancelled`/`refunded`, e a view só distingue "Ver campanha pronta" de "Acompanhar criação". Os rótulos acima (fase N de 3, aguardando pagamento, precisa de atenção) são alvo das fatias 1 e 3. O estado "Precisa de atenção" ainda não foi desenhado (ver `design/jinglepro/README.md`).
 - `payment_failed` é gravado por `Stripe::Handlers::PaymentIntentFailed` com `update_columns`. `OrdersController#checkout` e `CampaignsController#update/show` permitem retomar o pagamento nesse estado; uma sessão aberta é reutilizada, e somente uma sessão expirada pode ser substituída.
-- A regra de derivação (status + `video_status` → fase e estado) deve morar em um só lugar, usado pelo estúdio e pela Biblioteca, para os dois nunca divergirem.
+- A regra de derivação (status + música escolhida + `video_status` → fase) mora em um só lugar: `Campaigns::StudioPhase` (`for(order)` devolve `:lyrics`, `:music`, `:video`, `:rendering`, `:failed_video` ou `:delivered`; `step(phase)` devolve 1 a 4). O estúdio já a usa; **a Biblioteca ainda não** e deve passar a usá-la, para os dois nunca divergirem.
 
 Transições AASM do `Order` (eventos em `app/models/order.rb`): `mark_paid` (`pending`→`paid`), `start_lyrics_generation` (→`lyrics_drafting`), `lyrics_drafted` (→`lyrics_ready`), `approve_lyrics` (→`lyrics_approved`), `start_music_generation` (→`music_generating`), `music_ready` (→`preview_ready`), `approve_music` (`preview_ready`→`approved`), `regenerate_music` (`preview_ready`→`music_generating`), `fail_lyrics`, `fail_music`, `cancel` e `refund` (`cancelled`→`refunded`). No fluxo da campanha, `Orders::MusicApprover`, `Campaigns::MusicRounds` e `CampaignsController#retry_generation` também gravam `status` direto com `update!`; `payment_failed` nunca passa por evento.
 
@@ -98,7 +99,7 @@ Transições AASM do `Order` (eventos em `app/models/order.rb`): `mark_paid` (`p
 | `POST /campaigns/:id/retry_generation` | `campaigns#retry_generation` | Retentar letra ou música |
 | `GET /campaigns/:id/download` | `campaigns#download` | Baixar o MP4 |
 | `POST /campaigns/:id/save_music_profile` | `campaigns#save_music_profile` | Salvar o som do negócio |
-| `/orders/:order_id/chat/*` | `order_chat#*` | Estúdio atual (letra e música juntas; preparação e geração do vídeo) |
+| `/orders/:order_id/chat/*` | `order_chat#*` | Estúdio em 3 fases (letra, músicas, vídeo; views em `order_chat/studio/`) |
 | `GET /songs` | `songs#index` | Biblioteca |
 
 ### 0.7 LEGADO (código presente, fora do produto)

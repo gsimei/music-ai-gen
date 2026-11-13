@@ -1,0 +1,8 @@
+<%# locals: saved_photos. Voltar e Continuar são alternados pelo JS; o único envio é o botão "Pagar". O rótulo vem do servidor (preço congelado do pedido).
+    "Ver prévia" só aparece no celular, nos passos 1 e 3, flutuando acima da barra. %>
+<div class="ui-actionbar">
+  <button type="button" class="ui-btn ui-btn-ghost" data-campaign-form-target="back" data-action="campaign-form#back" hidden>Voltar</button>
+  <button type="button" class="ui-btn ui-btn-primary" data-campaign-form-target="next" data-action="campaign-form#next" hidden><span>Continuar</span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button type="submit" class="ui-btn ui-btn-primary" data-campaign-form-target="submit"><span data-campaign-form-target="submitLabel">Pagar <%= campaign_price(@campaign.order) %> e criar campanha</span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+  <button type="button" class="ui-float" aria-haspopup="dialog" data-action="campaign-form#openPreview"><img class="ui-float-thumb" alt="" data-campaign-form-target="previewThumb" <% if saved_photos.first %>src="<%= rails_blob_path(saved_photos.first) %>"<% else %>hidden<% end %>><span>Ver prévia</span></button>
+</div>

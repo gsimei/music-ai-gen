@@ -128,7 +128,43 @@ class CampaignAudioAccessTest < ActionDispatch::IntegrationTest
     assert_equal "photo", response.body
   end
 
+  test "full preview streams only the marked full derivative to the owner (RF 3)" do
+    path = order_audio_full_path(@order, asset_id: @asset.id)
+    get path
+    assert_response :not_found
+    attach_full_audition(watermark_version: Campaigns::AudioAudition::VERSION + 1)
+    get path
+    assert_response :not_found
+    attach_full_audition
+    get path
+    assert_response :success
+    assert_equal "marked full", response.body
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_includes response.headers["Content-Disposition"], "inline"
+    get path, headers: { "Range" => "bytes=0-5" }
+    assert_response :partial_content
+    assert_equal "marked", response.body
+    blob = @asset.full_audition_audio.blob
+    [ rails_storage_redirect_path(blob), rails_storage_proxy_path(blob) ].each do |stock|
+      get stock
+      assert_response :not_found
+    end
+    @order.update!(status: "lyrics_ready")
+    get path
+    assert_response :not_found
+    @order.update!(status: "preview_ready")
+    sign_in users(:customer_other)
+    get root_path
+    get path
+    assert_response :not_found
+  end
+
   private
+
+  def attach_full_audition(watermark_version: Campaigns::AudioAudition::VERSION)
+    @asset.full_audition_audio.attach(io: StringIO.new("marked full"), filename: "full.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: @asset.audio.blob.id, watermark_version: watermark_version })
+  end
 
   def attach_audition
     @asset.audition_audio.attach(io: StringIO.new("marked audition"), filename: "audition.m4a", content_type: "audio/mp4",

@@ -26,8 +26,11 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
       assert_text "Confira e comece."
       assert_text campaign.sound_summary
       assert_button "Pagar R$ 29,90"
-      assert_selector '[data-campaign-form-target="previewPhoto"][src*="rails/active_storage"]'
+      assert_selector '[data-campaign-form-target="previewPhoto"][src*="rails/active_storage"]', visible: :all # no desktop o passo 3 mostra o cartão de preço, não a prévia
       assert_no_button "Continuar"
+      assert_no_button "Editar" # com o checkout iniciado não há passos 1 e 2 para voltar
+      assert_selector ".ui-price", text: "R$ 29,90"
+      assert_selector '[data-summary="promotion"]', text: "Café por R$"
       assert_no_javascript_errors
       page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
       assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
@@ -40,44 +43,44 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     end
   end
 
-  test "merchant can use only a logo or leave both branding fields empty on mobile" do
+  test "merchant leaves the business name empty on mobile and the campaign is still saved" do
     visit new_campaign_path
+    assert_selector "dialog.ui-stage[open]"
     assert_no_selector '[data-campaign-form-target="previewBusiness"]'
     assert_no_selector '[data-campaign-form-target="previewLogo"]'
     fill_in "Qual é a oferta ou novidade?", with: "Casa com 03 quartos\nR$ 750.000"
-    uncheck "Incluir faixa de contato no vídeo"
-    attach_file "Logo da empresa (opcional)", Rails.root.join("public/brand/musical/virajingle-logo-white.png"), make_visible: true
-    assert_selector '[data-campaign-form-target="previewLogo"][src^="blob:"]'
-    assert_no_selector '[data-campaign-form-target="previewBusiness"]'
-    fill_in "Nome do seu negócio (opcional)", with: "Landel"
+    choose_chip("Sem faixa de contato")
+    fill_in "Nome do seu negócio", with: "Landel"
     assert_selector '[data-campaign-form-target="previewBusiness"]', text: "Landel"
-    fill_in "Nome do seu negócio (opcional)", with: ""
+    fill_in "Nome do seu negócio", with: ""
     assert_no_selector '[data-campaign-form-target="previewBusiness"]'
-    assert_selector '[data-campaign-form-target="previewLogo"]'
+    assert_no_selector '[data-campaign-form-target="previewLogo"]'
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
-    page.scroll_to(find(".campaign-preview-wrap"), align: :top)
+    assert_no_selector ".ui-stage" # no celular a prévia não fica mais no fim da página: só abre pelo botão "Ver prévia"
+    assert_button "Ver prévia"
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
-    page.save_screenshot("/tmp/virajingle-company-logo-mobile.png")
+    page.save_screenshot("/tmp/virajingle-company-name-empty-mobile.png")
     click_button "Continuar"
     click_button "Continuar"
     click_button "Pagar R$ 29,90"
     assert_text "Sua campanha está salva"
     campaign = Campaign.last
     assert_equal "", campaign.business_name
-    assert campaign.logo.attached?
+    refute campaign.logo.attached?
     assert_empty campaign.product_photos
+    refute campaign.show_cta?
     click_button "Voltar"
     click_button "Voltar"
-    assert_selector '[data-campaign-form-target="previewLogo"][src*="rails/active_storage"]'
-    check "Remover logo do vídeo"
-    assert_no_selector '[data-campaign-form-target="previewLogo"]'
+    assert_checked_field "Sem faixa de contato", visible: :all
+    click_button "Ver prévia"
     assert_no_selector '[data-campaign-form-target="previewBusiness"]'
+    click_button "Voltar a preencher"
     click_button "Continuar"
     click_button "Continuar"
     click_button "Pagar R$ 29,90"
     assert_text "Sua campanha está salva"
-    refute campaign.reload.logo.attached?
-    assert_equal "", campaign.business_name
+    assert_equal "", campaign.reload.business_name
+    refute campaign.logo.attached?
     assert_equal campaign.offer, campaign.caption
     assert_no_javascript_errors
   end
@@ -87,27 +90,27 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     campaign = Campaign.create!(order: order, business_name: "Landel", offer: "Casa com 03 quartos", show_cta: false)
     campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     visit order_chat_path(order_id: order.id)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
     fill_in "Nome do seu negócio (opcional)", with: ""
     attach_file "Logo da empresa (opcional)", Rails.root.join("public/brand/musical/virajingle-logo-white.png"), make_visible: true
-    assert_selector '.creative-video-appearance [data-campaign-form-target="previewLogo"][src^="blob:"]'
-    assert_no_selector '.creative-video-appearance [data-campaign-form-target="previewBusiness"]'
-    within ".creative-video-appearance" do
+    assert_selector '.ui-stage [data-campaign-form-target="previewLogo"][src^="blob:"]'
+    assert_no_selector '.ui-stage [data-campaign-form-target="previewBusiness"]'
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="1"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="1"]', visible: :all
     assert_selector "#campaign-project-title-#{campaign.id}", text: "Campanha #{order.reference}"
     assert_equal "", campaign.reload.business_name
     assert campaign.logo.attached?
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
     fill_in "Nome do seu negócio (opcional)", with: "Landel Imóveis"
     check "Remover logo do vídeo"
-    assert_no_selector '.creative-video-appearance [data-campaign-form-target="previewLogo"]'
-    assert_selector '.creative-video-appearance [data-campaign-form-target="previewBusiness"]', text: "Landel Imóveis"
-    within ".creative-video-appearance" do
+    assert_no_selector '.ui-stage [data-campaign-form-target="previewLogo"]'
+    assert_selector '.ui-stage [data-campaign-form-target="previewBusiness"]', text: "Landel Imóveis"
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="2"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="2"]', visible: :all
     assert_selector "#campaign-project-title-#{campaign.id}", text: "Landel Imóveis"
     assert_equal "Landel Imóveis", campaign.reload.business_name
     refute campaign.logo.attached?
@@ -115,31 +118,31 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     assert_no_javascript_errors
   end
 
-  test "merchant keeps offer lines and chooses an optional colored strip on desktop and mobile" do
+  test "merchant keeps offer lines and chooses an optional strip on desktop and mobile" do
     visit new_campaign_path
     fill_in "Nome do seu negócio", with: "Landel"
     fill_in "Qual é a oferta ou novidade?", with: "Casa com 03 quartos\nR$ 750.000"
     fill_in "WhatsApp, endereço ou @Instagram", with: "@landel"
     assert_offer_lines
-    set_color "#6b21a8"
-    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor")
-    assert_equal "rgb(255, 255, 255)", cta_style("color")
-    assert_equal "rgb(255, 255, 255)", page.evaluate_script('getComputedStyle(document.querySelector("[data-campaign-form-target=previewContact]")).color')
     page.save_screenshot("/tmp/virajingle-appearance-desktop.png")
 
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
+    assert_no_selector ".ui-stage" # fechada no celular
+    click_button "Ver prévia"
     assert_offer_lines
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
-    page.scroll_to(find(".campaign-preview-wrap"), align: :top)
     page.save_screenshot("/tmp/virajingle-appearance-mobile.png")
-    uncheck "Incluir faixa de contato no vídeo"
-    assert_no_selector '[data-campaign-form-target="previewCtaPanel"]'
+    click_button "Voltar a preencher"
+    choose_chip("Sem faixa de contato")
+    assert_equal "0", page.evaluate_script('document.querySelector(\'input[name="campaign[show_cta]"]\').value')
+    assert page.evaluate_script('document.querySelector(\'[data-campaign-form-target="previewCtaPanel"]\').hidden')
     assert_no_selector '[data-campaign-form-target="ctaFields"]'
-    check "Incluir faixa de contato no vídeo"
+    choose_chip("Peça pelo WhatsApp")
+    assert_equal "1", page.evaluate_script('document.querySelector(\'input[name="campaign[show_cta]"]\').value')
     assert_field "WhatsApp, endereço ou @Instagram", with: "@landel"
-    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor")
+    assert_not page.evaluate_script('document.querySelector(\'[data-campaign-form-target="previewCtaPanel"]\').hidden')
     fill_in "WhatsApp, endereço ou @Instagram", with: ""
-    uncheck "Incluir faixa de contato no vídeo"
+    choose_chip("Sem faixa de contato")
     click_button "Continuar"
     assert_text "Como sua promoção deve soar?"
     click_button "Continuar"
@@ -147,15 +150,17 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     assert_text "Sua campanha está salva"
     campaign = Campaign.find_by!(business_name: "Landel")
     refute campaign.show_cta?
-    assert_equal "#6b21a8", campaign.cta_color
+    assert_equal "", campaign.call_to_action
+    assert_equal "#d6f36b", campaign.cta_color # o Criar não escolhe cor: vale o padrão do servidor
     assert_equal "Casa com 03 quartos\nR$ 750.000", campaign.offer
     assert_equal "", campaign.contact
     click_button "Voltar"
     click_button "Voltar"
-    assert_unchecked_field "Incluir faixa de contato no vídeo"
-    assert_no_selector '[data-campaign-form-target="previewCtaPanel"]'
-    check "Incluir faixa de contato no vídeo"
-    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor")
+    assert_checked_field "Sem faixa de contato", visible: :all
+    assert_no_selector '[data-campaign-form-target="ctaFields"]'
+    assert page.evaluate_script('document.querySelector(\'[data-campaign-form-target="previewCtaPanel"]\').hidden')
+    choose_chip("Peça pelo WhatsApp")
+    assert_field "WhatsApp, endereço ou @Instagram"
     assert_no_javascript_errors
   end
 
@@ -170,33 +175,35 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     asset.update!(campaign_preview_status: "ready")
     campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     visit order_chat_path(order_id: order.id)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
+    set_color "#6b21a8"
+    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor", within: ".ui-stage")
+    assert_equal "rgb(255, 255, 255)", cta_style("color", within: ".ui-stage")
+    assert_equal "rgb(255, 255, 255)", page.evaluate_script('getComputedStyle(document.querySelector(".ui-stage [data-campaign-form-target=previewContact]")).color')
     set_color "#ffffff"
-    assert_equal "rgb(23, 62, 50)", cta_style("color")
-    within ".creative-video-setup" do
-      click_button "Gerar meu vídeo"
-    end
+    assert_equal "rgb(23, 62, 50)", cta_style("color", within: ".ui-stage")
+    click_button "Gerar meu vídeo"
     assert_text "Salve ou envie a alteração"
-    within ".creative-video-appearance" do
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="1"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="1"]', visible: :all
     assert_equal "#ffffff", campaign.reload.cta_color
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
-    uncheck "Incluir faixa de contato no vídeo"
-    within ".creative-video-appearance" do
+    open_appearance
+    within "#video-appearance" do
+      choose_chip("Sem faixa de contato")
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector ".creative-video-appearance summary", text: "Ajustar nome, logo e faixa · sem faixa"
+    assert_selector "#video-appearance summary", text: "Aparência do vídeo · sem faixa"
     assert_no_selector ".jp-summary-contact"
     refute campaign.reload.show_cta?
     assert_equal 2, campaign.video_revision
     assert_equal 1, order.completed_music_rounds
     assert_equal 0, order.generation_costs.count
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
-    check "Incluir faixa de contato no vídeo"
-    page.scroll_to(find(".creative-video-appearance"), align: :top)
+    open_appearance
+    within("#video-appearance") { choose_chip("Peça pelo WhatsApp") }
+    page.scroll_to(find("#video-appearance"), align: :top)
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     page.save_screenshot("/tmp/virajingle-appearance-studio-mobile.png")
     assert_no_javascript_errors
@@ -205,6 +212,8 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
   private
 
   def assert_offer_lines
+    assert page.evaluate_script('!!document.querySelector("dialog.ui-stage [data-campaign-form-target=previewOffer]")'), "a oferta da prévia vive dentro do dialog.ui-stage"
+    refute page.evaluate_script('document.querySelector("[data-campaign-form-target=previewOffer]").classList.contains("campaign-offer-text")'), "a prévia nova não usa a classe legada"
     assert_equal "Casa com 03 quartos\nR$\u00a0750.000", page.evaluate_script('document.querySelector("[data-campaign-form-target=previewOffer]").textContent')
     assert_equal "pre-wrap", page.evaluate_script('getComputedStyle(document.querySelector("[data-campaign-form-target=previewOffer]")).whiteSpace')
     rectangles = page.evaluate_script(<<~JS)
@@ -219,6 +228,18 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     assert_equal 1, rectangles, "Currency and amount must share a rendered line"
   end
 
+  # Chips ficam no meio do formulário; no celular a barra de ação fixa não pode interceptar o clique.
+  def choose_chip(text)
+    chip = find("label", text: text)
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", chip)
+    chip.click
+  end
+
+  def open_appearance
+    find("#video-changes > summary").click unless page.has_css?("#video-changes[open]", wait: 0)
+    find("#video-appearance > summary").click unless page.has_css?("#video-appearance[open]", wait: 0)
+  end
+
   def set_color(color)
     page.execute_script(<<~JS, color)
       const input = document.querySelector('[data-campaign-form-target="ctaColor"]')
@@ -227,8 +248,9 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     JS
   end
 
-  def cta_style(property)
-    page.evaluate_script('getComputedStyle(document.querySelector("[data-campaign-form-target=previewCtaPanel]"))[arguments[0]]', property)
+  def cta_style(property, within: nil)
+    selector = [ within, "[data-campaign-form-target=previewCtaPanel]" ].compact.join(" ")
+    page.evaluate_script("getComputedStyle(document.querySelector(arguments[1]))[arguments[0]]", property, selector)
   end
 
   def assert_no_javascript_errors

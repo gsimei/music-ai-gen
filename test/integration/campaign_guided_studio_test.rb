@@ -23,11 +23,12 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
   test "music workspace leads with listening and keeps one optional editor" do
     get order_chat_path(order_id: @order.id)
     assert_response :success
-    assert_select ".creative-version", count: 2
-    assert_select "button", text: "Usar esta música", count: 1
-    assert_select "#creation-adjustments:not([open])", count: 1
+    assert_select ".ui-version", count: 2
+    assert_select ".ui-btn-primary", text: /Usar a Versão A e montar o vídeo/, count: 1
+    assert_select "input[type=radio][name=asset_id]", count: 1
+    assert_select "#music-changes:not([open])", count: 1
     assert_select "#editable-lyrics", count: 1
-    assert_select ".creative-video-photos, .creative-video-appearance, .excerpt-editor, .creative-favorite-label, .jp-assistant", count: 0
+    assert_select "#video-photos, #video-appearance, .ui-duration, .creative-favorite-label, .jp-assistant", count: 0
     assert_select ".creative-progress", text: /ajustes disponíveis|rodadas prontas/, count: 0
   end
 
@@ -41,8 +42,8 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
     assert_equal "pending", @campaign.video_status
     assert_nil @order.approved_music_generation_id
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-video-setup", count: 1
-    assert_select ".creative-video-photos, .creative-video-appearance", count: 2
+    assert_select "h1", text: "Monte o seu vídeo."
+    assert_select "form#video-photos, #video-appearance", count: 2
     assert_select "button", text: "Gerar meu vídeo"
     assert_select "#editable-lyrics", count: 0
 
@@ -51,7 +52,7 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
     assert_nil @campaign.reload.selected_music_asset_id
     assert_equal 1, @order.completed_music_rounds
     get order_chat_path(order_id: @order.id)
-    assert_select "#creation-adjustments", count: 1
+    assert_select "#music-changes", count: 1
   end
 
   test "one submission saves lyrics and sound before generating and preserves old audio lyrics" do
@@ -119,7 +120,8 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
     end
     get order_chat_path(order_id: @order.id)
     assert_select "#editable-lyrics", count: 0
-    assert_select "#previous-music button", text: "Usar esta música"
+    assert_select "details#music-round-1 input[type=radio][name=asset_id][form=music-pick][value=?]", @asset.id.to_s
+    assert_select ".ui-btn-primary", text: /Usar a Versão A da rodada 1/
     assert_no_difference [ "LyricsDraft.count", "MusicGeneration.count" ] do
       post order_chat_creation_path(order_id: @order.id), params: creation_params.merge(intent: "generate"), headers: @headers
     end

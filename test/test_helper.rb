@@ -33,6 +33,9 @@ module ActiveSupport
     fixtures :all
 
     include ActiveJob::TestHelper
+
+    # rate_limit counters live in this store; keep them from leaking between tests.
+    setup { ActionController::Base.cache_store.clear }
   end
 end
 

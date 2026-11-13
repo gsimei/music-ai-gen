@@ -9,6 +9,7 @@ class ArchiveCampaignAudioJob < ApplicationJob
     return if !asset.order.campaign || !asset.music_variant?
     if archived?(asset)
       PrepareCampaignAudioJob.perform_later(asset.id) unless asset.audition_ready?
+      PrepareFullAuditionJob.perform_later(asset.id) unless asset.full_audition_ready?
       return
     end
     Tempfile.create([ "jingle-version-", ".mp3" ]) do |file|
@@ -23,6 +24,7 @@ class ArchiveCampaignAudioJob < ApplicationJob
       end
     end
     PrepareCampaignAudioJob.perform_later(asset.id) unless asset.audition_ready?
+    PrepareFullAuditionJob.perform_later(asset.id) unless asset.full_audition_ready?
   rescue StandardError
     asset&.update!(campaign_preview_status: "failed") unless asset&.campaign_preview_ready?
     OrderChatBroadcaster.call(asset.order) if asset

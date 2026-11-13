@@ -227,6 +227,13 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
 - [x] **B-5**: `:card_number` e `:iban` filtrados nos parâmetros de log
 - [ ] **B-6**: Criar `config/initializers/session_store.rb` explícito quando `force_ssl` estiver ativo
 
+### Achados da revisão de segurança do Criar (13/11/2026, anteriores ao redesign)
+
+- [ ] **S-1** (médio): `campaign[photos][]` aceita string. Lixo dá 500 (`InvalidSignature`) e o signed id de um blob de outro usuário é anexado. Filtrar para `ActionDispatch::Http::UploadedFile` em `CampaignsController#campaign_params`
+- [ ] **S-2** (médio): `Campaign#supported_photo` confia no `content_type` declarado; texto declarado `image/jpeg` passa, o cliente paga e o vídeo falha. Validar magic bytes com Marcel
+- [ ] **S-3** (médio, decisão de produto): sem rate limit em `POST /campaigns` e `orders#checkout`, sem limpeza de pedidos `pending` abandonados, e voltar da Stripe pelo bfcache pode criar outro pedido
+- [ ] **S-4** (baixo): `photo_order=` usa `Integer(id, exception: false)` (aceita `"0x2cb"`); usar base 10. `media_src` aceita qualquer `https:`
+
 ---
 
 ---
@@ -340,12 +347,28 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
   - [ ] Entrar (`users/sessions/new` e telas de senha; prancha `Entrar`)
   - [ ] Biblioteca (`songs/index`; prancha `Biblioteca`) com os estados Aguardando pagamento, Em criação (fase N de 3), Pronta e Precisa de atenção (SPEC 0.4). "Precisa de atenção" ainda não foi desenhado
   - [ ] Estados vazio e de erro (prancha `Estados`)
-- [ ] **Fatia 2, reskin do Criar**
-  - [ ] Passos 1 e 2 de `campaigns/new` (pranchas `Criar` e `Criar-Mobile`). O mobile dos passos 2 e 3 ainda não foi desenhado
-- [ ] **Fatia 3, Estúdio em 3 fases e Entrega**
-  - [ ] Estúdio em 3 fases: letra, músicas, vídeo (pranchas `Estudio` e `Estudio-Mobile`), com a derivação de fase a partir de status + `video_status`
-  - [ ] Definir o destino das ações do estúdio hoje hospedadas em `order_chat#*` (a fatia 5 só pode remover o chat depois disso; a decidir no `task-planner`)
-  - [ ] Entrega (`campaigns/_delivery`; prancha `Entrega`)
+- [~] **Fatia 2, reskin do Criar** (branch `feat/criar-caminho-b`; design `docs/superpowers/specs/2026-11-13-criar-caminho-b-design.md`)
+  - [x] Passos 1, 2 e 3 de `campaigns/new` com `ui.css` e sem `studio-app` (tarefas 1 a 9 do plano)
+  - [ ] Commit, PR e merge
+  - [ ] Tarefa 10: atualizar a linha de CSS do CLAUDE.md e a seção "Campanha" do SPEC (depois do merge)
+  - [ ] Pendências do passe visual: cabeçalho compartilhado quebra em 2 linhas no celular (133 px contra 64 px da prancha); no celular o player do passo 2 fica abaixo dos 12 ritmos; o botão "Ver prévia" cobre o contador da oferta na primeira dobra
+  - [ ] Conferir visualmente os estados `payment_failed`, checkout iniciado e erro 422 do servidor (só têm cobertura de integração)
+  - [ ] Limpar CSS órfão: `.campaign-sound-fields`, `.campaign-sound-details`, `.jp-genres`, `.campaign-style*`, `.campaign-review-photo`, `.campaign-total`, `.campaign-included`
+- [x] **Fatia 3, Estúdio em 3 fases e Entrega** (branch `feat/estudio-caminho-b`; design `docs/superpowers/specs/2026-11-13-estudio-caminho-b-design.md`)
+  - [x] Estúdio em 3 fases: letra, músicas, vídeo (pranchas `Estudio` e `Estudio-Mobile`), com a derivação de fase em `Campaigns::StudioPhase`
+  - [x] Ações do estúdio ficam em `order_chat#*` (rotas inalteradas); só as views novas em `order_chat/studio/`. A remoção do chat continua na fatia 5
+  - [x] Prévia da música inteira com marca sonora (`campaign_audio#full`, `OrderAsset#full_audition_audio`)
+  - [x] Entrega (`campaigns/_delivery`; prancha `Entrega`) e acompanhamento do vídeo com a casca do estúdio
+  - [x] Imagens em broadcasts Turbo usam URL só com o caminho; antes saíam com o host `example.org` do renderizador
+  - [ ] Fora da fatia: a Biblioteca (`songs#index`) ainda não usa `Campaigns::StudioPhase` (fatia 1)
+  - [ ] O estúdio segue sob a rota legada `/orders/:id/chat` (`order_chat`), que só sai com a fatia 5
+  - [ ] **Deploy:** depois de subir a marca d'água `Campaigns::AudioAudition::VERSION` 2, rodar `bin/rails campaigns:prepare_auditions`. Sem isso, os pedidos ainda não aprovados ficam com "Prepare a amostra para ouvir" em cada versão e "Gerar meu vídeo" desligado até o lojista preparar cartão por cartão. A task só pega campanhas não aprovadas e versões sem a amostra da versão atual, e pode rodar de novo
+  - [ ] "Prévia completa sendo preparada" usa uma heurística de 10 minutos; se aparecerem casos travados, criar `full_audition_status`. Ela também dá falso positivo logo depois de trocar o trecho na fase 3 (o `ExcerptSettings` refaz a `audition_audio` pelo `PrepareCampaignAudioJob`): por até 10 minutos uma versão antiga sem prévia completa não mostra o link nem "Preparar música completa" (revisão final, M7)
+  - [ ] Várias versões se chamam "Versão A" em `h2` (uma por rodada); a rodada só aparece no texto sr-only do rádio. Pôr a rodada no título das rodadas anteriores (revisão final, M11)
+  - [ ] Sem teste de sistema para um broadcast durante a reprodução (RF 1 só cobre digitação; revisão final, M4)
+  - [ ] O ramo `"custom"` de `order_chat#excerpt_settings` não tem mais UI; sai com a fatia 5, junto com os testes legados que ainda o usam
+  - [ ] Borda rara: `video_status` `ready` sem vídeo anexado mostra "Entrega" no topo e "Montando" no corpo, sem polling
+  - [ ] Prompt da Mureka: no teste real de 13/11/2026 a faixa veio com cerca de 16 s de introdução sem voz, e faixas de 66 s e 163 s para um pedido de 30 s. Investigar o prompt e a duração antes de prometer o trecho ao lojista
 - [ ] **Fatia 4, conta e pagamento no passo 3**
   - [ ] Passo 3 do Criar com criação de conta e botão "Pagar" (hoje o cadastro vem antes do formulário via `orders#new`)
   - [ ] Decidir como retomar um pedido em `payment_failed` (hoje checkout e edição só aceitam `pending`)

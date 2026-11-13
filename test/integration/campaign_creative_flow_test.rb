@@ -24,7 +24,13 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 2, @order.lyrics_drafts.count
     assert_equal 0, @order.reload.lyrics_regen_used
 
-    post order_chat_approve_lyrics_path(order_id: @order.id), params: { draft_id: @order.current_draft.id }, headers: @headers
+    get order_chat_path(order_id: @order.id)
+    assert_select "form[action=?] button[name=intent][value=generate]", order_chat_creation_path(order_id: @order.id), text: /Aprovar letra e ouvir 2 versões/
+    post order_chat_creation_path(order_id: @order.id), params: { intent: "generate", draft_id: @order.current_draft.id,
+      content: "Bella Napoli, duas pizzas na terça!", campaign: { musical_genre: @campaign.musical_genre } }, headers: @headers
+    assert_response :success
+    assert @order.reload.lyrics_approved?
+    assert_equal "Bella Napoli, duas pizzas na terça!", @order.approved_lyrics_draft.content
     GenerateMusicJob.perform_now(@order.id)
     first = finish_latest_round
     favorite = first.order_assets.first
@@ -46,9 +52,9 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 3, @order.completed_music_rounds
     assert_equal 0, @order.music_regen_remaining
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-version", count: 6
+    assert_select ".ui-version", count: 6
     assert_select ".creative-favorite-label", count: 0
-    assert_select 'audio source[type="audio/mp4"]', count: 6
+    assert_select ".ui-version .ui-player audio[src]", count: 6
     assert_select 'audio source[type="audio/mpeg"]', count: 0
     assert_select "form[action=?]", order_chat_regenerate_music_path(order_id: @order.id), count: 0
     assert_no_difference "MusicGeneration.count" do
@@ -181,6 +187,26 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 2, @order.all_music_assets.count
     assert_equal 1, @order.completed_music_rounds
     assert Orders::MusicApprover.call(order: @order.reload, asset_id: first.order_assets.first.id).success?
+  end
+
+  test "prepare_audio backfills the marked full audition for older archived versions" do
+    @order.update!(status: "lyrics_approved")
+    Campaigns::MusicRounds.call(order: @order)
+    asset = finish_latest_round.order_assets.first
+    assert asset.audition_ready?
+    assert_no_enqueued_jobs only: PrepareFullAuditionJob do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
+    asset.audio.attach(io: StringIO.new("fake MP3"), filename: "original.mp3", content_type: "audio/mpeg")
+    assert_enqueued_with(job: PrepareFullAuditionJob, args: [ asset.id ]) do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
+    assert_response :success
+    asset.full_audition_audio.attach(io: StringIO.new("marked full"), filename: "full.m4a", content_type: "audio/mp4",
+      metadata: { source_blob_id: asset.audio.blob.id, watermark_version: Campaigns::AudioAudition::VERSION })
+    assert_no_enqueued_jobs only: PrepareFullAuditionJob do
+      post order_chat_prepare_audio_path(order_id: @order.id), params: { asset_id: asset.id }, headers: @headers
+    end
   end
 
   test "saved audio can be played after provider URL expires" do

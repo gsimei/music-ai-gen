@@ -14,7 +14,7 @@ class MerchantJourneyTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to new_campaign_path
     follow_redirect!
-    assert_select "form.campaign-builder"
+    assert_select "form.ui-form"
   end
 
   test "return from paid checkout immediately resumes creation and cannot be forged" do
@@ -28,7 +28,8 @@ class MerchantJourneyTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert order.reload.pending?
       assert_select "[role=status]", text: /Aguardando/
-      assert_select "form.campaign-builder", count: 0
+      assert_select "form.ui-form", count: 0
+      assert_select 'button[type="submit"]', text: /Pagar/, count: 0
       assert_select 'input[type="submit"]', count: 0
     end
     paid = Stripe::Checkout::Session.construct_from(id: "cs_return_test", payment_status: "paid", amount_total: 7900, currency: "brl", payment_intent: "pi_test")

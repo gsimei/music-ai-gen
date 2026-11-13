@@ -31,6 +31,15 @@ class CampaignSoundSettingsTest < ActionDispatch::IntegrationTest
     assert_select 'textarea[name="campaign[music_notes]"]', text: "Sanfona em destaque"
   end
 
+  test "the studio lyrics phase shows the saved sound as checked tiles, not selects" do
+    @campaign.update!(musical_genre: "forro", vocal_gender: "female", music_notes: "Sanfona em destaque")
+    get order_chat_path(order_id: @order.id)
+    assert_select '#creation-sound input[type="radio"][name="campaign[musical_genre]"][checked][value="forro"]'
+    assert_select '#creation-sound input[type="radio"][name="campaign[vocal_gender]"][checked][value="female"]'
+    assert_select '#creation-sound textarea[name="campaign[music_notes]"]', text: "Sanfona em destaque"
+    assert_select "#creation-sound select", count: 0
+  end
+
   test "invalid choices cannot create a paid campaign" do
     assert_no_difference [ "Campaign.count", "Order.count" ] do
       post campaigns_path, params: { campaign: @campaign.attributes.slice("business_name", "offer", "contact", "call_to_action", "style").merge(

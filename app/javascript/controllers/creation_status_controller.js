@@ -20,17 +20,23 @@ export default class extends Controller {
     if (this.active) this.timer = setTimeout(() => this.refresh(), 5000)
   }
 
+  // O painel trocado por um envio ou broadcast traz a própria versão; sem isso o poll seguinte trocaria o painel de novo.
+  get currentVersion() {
+    return this.element.querySelector("#chat-lyrics-panel[data-creation-version]")?.dataset.creationVersion || this.versionValue
+  }
+
   async refresh() {
     try {
-      if (document.hidden || document.querySelector('[data-creative-editor-dirty="true"]')) return
-      if (Array.from(document.querySelectorAll('.creative-studio audio')).some(audio => !audio.paused && !audio.ended)) return
+      if (document.hidden || document.querySelector('[data-creative-editor-dirty="true"], #chat-lyrics-panel dialog[open]:modal')) return
+      if (Array.from(document.querySelectorAll('#chat-lyrics-panel audio')).some(audio => !audio.paused && !audio.ended)) return
       this.request = new AbortController()
       const url = new URL(this.urlValue, window.location.origin)
-      url.searchParams.set("version", this.versionValue)
+      const current = this.currentVersion
+      url.searchParams.set("version", current)
       const response = await fetch(url, { headers: { Accept: "text/vnd.turbo-stream.html" }, cache: "no-store", signal: this.request.signal })
       if (response.ok && !response.redirected) {
         const version = response.headers.get("X-Creation-Version")
-        if (version && version !== this.versionValue) {
+        if (version && version !== current) {
           Turbo.renderStreamMessage(await response.text())
           this.versionValue = version
         }

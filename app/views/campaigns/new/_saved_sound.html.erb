@@ -1,0 +1,15 @@
+<%# Identidade salva do negócio: linha de chips acima do passo 1. Só renderiza quando há perfis. %>
+<% if @music_profiles&.any? %>
+  <section class="ui-saved" aria-labelledby="ui-saved-title">
+    <h2 id="ui-saved-title" class="ui-saved-title">Comece com o som do seu negócio</h2>
+    <% if @music_profile %>
+      <p class="ui-saved-status" role="status">Identidade de <strong><%= @music_profile.business_name %></strong> aplicada. Preencha a nova oferta; você pode mudar o som nesta campanha.</p>
+    <% end %>
+    <ul class="ui-profiles">
+      <% @music_profiles.each do |profile| %>
+        <li><%= link_to new_campaign_path(music_profile_id: profile.id), class: "ui-profile", aria: { current: (@music_profile&.id == profile.id ? "true" : nil) } do %><strong><%= profile.business_name %></strong><span><%= profile.sound_summary %></span><% end %></li>
+      <% end %>
+    </ul>
+    <% if @music_profile %><%= link_to "Começar sem identidade salva", new_campaign_path, class: "ui-link" %><% end %>
+  </section>
+<% end %>

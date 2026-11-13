@@ -4,12 +4,32 @@ class OrderAsset < ApplicationRecord
   has_one_attached :audio
   has_one_attached :campaign_audio
   has_one_attached :audition_audio
+  has_one_attached :full_audition_audio
+
+  # The whole track with the sound watermark. Bound to the exact original blob
+  # and watermark version, so a re-archived recording or a new mark invalidates it.
+  def full_audition_ready?
+    audio.attached? && full_audition_audio.attached? &&
+      full_audition_audio.blob.metadata["source_blob_id"] == audio.blob.id &&
+      full_audition_audio.blob.metadata["watermark_version"] == Campaigns::AudioAudition::VERSION
+  end
+
+  def full_playback_url
+    Rails.application.routes.url_helpers.order_audio_full_path(order, asset_id: id) if full_audition_ready?
+  end
 
   def audition_ready?
     campaign_preview_ready? && audition_audio.attached? &&
       audition_audio.blob.metadata["source_blob_id"] == campaign_audio.blob.id &&
       audition_audio.blob.metadata["preview_revision"] == preview_revision &&
       audition_audio.blob.metadata["watermark_version"] == Campaigns::AudioAudition::VERSION
+  end
+
+  # Amostra a caminho: o trecho limpo está na fila, ou já existe e só falta a marca sonora da versão atual.
+  # ponytail: o segundo caso não tem status próprio; order_chat#prepare_audio toca updated_at ao enfileirar e isso conta
+  # como "preparando" por 10 minutos (mesmo heurístico da prévia completa). Coluna de status se travar.
+  def audition_preparing?
+    campaign_preview_status == "queued" || (campaign_preview_ready? && !audition_ready? && updated_at > 10.minutes.ago)
   end
 
   def approved_for_delivery?

@@ -2,6 +2,8 @@ require "tmpdir"
 
 class PrepareCampaignAudioJob < ApplicationJob
   queue_as :default
+  # One render per asset and revision at a time; repeated clicks or a re-run of campaigns:prepare_auditions are dropped.
+  limits_concurrency to: 1, key: ->(asset_id, revision = nil) { "campaign_audio/#{asset_id}/#{revision}" }, duration: 15.minutes, on_conflict: :discard
   retry_on StandardError, wait: :polynomially_longer, attempts: 3
 
   def perform(asset_id, revision = nil)
@@ -28,7 +30,7 @@ class PrepareCampaignAudioJob < ApplicationJob
         end
       end
       Campaigns::AudioAudition.render(source: destination, destination: audition_path,
-        start_seconds: metadata.fetch("start_seconds"), duration_seconds: metadata.fetch("duration_seconds"))
+        start_seconds: metadata.fetch("start_seconds"), duration_seconds: metadata.fetch("duration_seconds"), seed: asset.id.to_s)
       File.open(destination) do |audio|
         File.open(audition_path) do |audition|
           asset.order.with_lock do

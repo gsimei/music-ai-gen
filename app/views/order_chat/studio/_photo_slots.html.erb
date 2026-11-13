@@ -1,0 +1,40 @@
+<%# locals: (order:) %>
+<%# Fotos do vídeo como espaços (ui-slot), em número igual ao limite da duração escolhida (campaign.photo_limit). O input é
+    o file_field múltiplo de sempre, escondido por recorte e focável; cada espaço vazio é um <label for> dele, então abrir o
+    seletor funciona sem JS. O video-photos reconstrói os espaços ao incluir, mover ou remover. Salvar não gasta rodada. %>
+<% campaign = order.campaign %>
+<% photos = campaign.product_photos %>
+<% limit = campaign.photo_limit %>
+<% extra = limit - Campaigns::PhotoLimit::INITIAL %>
+<%= form_with url: order_chat_video_photos_path(order_id: order.id), method: :patch, multipart: true, id: "video-photos", class: "ui-field ui-photos",
+      data: { controller: "video-photos", video_photos_limit_value: limit, turbo_stream: true,
+              action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" } do %>
+  <%= hidden_field_tag :video_revision, campaign.video_revision, id: nil %>
+  <%= hidden_field_tag "photo_sequence[]", "", id: nil %>
+  <div class="ui-label-row">
+    <label for="video-photos-input" class="ui-label">Fotos do vídeo</label>
+    <% if extra.positive? %><span class="ui-badge">+<%= pluralize(extra, "espaço liberado", plural: "espaços liberados") %></span><% end %>
+  </div>
+  <%= file_field_tag "photos[]", multiple: true, accept: "image/jpeg,image/png,image/webp", id: "video-photos-input", class: "ui-sr-only",
+        aria: { label: "Fotos do vídeo", describedby: "video-photos-help video-photos-status" },
+        data: { video_photos_target: "input", action: "change->video-photos#add" } %>
+  <div class="ui-slots" data-video-photos-target="list">
+    <% photos.each_with_index do |photo, index| %>
+      <figure class="ui-slot" data-photo-key="saved:<%= photo.id %>">
+        <div class="ui-slot-box"><div class="ui-slot-preview"><%= image_tag rails_blob_path(photo), alt: "Foto #{index + 1} da campanha", loading: "lazy", decoding: "async" %></div></div>
+        <figcaption class="ui-slot-cap<%= " ui-slot-tag" if index.zero? %>"><%= index.zero? ? "Abre o vídeo" : "Foto #{index + 1}" %></figcaption>
+        <%= hidden_field_tag "photo_sequence[]", "saved:#{photo.id}", id: nil %>
+      </figure>
+    <% end %>
+    <% (photos.size...limit).each do |index| %>
+      <label class="ui-slot ui-slot-empty" for="video-photos-input">
+        <span class="ui-slot-box"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg><% if index == photos.size %><span>Adicionar</span><% end %></span>
+        <span class="ui-slot-cap<%= " ui-slot-tag" if index.zero? %>"><%= "Abre o vídeo" if index.zero? %></span>
+      </label>
+    <% end %>
+  </div>
+  <p id="video-photos-help" class="ui-hint">Até <%= pluralize(limit, "foto", plural: "fotos") %> nesta duração. JPG, PNG ou WebP de até 10 MB cada. A primeira abre o vídeo.</p>
+  <p id="video-photos-status" class="ui-hint" role="status" data-video-photos-target="status"><%= photos.any? ? "#{pluralize(photos.size, "foto", plural: "fotos")} #{photos.one? ? "salva" : "salvas"}. Você pode incluir outras ou mudar a ordem." : "Sem fotos, usamos uma arte com sua oferta." %></p>
+  <button type="submit" class="ui-btn ui-btn-ghost">Salvar fotos do vídeo</button>
+  <p class="ui-hint">Salvar as fotos não muda a música nem gasta rodada.</p>
+<% end %>

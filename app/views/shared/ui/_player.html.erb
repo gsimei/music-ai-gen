@@ -1,0 +1,46 @@
+<%# Cartão floresta do player, compartilhado entre o Criar e o estúdio. Um só <audio>, sem autoplay e sem controls: quem toca é o botão.
+    locals:
+      controller:       "genre-preview" (Criar) ou "ui-player" (estúdio). Todos os data-*-target e data-action usam esse nome.
+                        O ui-player se monta no próprio cartão; o genre-preview é montado por quem chama (a section do passo 2),
+                        porque os tiles de ritmo também são alvos dele.
+      src:              URL do áudio ou nil. Sem src, o botão some e a dica aparece no lugar (a onda e o relógio somem por CSS).
+      title:            nome grande do cartão (ritmo, "Versão 1"...).
+      description:      linha abaixo do nome.
+      note:             texto pequeno ao lado do relógio (opcional).
+      duration_seconds: duração conhecida antes do metadata (opcional); o áudio real corrige.
+    opcionais:
+      eyebrow:          rótulo acima do nome.
+      hint:             dica mostrada só quando não há src.
+      label:            complemento do aria-label do botão ("Tocar <label>" / "Pausar <label>"). Padrão "áudio".
+      error:            texto do erro recuperável. Padrão "Não foi possível tocar o áudio."
+      audio_action:     ações extras no <audio>, somadas às do player. No estúdio, passe "play->creative-editor#play"
+                        para um player pausar os outros e o guard de broadcast saber que há áudio tocando.
+      footer:           HTML extra no fim do cartão (o Criar põe "Sua direção"). Local e não bloco: `yield` num partial sem bloco
+                        devolve o conteúdo do layout. %>
+<% eyebrow = local_assigns[:eyebrow]
+   hint = local_assigns[:hint]
+   label = local_assigns.fetch(:label, "áudio")
+   note = local_assigns[:note]
+   duration_seconds = local_assigns[:duration_seconds]
+   target = "data-#{controller}-target" %>
+<%= tag.div class: "ui-player", data: (controller == "ui-player" ? { controller: "ui-player" } : {}) do %>
+  <% if eyebrow.present? %><p class="ui-player-eyebrow"><%= eyebrow %></p><% end %>
+  <p class="ui-player-name" <%= target %>="name"><%= title %></p>
+  <p class="ui-player-desc" <%= target %>="description"><%= description %></p>
+  <div class="ui-wave" <%= target %>="wave" aria-hidden="true"><% 36.times do %><i></i><% end %></div>
+  <div class="ui-player-row">
+    <button type="button" class="ui-play" aria-label="Tocar <%= label %>" data-label="<%= label %>" data-playing="false" <%= target %>="toggle" data-action="<%= controller %>#toggle" <%= "hidden" if src.blank? %>>
+      <svg class="ui-icon ui-play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>
+      <svg class="ui-icon ui-pause-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+    </button>
+    <div class="ui-time">
+      <p class="ui-time-clock"><span <%= target %>="current">0:00</span><span class="ui-time-total" <%= target %>="duration"><%= campaign_media_time(duration_seconds) if duration_seconds %></span></p>
+      <% if note.present? %><p class="ui-time-note"><%= note %></p><% end %>
+    </div>
+  </div>
+  <p class="ui-player-hint" <%= target %>="hint" <%= "hidden" if src.present? || hint.blank? %>><%= hint %></p>
+  <p class="ui-player-error" role="status" <%= target %>="error" hidden><%= local_assigns.fetch(:error, "Não foi possível tocar o áudio.") %> <button type="button" class="ui-player-retry" data-action="<%= controller %>#retry">Tentar de novo</button></p>
+  <%= tag.audio preload: "none", src: src.presence, data: { "#{controller}-target": "player",
+        action: [ *local_assigns[:audio_action], *%w[play pause ended timeupdate loadedmetadata error].zip(%w[play paused paused tick metadata error]).map { |event, method| "#{event}->#{controller}##{method}" } ].join(" ") } %>
+  <%= local_assigns[:footer] %>
+<% end %>

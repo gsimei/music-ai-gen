@@ -3,6 +3,10 @@
 class OrderChatController < ApplicationController
   before_action :authenticate_user!
   before_action :set_order
+  # Both actions can enqueue ffmpeg renders; one shared bucket per user.
+  # The chip and timeline post excerpt_settings often in normal use.
+  AUDIO_RATE_LIMIT = 30
+  rate_limit to: AUDIO_RATE_LIMIT, within: 1.minute, only: %i[prepare_audio excerpt_settings], by: -> { current_user.id }, with: -> { head :too_many_requests }
 
   def show
     @messages = @order.briefing_messages
@@ -147,10 +151,12 @@ class OrderChatController < ApplicationController
     asset = @order.all_music_assets.find(params[:asset_id])
     asset.with_lock do
       return head :conflict if asset.approved_for_delivery? && !asset.campaign_preview_ready?
-      unless asset.audition_ready? || asset.campaign_preview_status == "queued"
-        asset.update!(campaign_preview_status: "queued") unless asset.campaign_preview_ready?
+      unless asset.audition_ready? || asset.audition_preparing?
+        asset.campaign_preview_ready? ? asset.touch : asset.update!(campaign_preview_status: "queued")
         ArchiveCampaignAudioJob.perform_later(asset.id)
       end
+      # Versions archived before the full marked preview existed.
+      PrepareFullAuditionJob.perform_later(asset.id) if asset.audition_ready? && asset.audio.attached? && !asset.full_audition_ready?
     end
     render_chat_state
   end

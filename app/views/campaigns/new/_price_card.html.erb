@@ -1,0 +1,17 @@
+<%# Cartão de preço floresta, só no passo 3 (coluna da direita no desktop, abaixo do resumo no celular). Sem botão: o único envio fica na barra de ação.
+    Preço, rodadas e ajustes vêm do pedido, de Campaigns::MusicRounds e de BRANDS_CONFIG, nunca de texto fixo. %>
+<% check = tag.svg(tag.path(d: "m5 12.5 4.5 4.5L19 7.5"), class: "ui-icon", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false") %>
+<section class="ui-price" aria-labelledby="ui-price-title">
+  <div class="ui-price-top">
+    <h3 id="ui-price-title">Campanha completa</h3>
+    <span class="ui-price-tag">Pagamento único</span>
+  </div>
+  <p class="ui-price-line"><span class="ui-price-amount"><%= campaign_price(@campaign.order) %></span><small>por campanha</small></p>
+  <ul class="ui-price-list" role="list">
+    <li><%= check %>Até <%= Campaigns::MusicRounds::LIMIT %> rodadas com 2 versões de música cada</li>
+    <li><%= check %>Até <%= BRANDS_CONFIG.dig(:b2b, :tiers, :starter, :lyrics_regen_limit) %> reescritas com IA e edição livre da letra</li>
+    <li><%= check %>Vídeo vertical com fotos, oferta e transições</li>
+    <li><%= check %>MP3 e legenda para copiar</li>
+  </ul>
+  <p class="ui-price-note"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 11h12v9H6v-9Zm3 0V8a3 3 0 0 1 6 0v3"/></svg>Você seguirá para o pagamento seguro pelo Stripe. A criação começa após a confirmação.</p>
+</section>

@@ -171,14 +171,13 @@ class Campaigns::AudioPreviewTest < ActiveSupport::TestCase
       Campaigns::MediaCommand.run!("ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "12", source)
       decoded = [ 0, 2 ].map do |start|
         destination = File.join(dir, "marked-#{start}.m4a")
-        Campaigns::AudioAudition.render(source: source, destination: destination, start_seconds: start, duration_seconds: 12)
+        Campaigns::AudioAudition.render(source: source, destination: destination, start_seconds: start, duration_seconds: 12, seed: "7")
         assert_in_delta 12, duration(destination), 0.05
         Campaigns::MediaCommand.run!("ffmpeg", "-v", "error", "-i", destination, "-f", "f32le", "-ac", "1", "-ar", "8000", "-").unpack("e*")
       end
       energy = ->(samples, start, length) { samples.slice(start * 8000, length * 8000).sum(&:abs) / (length * 8000) }
-      assert_operator energy.call(decoded[0], 0, 2), :>, 0.01, "Watermark asset must contain actual audible speech"
-      assert_operator energy.call(decoded[0], 4, 2), :<, 0.001
-      assert_operator energy.call(decoded[1], 6, 2), :>, 0.01
+      assert_operator energy.call(decoded[0], 0, 3.5), :>, 0.01, "Watermark asset must contain actual audible speech"
+      assert_operator energy.call(decoded[1], 6, 3.5), :>, 0.01
       first = decoded[0].slice(8 * 8000, 2 * 8000)
       shifted = decoded[1].slice(6 * 8000, 2 * 8000)
       error = first.zip(shifted).sum { |a, b| (a - b).abs } / first.size

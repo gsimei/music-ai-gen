@@ -1,0 +1,27 @@
+<%# locals: f, saved_photos. O input é o mesmo file_field múltiplo de sempre (escondido por recorte, continua focável);
+    cada espaço vazio é um <label for> dele, então abrir o seletor funciona sem JS. O controller reconstrói os espaços ao escolher fotos. %>
+<% initial = Campaigns::PhotoLimit::INITIAL %>
+<div class="ui-field ui-photos">
+  <%= f.label :photos, "Fotos do produto ou do negócio (opcional)", class: "ui-label" %>
+  <%= f.file_field :photos, multiple: true, include_hidden: false, accept: "image/jpeg,image/png,image/webp", class: "ui-sr-only",
+    aria: { label: "Fotos do produto ou do negócio (opcional)" }.merge(criar_field_aria(f.object, :photos, "campaign-photo-help campaign-photo-status")),
+    data: { campaign_form_target: "photoInput", saved_photos: saved_photos.any?, action: "change->campaign-form#photo" } %>
+  <div class="ui-slots" data-campaign-form-target="photoList">
+    <% saved_photos.each_with_index do |photo, index| %>
+      <figure class="ui-slot" data-photo-id="<%= photo.id %>">
+        <div class="ui-slot-box"><div class="ui-slot-preview"><%= image_tag photo, alt: "Foto #{index + 1} da campanha" %></div></div>
+        <figcaption class="ui-slot-cap<%= " ui-slot-tag" if index.zero? %>"><%= index.zero? ? "Abre o vídeo" : "Foto #{index + 1}" %></figcaption>
+        <%= hidden_field_tag "campaign[photo_order][]", photo.id, id: nil %>
+      </figure>
+    <% end %>
+    <% (saved_photos.size...initial).each do |index| %>
+      <label class="ui-slot ui-slot-empty" for="<%= f.field_id(:photos) %>">
+        <span class="ui-slot-box"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg><% if index.zero? %><span>Adicionar</span><% end %></span>
+        <span class="ui-slot-cap<%= " ui-slot-tag" if index.zero? %>"><%= "Abre o vídeo" if index.zero? %></span>
+      </label>
+    <% end %>
+  </div>
+  <p id="campaign-photo-help" class="ui-hint">Comece com até <%= initial %> fotos. Depois de escolher a duração do vídeo, você pode incluir mais no estúdio, até <%= Campaigns::PhotoLimit::MAX %>. A primeira abre o vídeo. JPG, PNG ou WebP, até 10 MB por foto.</p>
+  <%= criar_field_error(f.object, :photos) %>
+  <p id="campaign-photo-status" class="ui-hint" role="status" data-campaign-form-target="photoStatus"><%= saved_photos.any? ? "Suas fotos estão salvas. Se escolher novas fotos, elas substituem as anteriores." : "Use fotos nítidas, com o produto no centro. Sem fotos? Criamos uma arte com a oferta." %></p>
+</div>

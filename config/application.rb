@@ -28,5 +28,9 @@ module MusicAiGen
     config.i18n.available_locales = %i[it en es fr de pt]
     config.i18n.default_locale = :pt
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.yml").to_s]
+
+    # Marked previews (CampaignAudioController) are played in the page, not
+    # downloaded. Stock storage routes for order audio stay blocked by ProtectedOrderAudio.
+    config.active_storage.content_types_allowed_inline += %w[audio/mp4]
   end
 end

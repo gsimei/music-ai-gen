@@ -1,0 +1,46 @@
+<%# locals: f (builder do form_with do Criar ou do fields_for :campaign do estúdio). Fieldsets de ritmo (tiles), voz (segmentado)
+    e clima (chips). Os rádios levam data-genre-preview-* e data-sound-*: fora desses controllers, são inertes.
+    between (opcional): HTML entre o ritmo e a voz (o Criar põe o cartão do player ali, ordem do celular). Local e não bloco:
+    `yield` num partial sem bloco devolve o conteúdo do layout. %>
+<fieldset class="ui-field">
+  <legend class="ui-label">Qual ritmo combina com seu negócio?</legend>
+  <div class="ui-tiles">
+    <% Campaign::GENRES.each do |key, genre| %>
+      <% name, description = genre[:label].split(" · ", 2) %>
+      <label class="ui-tile">
+        <%= f.radio_button :musical_genre, key, required: true, data: { sound_setting: "genre", genre_preview_target: "genre", sound_label: name, genre_description: description, action: "change->genre-preview#select" } %>
+        <% if key == "auto" %><svg class="ui-icon ui-tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v4m0 10v4M3 12h4m10 0h4M6.3 6.3l2.4 2.4m6.6 6.6 2.4 2.4m0-11.4-2.4 2.4m-6.6 6.6-2.4 2.4"/></svg><% end %>
+        <span class="ui-tile-name"><%= name %></span>
+        <% if description %><span class="ui-tile-desc"><%= description %></span><% end %>
+      </label>
+    <% end %>
+  </div>
+</fieldset>
+
+<%= local_assigns[:between] %>
+
+<fieldset class="ui-field">
+  <legend class="ui-label">Como você imagina a voz?</legend>
+  <div class="ui-seg">
+    <% Campaign::VOCAL_GENDERS.each do |key, label| %>
+      <label class="ui-seg-item">
+        <%= f.radio_button :vocal_gender, key, required: true, data: { sound_setting: "voice", sound_label: label } %>
+        <span><%= label %></span>
+      </label>
+    <% end %>
+  </div>
+  <p class="ui-hint">A voz é uma preferência; você confere o resultado antes de aprovar.</p>
+</fieldset>
+
+<fieldset class="ui-field">
+  <legend class="ui-label">Qual é o clima?</legend>
+  <div class="ui-moods">
+    <% Campaign::STYLES.each do |key, style| %>
+      <label class="ui-chip ui-chip-mood">
+        <%= f.radio_button :style, key, required: true, data: { sound_setting: "climate", sound_label: style[:label] } %>
+        <span class="ui-mood-name"><%= style[:label] %><svg class="ui-icon ui-mood-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+        <span class="ui-mood-desc"><%= style[:description] %></span>
+      </label>
+    <% end %>
+  </div>
+</fieldset>

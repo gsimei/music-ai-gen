@@ -26,7 +26,6 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: /Sua próxima campanha/
     assert_select "form[action=?]", save_music_profile_campaign_path(campaign), count: 0
     assert_select "#campaign_business_name:not([required])"
-    assert_select 'input#campaign_logo[type="file"]'
     assert_select '[data-campaign-form-target="previewBusiness"][hidden]'
     assert_select '[data-campaign-form-target="previewLogo"][src]'
     original = campaign.logo.blob.id
@@ -51,7 +50,7 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select '[data-campaign-form-target="previewBusiness"][hidden]'
     assert_select '[data-campaign-form-target="previewLogo"][hidden]'
-    assert_select "form.campaign-builder[enctype=?]", "multipart/form-data"
+    assert_select "form.ui-form[enctype=?]", "multipart/form-data"
   end
 
   test "invalid logo uploads do not create campaigns or remove an existing logo" do
@@ -110,6 +109,17 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     save_appearance(order, { logo: logo_upload }, revision: 3)
     assert_response :unprocessable_entity
     refute campaign.reload.logo.attached?
+  end
+
+  test "the studio owns the logo picker now that the Criar form only shows the saved logo in its preview" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(@attributes.merge(order: order, business_name: "Landel", show_cta: false))
+    campaign.update!(selected_music_asset: order_assets(:music_variant_a))
+    get order_chat_path(order_id: order.id)
+    assert_response :success
+    assert_select '#video-appearance input#campaign_logo[type="file"]'
+    assert_select '.ui-stage [data-campaign-form-target="previewLogo"]'
+    assert_select '#video-appearance [data-campaign-form-target="logoInput"]'
   end
 
   test "studio rejects invalid logos and other accounts cannot change branding" do

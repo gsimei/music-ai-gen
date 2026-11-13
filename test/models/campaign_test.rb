@@ -91,4 +91,18 @@ class CampaignTest < ActiveSupport::TestCase
     @campaign.cta_color = "#000000"
     assert_equal "#ffffff", @campaign.cta_text_color
   end
+
+  test "the name and offer limits are public constants that the validators enforce" do
+    assert_equal 60, Campaign::BUSINESS_NAME_MAX_LENGTH
+    assert_equal 180, Campaign::OFFER_MAX_LENGTH
+    @campaign.assign_attributes(business_name: "n" * Campaign::BUSINESS_NAME_MAX_LENGTH, offer: "o" * Campaign::OFFER_MAX_LENGTH)
+    assert @campaign.valid?, @campaign.errors.full_messages.to_sentence
+    @campaign.business_name = "n" * (Campaign::BUSINESS_NAME_MAX_LENGTH + 1)
+    refute @campaign.valid?
+    assert @campaign.errors.added?(:business_name, :too_long, count: Campaign::BUSINESS_NAME_MAX_LENGTH)
+    @campaign.business_name = "Landel"
+    @campaign.offer = "o" * (Campaign::OFFER_MAX_LENGTH + 1)
+    refute @campaign.valid?
+    assert @campaign.errors.added?(:offer, :too_long, count: Campaign::OFFER_MAX_LENGTH)
+  end
 end

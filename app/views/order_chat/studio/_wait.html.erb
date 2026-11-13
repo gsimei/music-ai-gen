@@ -1,0 +1,11 @@
+<%# locals: (title:, detail:, notes: []) %>
+<section class="ui-wait" role="status">
+  <span class="ui-wait-pulse" aria-hidden="true"><i></i><i></i><i></i></span>
+  <div>
+    <p class="ui-wait-title"><%= title %></p>
+    <p class="ui-wait-detail"><%= detail %></p>
+    <% if notes.any? %>
+      <ul class="ui-wait-notes"><% notes.each do |note| %><li><%= note %></li><% end %></ul>
+    <% end %>
+  </div>
+</section>

@@ -9,7 +9,7 @@ module Campaigns
         file = "/demos/genres/#{key}-v1.mp3"
         next unless samples.dig(key, "status") == "ready"
         next unless Rails.root.join("public", file.delete_prefix("/")).file?
-        [ key, { url: file, label: genre.fetch(:label).split(" · ").first } ]
+        [ key, { url: file, label: genre.fetch(:label).split(" · ").first, duration_seconds: samples.dig(key, "duration_seconds") } ]
       end.to_h
     rescue JSON::ParserError
       Rails.logger.warn("Genre sample manifest is invalid; examples temporarily unavailable")

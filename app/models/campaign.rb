@@ -23,6 +23,8 @@ class Campaign < ApplicationRecord
   CTA_DEFAULT_COLOR = "#d6f36b"
   CTA_DARK_COLOR = "#173e32"
   CTA_COLOR_FORMAT = /\A#[0-9a-f]{6}\z/i
+  BUSINESS_NAME_MAX_LENGTH = 60
+  OFFER_MAX_LENGTH = 180
   CTA_OPTIONS = [ "Peça pelo WhatsApp", "Venha nos visitar", "Reserve seu horário", "Saiba mais no Instagram" ].freeze
   LOGO_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
   LOGO_MAX_SIZE = 5.megabytes
@@ -43,8 +45,8 @@ class Campaign < ApplicationRecord
   validates :contact, :call_to_action, presence: true, if: :show_cta?
   validates :show_cta, inclusion: { in: [ true, false ] }
   validates :cta_color, format: { with: CTA_COLOR_FORMAT }
-  validates :business_name, length: { maximum: 60 }
-  validates :offer, length: { maximum: 180 }
+  validates :business_name, length: { maximum: BUSINESS_NAME_MAX_LENGTH }
+  validates :offer, length: { maximum: OFFER_MAX_LENGTH }
   validates :contact, length: { maximum: 70 }
   validates :call_to_action, length: { maximum: 40 }
   validates :style, inclusion: { in: STYLES.keys }

@@ -1,0 +1,43 @@
+<%# locals: (order:, asset:, version:, selectable:, checked:) %>
+<%# Um cartão de versão: rádio do form#music-pick, player da marca com a amostra marcada e, abaixo, a música completa
+    (também com marca sonora) tocada no mesmo player por ui-player#listen. %>
+<% name = "Versão #{("A".ord + asset.variant_index).chr}" %>
+<article class="ui-version" id="music-version-<%= asset.id %>">
+  <div class="ui-version-head">
+    <h2 class="ui-version-name"><%= name %></h2>
+    <% if selectable %>
+      <label class="ui-chip">
+        <%= radio_button_tag :asset_id, asset.id, checked, id: "music-pick-#{asset.id}", form: "music-pick",
+              data: { label: "Usar a #{version} e montar o vídeo", action: "change->creative-editor#pick" } %>
+        <%# O estado escolhido também em texto, não só pela cor; creative-editor#pick mantém os rótulos em sincronia. %>
+        <span data-pick-text><%= checked ? "Escolhida" : "Escolher" %></span><span class="ui-sr-only"> a <%= version %></span>
+      </label>
+    <% end %>
+  </div>
+  <% if asset.audition_ready? %>
+    <% track = asset.track_duration_seconds %>
+    <% full_url = asset.full_playback_url %>
+    <%# ponytail: não há status da prévia completa; o ArchiveCampaignAudioJob a enfileira junto com a amostra, então uma
+        amostra recente (< 10 min) conta como "preparando". Versões mais antigas ganham o botão (P1). Coluna de status se
+        o heurístico enganar. %>
+    <% preparing = asset.audition_audio.blob.created_at > 10.minutes.ago %>
+    <% footer = capture do %>
+      <% if track.positive? %>
+        <p class="ui-version-full">Música completa <%= campaign_media_time(track) %><% if full_url %> · <%= link_to "Ouvir completa", full_url, class: "ui-link", data: { action: "ui-player#listen" } %><% end %></p>
+        <% if !full_url && !preparing && asset.audio.attached? %>
+          <%= button_to "Preparar música completa", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id },
+                class: "ui-link", data: { turbo_stream: true } %>
+        <% end %>
+      <% end %>
+    <% end %>
+    <%= render "shared/ui/player", controller: "ui-player", src: asset.campaign_playback_url, title: "Amostra",
+          description: "Com marca sonora. O vídeo usa um trecho desta música.", label: name,
+          duration_seconds: asset.campaign_audio.blob.metadata["duration_seconds"], audio_action: "play->creative-editor#play", footer: footer %>
+  <% elsif asset.audition_preparing? %>
+    <p class="ui-hint" role="status">Preparando a amostra…</p>
+  <% else %>
+    <p class="ui-hint">Sua música está salva. Prepare a amostra para ouvir.</p>
+    <%= button_to "Preparar amostra", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id },
+          class: "ui-btn ui-btn-ghost", data: { turbo_stream: true } %>
+  <% end %>
+</article>
