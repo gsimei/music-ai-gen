@@ -24,7 +24,13 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 2, @order.lyrics_drafts.count
     assert_equal 0, @order.reload.lyrics_regen_used
 
-    post order_chat_approve_lyrics_path(order_id: @order.id), params: { draft_id: @order.current_draft.id }, headers: @headers
+    get order_chat_path(order_id: @order.id)
+    assert_select "form[action=?] button[name=intent][value=generate]", order_chat_creation_path(order_id: @order.id), text: /Aprovar letra e ouvir 2 versões/
+    post order_chat_creation_path(order_id: @order.id), params: { intent: "generate", draft_id: @order.current_draft.id,
+      content: "Bella Napoli, duas pizzas na terça!", campaign: { musical_genre: @campaign.musical_genre } }, headers: @headers
+    assert_response :success
+    assert @order.reload.lyrics_approved?
+    assert_equal "Bella Napoli, duas pizzas na terça!", @order.approved_lyrics_draft.content
     GenerateMusicJob.perform_now(@order.id)
     first = finish_latest_round
     favorite = first.order_assets.first

@@ -23,7 +23,7 @@ export default class extends Controller {
   async refresh() {
     try {
       if (document.hidden || document.querySelector('[data-creative-editor-dirty="true"]')) return
-      if (Array.from(document.querySelectorAll('.creative-studio audio')).some(audio => !audio.paused && !audio.ended)) return
+      if (Array.from(document.querySelectorAll('#chat-lyrics-panel audio')).some(audio => !audio.paused && !audio.ended)) return
       this.request = new AbortController()
       const url = new URL(this.urlValue, window.location.origin)
       url.searchParams.set("version", this.versionValue)

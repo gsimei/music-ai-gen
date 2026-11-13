@@ -60,6 +60,6 @@ class CampaignDesignRegressionsTest
     assert_select "textarea#editable-lyrics", text: draft.content
     assert_select ".jp-assistant", count: 0
     assert_select 'form[action=?] input[name="draft_id"][value=?]', order_chat_creation_path(order_id: order.id), draft.id.to_s
-    assert_select 'select[name="campaign[musical_genre]"] option', count: Campaign::GENRES.size
+    assert_select 'input[type="radio"][name="campaign[musical_genre]"]', count: Campaign::GENRES.size
   end
 end

@@ -305,7 +305,7 @@ html:has(.criar) {
     background: var(--jp-cream);
   }
 }
-.criar .ui-btn {
+:is(.criar, .estudio) .ui-btn {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -321,22 +321,22 @@ html:has(.criar) {
   text-align: left;
   cursor: pointer;
 }
-.criar .ui-btn:hover {
+:is(.criar, .estudio) .ui-btn:hover {
   background: var(--jp-hover);
   border-color: var(--jp-hover);
 }
-.criar .ui-btn:disabled {
+:is(.criar, .estudio) .ui-btn:disabled {
   cursor: progress;
   opacity: 0.7;
 }
-.criar .ui-btn-ghost {
+:is(.criar, .estudio) .ui-btn-ghost {
   justify-content: center;
   padding-inline: 24px;
   border-color: var(--jp-field);
   background: transparent;
   color: var(--jp-forest);
 }
-.criar .ui-btn-ghost:hover {
+:is(.criar, .estudio) .ui-btn-ghost:hover {
   border-color: var(--jp-forest);
   background: transparent;
 }
@@ -351,16 +351,16 @@ html:has(.criar) {
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .criar .ui-btn {
+  :is(.criar, .estudio) .ui-btn {
     transition: transform 0.2s ease;
   }
-  .criar .ui-btn:hover:not(:disabled) {
+  :is(.criar, .estudio) .ui-btn:hover:not(:disabled) {
     transform: translateY(-2px);
   }
 }
 
 /* ---------- Campos e chips (passo 1) ---------- */
-.criar .ui-eyebrow {
+:is(.criar, .estudio) .ui-eyebrow {
   margin: 0;
   color: var(--jp-muted);
   font-size: 13px;
@@ -368,7 +368,7 @@ html:has(.criar) {
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.criar .ui-lead {
+:is(.criar, .estudio) .ui-lead {
   max-width: 46ch;
   margin: 0 0 32px;
   color: var(--jp-muted);
@@ -407,7 +407,7 @@ html:has(.criar) {
   font-weight: 500;
   line-height: 1.5;
 }
-.criar .ui-input {
+:is(.criar, .estudio) .ui-input {
   width: 100%;
   min-height: 60px;
   padding: 0 18px;
@@ -417,11 +417,11 @@ html:has(.criar) {
   color: var(--jp-forest);
   font: 500 17px/1.4 Manrope, system-ui, sans-serif;
 }
-.criar .ui-input::placeholder {
+:is(.criar, .estudio) .ui-input::placeholder {
   color: var(--jp-muted);
   opacity: 1;
 }
-.criar .ui-input:focus {
+:is(.criar, .estudio) .ui-input:focus {
   border-color: var(--jp-forest);
 }
 .criar .ui-offer {
@@ -1096,7 +1096,7 @@ html:has(.criar) {
 .criar .ui-more:hover {
   color: var(--jp-hover);
 }
-.criar .ui-notes {
+:is(.criar, .estudio) .ui-notes {
   min-height: 104px;
   padding: 14px 18px;
   line-height: 1.5;
@@ -1523,7 +1523,7 @@ html:has(.criar) {
 }
 
 /* ---------- Avisos do formulário e erros de campo ---------- */
-.criar .ui-alert {
+:is(.criar, .estudio) .ui-alert {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -1536,13 +1536,13 @@ html:has(.criar) {
   font-size: 14px;
   line-height: 1.65;
 }
-.criar .ui-alert .ui-icon {
+:is(.criar, .estudio) .ui-alert .ui-icon {
   margin-top: 2px;
 }
-.criar .ui-alert p {
+:is(.criar, .estudio) .ui-alert p {
   margin: 4px 0 0;
 }
-.criar .ui-alert ul {
+:is(.criar, .estudio) .ui-alert ul {
   margin: 6px 0 0;
   padding-left: 20px;
 }
@@ -1738,4 +1738,76 @@ html:has(.criar) {
 .estudio .ui-cta-preview b {
   color: inherit;
   font-size: 14px;
+}
+
+/* ---------- Estúdio · fase (título, ações, "Quero mudar algo") ---------- */
+.estudio .ui-phase {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+}
+.estudio .ui-phase-title {
+  margin: 0;
+  font-size: clamp(32px, 7vw, 48px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+.estudio .ui-phase .ui-lead {
+  margin-bottom: 12px;
+}
+.estudio .ui-phase form {
+  display: grid;
+  gap: 28px;
+}
+.estudio .ui-phase .ui-btn {
+  justify-self: start;
+  max-width: 100%;
+}
+.estudio .ui-lyrics {
+  min-height: 240px;
+  padding: 18px 20px;
+  font-size: 18px;
+  line-height: 1.75;
+  resize: vertical;
+}
+.estudio .ui-lyrics-text {
+  margin: 0 0 16px;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.estudio .ui-more-box {
+  border-top: 1px solid var(--jp-border);
+  border-bottom: 1px solid var(--jp-border);
+}
+.estudio .ui-more-box .ui-more-box {
+  border-bottom: 0;
+}
+.estudio .ui-more-box > summary {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.estudio .ui-more-box > :not(summary) {
+  margin-bottom: 20px;
+}
+.estudio .ui-phase-actions {
+  display: grid;
+  gap: 10px;
+}
+.estudio .ui-phase-actions .ui-btn-primary {
+  min-height: 64px;
+  font-size: 17px;
+}
+.estudio .ui-phase .ui-alert {
+  margin: 0;
+}
+@media (max-width: 639px) {
+  .estudio .ui-phase-actions .ui-btn-primary {
+    justify-self: stretch;
+  }
 }

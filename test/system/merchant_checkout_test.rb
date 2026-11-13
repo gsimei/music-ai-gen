@@ -73,8 +73,8 @@ class MerchantCheckoutTest < ApplicationSystemTestCase
       body: { title: "Café do Bairro", lyrics: "Café com pão por doze reais, nesta terça tem mais!" }.to_json
     )
     perform_enqueued_jobs(only: GenerateLyricsJob)
-    assert_field "Sua letra", with: "Café com pão por doze reais, nesta terça tem mais!"
-    assert_button "Gerar duas músicas"
+    assert_field "editable-lyrics", with: "Café com pão por doze reais, nesta terça tem mais!"
+    assert_button "Aprovar letra e ouvir 2 versões"
     violations = page.driver.browser.logs.get(:browser).select { |entry| entry.message.match?(/violates.*Content Security Policy|Refused to (execute|load|connect)/i) }
     assert_empty violations, violations.map(&:message).join("\n")
   end

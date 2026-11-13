@@ -1,6 +1,5 @@
 <%# locals: (order:) %>
-<%# Falhas de letra e de música. Os avisos de espera ficam em order_chat/studio/_wait. %>
-  <% if order.lyrics_failed? %><div class="campaign-note"><strong>Não conseguimos preparar a letra.</strong><p>Seus dados estão salvos. Tente novamente.</p><%= button_to "Tentar preparar a letra novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
+<%# Falhas de música (a de letra foi para studio/_lyrics_phase). Os avisos de espera ficam em order_chat/studio/_wait. %>
   <% latest_attempt = order.music_generations.order(:iteration).last %>
   <% if order.music_failed? %>
     <% checking = %w[generation_delayed status_unavailable].include?(latest_attempt&.error_code) && latest_attempt&.mureka_job_id.present? %>

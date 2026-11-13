@@ -3,10 +3,12 @@
 <% phase = Campaigns::StudioPhase.for(order) %>
 <% selected = order.campaign.selected_music_asset if phase == :video %>
 <% video_step = selected.present? || order.approved? %>
-<div id="chat-lyrics-panel" class="creative-studio" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>">
+<%# ponytail: a classe legada sai por fase; a fase 1 já não depende de studio_identity.css. %>
+<div id="chat-lyrics-panel" class="<%= "creative-studio" unless phase == :lyrics %>" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>" data-phase="<%= Campaigns::StudioPhase.step(phase) %>">
   <%= render "order_chat/studio/head", order: order, phase: phase %>
   <div id="creative-errors" class="creative-errors" role="alert" tabindex="-1"><%= order.lyrics_revision_error %></div>
   <% if @creation_notice.present? %><p class="creative-working" role="status"><%= @creation_notice %></p><% end %>
+  <% unless phase == :lyrics %>
   <header class="creative-progress">
     <h1 tabindex="-1"><%= if order.approved?
       order.campaign.video_status == "ready" ? "Seu vídeo está pronto." : "Estamos montando seu vídeo."
@@ -19,8 +21,11 @@
     end %></h1>
     <p><%= video_step ? "Confira o resultado e ajuste o que quiser." : completed.positive? ? "Ouça as opções. Você pode ajustar a letra e o som antes de escolher." : "Confira o nome, o preço e as informações da sua oferta. Você pode ajustar a letra antes e depois de ouvir." %></p>
   </header>
-  <%# ponytail: cada fase ainda renderiza os partials atuais; as tarefas 5 a 7 os trocam. %>
+  <% end %>
+  <%# ponytail: as fases 2 e 3 ainda renderizam os partials atuais; as tarefas 6 e 7 os trocam. %>
   <% case phase %>
+  <% when :lyrics %>
+    <%= render "order_chat/studio/lyrics_phase", order: order, draft: draft %>
   <% when :rendering, :failed_video, :delivered %>
     <%= render "campaigns/delivery", campaign: order.campaign %>
   <% when :video %>
@@ -31,9 +36,7 @@
       <% notes = [] %>
       <% notes << "O serviço de música está ocupado. Vamos tentar novamente em instantes, com um limite de tentativas." if latest_attempt&.error_code == "rate_limited" %>
       <% notes << "Sua música já foi solicitada. Estamos recuperando a resposta, sem gerar outra versão." if latest_attempt&.error_code == "status_unavailable" %>
-      <% if order.paid? || order.lyrics_drafting? %>
-        <%= render "order_chat/studio/wait", title: "Preparando sua letra…", detail: "Leva poucos instantes. Você pode sair e voltar pela Biblioteca.", notes: notes %>
-      <% elsif order.lyrics_revision_token.present? %>
+      <% if order.lyrics_revision_token.present? %>
         <%= render "order_chat/studio/wait", title: "Reescrevendo sua letra…", detail: "Leva poucos instantes. Sua letra atual continua salva.", notes: notes %>
       <% else %>
         <%= render "order_chat/studio/wait", title: completed.positive? ? "Criando duas novas versões…" : "Criando duas versões…",

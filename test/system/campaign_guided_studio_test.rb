@@ -84,33 +84,55 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     assert_empty errors, errors.map(&:message).join("\n")
   end
 
-  test "first creation keeps rewritten lyrics visible before generating music" do
+  test "first creation keeps rewritten lyrics visible before approving the lyrics" do
     order = orders(:b2b_lyrics_ready)
     campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
     campaign.sync_briefing!
     order.current_draft.update!(content: "Café do Bairro, venha experimentar!")
     visit order_chat_path(order_id: order.id)
-    assert_text "Vamos criar sua música."
-    assert_field "Sua letra", with: "Café do Bairro, venha experimentar!"
-    assert_button "Gerar duas músicas"
+    assert_selector "h2", text: "Revise a letra."
+    assert_field "editable-lyrics", with: "Café do Bairro, venha experimentar!"
+    assert_button "Aprovar letra e ouvir 2 versões"
+    assert_text "Isso usa a rodada 1 de #{Campaigns::MusicRounds::LIMIT}."
     page.save_screenshot(Rails.root.join("tmp/guided-lyrics-desktop.png"))
-    fill_in "Sua letra", with: "Café do Bairro, café por doze reais!"
+    fill_in "editable-lyrics", with: "Café do Bairro, café por doze reais!"
+    find("#lyrics-changes summary").click
     find("#rewrite-lyrics summary").click
     fill_in "O que você quer mudar na letra?", with: "Inclua bom dia"
-    click_button "Reescrever a letra"
+    click_button "Reescrever com IA · #{order.lyrics_regen_remaining} ajustes"
     assert_text "Reescrevendo sua letra"
-    assert_no_button "Gerar duas músicas"
+    assert_no_button "Aprovar letra e ouvir 2 versões"
     token = order.reload.lyrics_revision_token
     stub_request(:post, LyricsGenerator::MurekaLyricsClient::MUREKA_LYRICS_URL)
       .to_return(status: 200, body: { title: "Café", lyrics: "Bom dia! Café do Bairro, café por doze reais!" }.to_json)
     RewriteCampaignLyricsJob.perform_now(order.id, token, order.current_draft.id, "Inclua bom dia")
-    assert_field "Sua letra", with: "Bom dia! Café do Bairro, café por doze reais!"
+    assert_field "editable-lyrics", with: "Bom dia! Café do Bairro, café por doze reais!"
     assert_equal 0, order.completed_music_rounds
-    click_button "Gerar duas músicas"
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 812, deviceScaleFactor: 1, mobile: true)
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
+    page.save_screenshot(Rails.root.join("tmp/guided-lyrics-mobile.png"))
+    click_button "Aprovar letra e ouvir 2 versões"
     assert_text "Criando duas versões"
     assert_current_path order_chat_path(order_id: order.id)
     assert order.reload.lyrics_approved?
     assert_equal "Bom dia! Café do Bairro, café por doze reais!", order.approved_lyrics_draft.content
+  end
+
+  test "a broadcast while the merchant types the lyrics keeps the typed text (RF 1)" do
+    order = orders(:b2b_lyrics_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.sync_briefing!
+    visit order_chat_path(order_id: order.id)
+    assert_selector "h2", text: "Revise a letra."
+    # Controle: com o campo limpo, o broadcast chega e troca o painel.
+    order.update!(lyrics_regen_used: 1)
+    OrderChatBroadcaster.call(order)
+    assert_selector ".ui-counters", text: /Ajustes de letra com IA: #{order.lyrics_regen_remaining}/
+    fill_in "editable-lyrics", with: "Texto que o lojista está digitando"
+    order.update!(lyrics_regen_used: 2)
+    OrderChatBroadcaster.call(order)
+    assert_no_selector ".ui-counters", text: /Ajustes de letra com IA: #{order.lyrics_regen_remaining}/, wait: 2
+    assert_field "editable-lyrics", with: "Texto que o lojista está digitando"
   end
 
   private
