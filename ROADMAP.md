@@ -354,10 +354,18 @@ Itens da revisão de segurança (security-engineer, 2026-05-25) que devem ser en
   - [ ] Pendências do passe visual: cabeçalho compartilhado quebra em 2 linhas no celular (133 px contra 64 px da prancha); no celular o player do passo 2 fica abaixo dos 12 ritmos; o botão "Ver prévia" cobre o contador da oferta na primeira dobra
   - [ ] Conferir visualmente os estados `payment_failed`, checkout iniciado e erro 422 do servidor (só têm cobertura de integração)
   - [ ] Limpar CSS órfão: `.campaign-sound-fields`, `.campaign-sound-details`, `.jp-genres`, `.campaign-style*`, `.campaign-review-photo`, `.campaign-total`, `.campaign-included`
-- [ ] **Fatia 3, Estúdio em 3 fases e Entrega**
-  - [ ] Estúdio em 3 fases: letra, músicas, vídeo (pranchas `Estudio` e `Estudio-Mobile`), com a derivação de fase a partir de status + `video_status`
-  - [ ] Definir o destino das ações do estúdio hoje hospedadas em `order_chat#*` (a fatia 5 só pode remover o chat depois disso; a decidir no `task-planner`)
-  - [ ] Entrega (`campaigns/_delivery`; prancha `Entrega`)
+- [x] **Fatia 3, Estúdio em 3 fases e Entrega** (branch `feat/estudio-caminho-b`; design `docs/superpowers/specs/2026-11-13-estudio-caminho-b-design.md`)
+  - [x] Estúdio em 3 fases: letra, músicas, vídeo (pranchas `Estudio` e `Estudio-Mobile`), com a derivação de fase em `Campaigns::StudioPhase`
+  - [x] Ações do estúdio ficam em `order_chat#*` (rotas inalteradas); só as views novas em `order_chat/studio/`. A remoção do chat continua na fatia 5
+  - [x] Prévia da música inteira com marca sonora (`campaign_audio#full`, `OrderAsset#full_audition_audio`)
+  - [x] Entrega (`campaigns/_delivery`; prancha `Entrega`) e acompanhamento do vídeo com a casca do estúdio
+  - [x] Imagens em broadcasts Turbo usam URL só com o caminho; antes saíam com o host `example.org` do renderizador
+  - [ ] Fora da fatia: a Biblioteca (`songs#index`) ainda não usa `Campaigns::StudioPhase` (fatia 1)
+  - [ ] O estúdio segue sob a rota legada `/orders/:id/chat` (`order_chat`), que só sai com a fatia 5
+  - [ ] "Prévia completa sendo preparada" usa uma heurística de 10 minutos; se aparecerem casos travados, criar `full_audition_status`
+  - [ ] Apagar ~21 regras mortas `.creative-video-*` em `jinglepro.css`
+  - [ ] Borda rara: `video_status` `ready` sem vídeo anexado mostra "Entrega" no topo e "Montando" no corpo, sem polling
+  - [ ] Prompt da Mureka: no teste real de 13/11/2026 a faixa veio com cerca de 16 s de introdução sem voz, e faixas de 66 s e 163 s para um pedido de 30 s. Investigar o prompt e a duração antes de prometer o trecho ao lojista
 - [ ] **Fatia 4, conta e pagamento no passo 3**
   - [ ] Passo 3 do Criar com criação de conta e botão "Pagar" (hoje o cadastro vem antes do formulário via `orders#new`)
   - [ ] Decidir como retomar um pedido em `payment_failed` (hoje checkout e edição só aceitam `pending`)

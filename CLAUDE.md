@@ -6,7 +6,7 @@ Mercado: Brasil. Interface em português (pt-BR) e preço em BRL: R$ 29,90 por c
 
 Não existem mais duas marcas (B2B/B2C), preços em € nem mercado europeu multi-idioma. O código ainda carrega vestígios disso (ver "Marca e locale" abaixo); não os reative sem passar pelo `idea-validator`.
 
-Funcionalidades **LEGADO** (fora do produto; o código ainda está no repositório e a remoção está planejada na fatia 5 do redesign, ver ROADMAP): chat conversacional (`OrderChat`, `ConversationalReplyJob`, `BriefingMessage`), soundtrack (`SoundtrackInput`) e wizard de 5 passos (`orders#wizard_*`). Voice cloning também é LEGADO, mas só existe no SPEC (nunca foi implementado). Não construa nada novo em cima delas. Atenção: hoje o estúdio da campanha ainda é renderizado dentro de `order_chat/` (rota `/orders/:id/chat`); isso muda na fatia 3.
+Funcionalidades **LEGADO** (fora do produto; o código ainda está no repositório e a remoção está planejada na fatia 5 do redesign, ver ROADMAP): chat conversacional (`OrderChat`, `ConversationalReplyJob`, `BriefingMessage`), soundtrack (`SoundtrackInput`) e wizard de 5 passos (`orders#wizard_*`). Voice cloning também é LEGADO, mas só existe no SPEC (nunca foi implementado). Não construa nada novo em cima delas. Atenção: o estúdio da campanha ainda é servido pela rota legada `/orders/:id/chat` (`order_chat#*`), mas as views novas (3 fases: Letra, Músicas, Vídeo) vivem em `app/views/order_chat/studio/` e a fase vem de `Campaigns::StudioPhase`. As ações saem de `order_chat` só na fatia 5.
 
 ---
 
@@ -20,7 +20,7 @@ Conferida em `Gemfile`, `Gemfile.lock`, `config/`, `Dockerfile` e `layouts/appli
 | Framework | Rails 8.1 (8.1.4.1 no lock) |
 | Banco de dados | PostgreSQL (versão a confirmar) |
 | Frontend | Hotwire (Turbo + Stimulus) via importmap-rails; assets via Propshaft |
-| CSS | `stylesheet_link_tag :app` carrega em **todas** as páginas tudo o que está em `app/assets/**/*.css` (glob do Propshaft): CSS escrito à mão em `app/assets/stylesheets/` (`landing.css`, `studio.css`, `studio_app.css`, `studio_identity.css`) + Tailwind CSS 4 (`tailwindcss-rails`, entrada em `app/assets/tailwind/application.css`, classes utilitárias ainda aparecem em views de `lyrics/`, `order_chat/`, `orders/`, `music_preview/` e `pages/`). A fatia 1 do redesign unifica o CSS |
+| CSS | `stylesheet_link_tag :app` carrega em **todas** as páginas tudo o que está em `app/assets/**/*.css` (glob do Propshaft): CSS escrito à mão em `app/assets/stylesheets/` (`landing.css`, `studio.css`, `studio_app.css`, `studio_identity.css`, e `ui.css`, o novo, com escopo `.criar`/`.estudio`, usado por Criar e estúdio) + Tailwind CSS 4 (`tailwindcss-rails`, entrada em `app/assets/tailwind/application.css`, classes utilitárias ainda aparecem em views de `lyrics/`, `order_chat/`, `orders/`, `music_preview/` e `pages/`). A fatia 1 do redesign unifica o CSS |
 | Movimento | `app/javascript/jp_motion.js` e `jp_waveform.js`; GSAP 3.12.5 carregado por CDN (cdnjs) no layout e usado como melhoria opcional em `jp_motion.js` |
 | Fontes | Manrope e Cormorant Garamond (Google Fonts, no layout) |
 | Auth | Devise 5 + Pundit |
@@ -209,7 +209,7 @@ end
 - O botão "Testar sem cobrança" (`POST /campaigns/:id/test_payment`) só existe em development
 
 ### Storage
-- Hoje: ActiveStorage com serviço Disk. O vídeo é baixado por `GET /campaigns/:id/download`, que exige o dono da campanha, pedido `approved` e `video_status == "ready"` e redireciona para o blob do ActiveStorage; a música aprovada é servida por `OrderAsset#playback_url`
+- Hoje: ActiveStorage com serviço Disk. O vídeo é baixado por `GET /campaigns/:id/download`, que exige o dono da campanha, pedido `approved` e `video_status == "ready"` e redireciona para o blob do ActiveStorage; a música aprovada é servida por `OrderAsset#playback_url`. Antes da aprovação, a prévia completa da faixa, sempre com marca sonora, sai por `campaign_audio#full` (`GET /campaigns/:id/audio/:asset_id/full`) a partir de `OrderAsset#full_audition_audio`
 - Meta ao migrar para R2 (ROADMAP, M-4), ainda não implementada: bucket público (previews, samples) com URLs diretas; bucket privado (MP3 completo, vídeo) com signed URLs de 1h; cliente nunca recebe URL direta do bucket privado
 
 ### Testes
