@@ -1,7 +1,7 @@
 <div class="jp-summary-card" id="campaign-summary-<%= campaign.id %>">
   <p class="studio-kicker">SUA PROMOÇÃO</p>
-  <% if campaign.product_photos.first %><%= image_tag campaign.product_photos.first, alt: "Foto de abertura da campanha", class: "jp-summary-photo" %><% end %>
-  <% if campaign.logo.attached? %><%= image_tag campaign.logo, alt: "Logo da empresa", class: "jp-summary-logo" %><% end %>
+  <% if campaign.product_photos.first %><%= image_tag rails_blob_path(campaign.product_photos.first), alt: "Foto de abertura da campanha", class: "jp-summary-photo" %><% end %>
+  <% if campaign.logo.attached? %><%= image_tag rails_blob_path(campaign.logo), alt: "Logo da empresa", class: "jp-summary-logo" %><% end %>
   <h2><%= campaign.title %></h2><p class="campaign-offer-text"><%= campaign.display_offer %></p>
   <% if campaign.show_cta? %><div class="jp-summary-contact"><strong><%= campaign.call_to_action %></strong><p><%= campaign.contact %></p></div><% end %>
   <p class="studio-field-hint"><%= campaign.sound_summary %></p>

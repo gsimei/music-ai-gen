@@ -64,7 +64,7 @@
   <% end %>
 
   <% if chosen %>
-    <%= form_with url: order_chat_select_music_path(order_id: order.id), id: "music-pick", class: "ui-phase-actions", data: { turbo_stream: true } do %>
+    <%= form_with url: order_chat_select_music_path(order_id: order.id), id: "music-pick", class: "ui-phase-actions ui-actionbar", data: { turbo_stream: true } do %>
       <button type="submit" class="ui-btn ui-btn-primary">
         <span id="music-pick-label">Usar a <%= version.(chosen, rounds.find { |_, assets| assets.include?(chosen) }.first) %> e montar o vídeo</span>
         <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>

@@ -9,7 +9,8 @@
       <label class="ui-chip">
         <%= radio_button_tag :asset_id, asset.id, checked, id: "music-pick-#{asset.id}", form: "music-pick",
               data: { label: "Usar a #{version} e montar o vídeo", action: "change->creative-editor#pick" } %>
-        Escolher<span class="ui-sr-only"> a <%= version %></span>
+        <%# O estado escolhido também em texto, não só pela cor; creative-editor#pick mantém os rótulos em sincronia. %>
+        <span data-pick-text><%= checked ? "Escolhida" : "Escolher" %></span><span class="ui-sr-only"> a <%= version %></span>
       </label>
     <% end %>
   </div>

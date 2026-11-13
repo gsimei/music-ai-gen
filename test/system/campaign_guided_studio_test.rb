@@ -73,6 +73,10 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     within "#music-version-#{generation.order_assets.order(:variant_index).last.id}" do
       find("label.ui-chip", text: "Escolher").click
     end
+    # M2: o estado escolhido também em texto, e só num cartão.
+    assert_selector "#music-version-#{generation.order_assets.order(:variant_index).last.id} label.ui-chip", text: "Escolhida"
+    assert_selector "#music-version-#{generation.order_assets.order(:variant_index).first.id} label.ui-chip", text: "Escolher"
+    assert_selector ".ui-version label.ui-chip", text: "Escolhida", count: 1
     click_button "Usar a Versão B e montar o vídeo"
     assert_selector "h1", text: "Monte o seu vídeo."
     assert_equal generation.order_assets.order(:variant_index).last.id, campaign.reload.selected_music_asset_id

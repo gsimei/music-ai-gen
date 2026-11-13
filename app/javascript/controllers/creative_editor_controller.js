@@ -87,10 +87,14 @@ export default class extends Controller {
   }
   saved(event) { if (!event.detail.success) this.changed() }
   suggest(event) { this.feedbackTarget.value = event.currentTarget.dataset.feedback; this.feedbackChanged({target: this.feedbackTarget}); this.feedbackTarget.focus() }
-  // Fase 2: o rádio do cartão troca só o rótulo do botão principal; o asset vai pelo próprio rádio (form="music-pick").
+  // Fase 2: o rádio do cartão troca o rótulo do botão principal e o "Escolhida/Escolher" dos cartões; o asset vai pelo próprio rádio (form="music-pick").
   pick(event) {
     const label = this.element.querySelector("#music-pick-label")
     if (label && event.target.dataset.label) label.textContent = event.target.dataset.label
+    this.element.querySelectorAll('input[name="asset_id"][form="music-pick"]').forEach(radio => {
+      const text = radio.closest("label")?.querySelector("[data-pick-text]")
+      if (text) text.textContent = radio.checked ? "Escolhida" : "Escolher"
+    })
   }
   // "← Voltar à letra": abre o details do destino e os que o contêm, e foca o campo.
   reveal(event) {

@@ -83,6 +83,9 @@ class EstudioMusicPhaseTest < ActionDispatch::IntegrationTest
     get order_chat_path(order_id: @order.id)
     assert_select "input[type=radio][name=asset_id][value=?][checked]", @b.id.to_s
     assert_select ".ui-btn-primary", text: /Usar a Versão B e montar o vídeo/
+    # M2: escolhida também em texto, não só pela cor.
+    assert_select "#music-version-#{@b.id} label.ui-chip [data-pick-text]", text: "Escolhida"
+    assert_select "#music-version-#{@a.id} label.ui-chip [data-pick-text]", text: "Escolher"
   end
 
   test "Quero mudar algo holds quick requests, feedback, sound and lyrics, and spends the next round" do

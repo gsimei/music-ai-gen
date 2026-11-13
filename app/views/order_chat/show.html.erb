@@ -7,7 +7,7 @@
     <main class="ui-main"><%= render "shared/studio_flash" %>
       <div class="ui-project"><div><p class="ui-kicker">Sua campanha</p><strong id="campaign-project-title-<%= @order.campaign.id %>"><%= @order.campaign.title %></strong></div><%= link_to "Ver dados da campanha", campaign_path(@order.campaign), class: "ui-link" %></div>
       <%= render "order_chat/campaign_studio", order: @order, draft: @draft %>
-      <details class="creative-campaign-context"><summary>Ver resumo da promoção</summary><%= render "campaigns/summary", campaign: @order.campaign %></details>
+      <details class="creative-campaign-context ui-more-box"><summary>Ver resumo da promoção</summary><%= render "campaigns/summary", campaign: @order.campaign %></details>
     </main>
   </div>
 <% else %><%= render "order_chat/legacy_workspace" %><% end %>

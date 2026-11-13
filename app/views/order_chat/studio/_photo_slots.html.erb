@@ -21,7 +21,7 @@
   <div class="ui-slots" data-video-photos-target="list">
     <% photos.each_with_index do |photo, index| %>
       <figure class="ui-slot" data-photo-key="saved:<%= photo.id %>">
-        <div class="ui-slot-box"><div class="ui-slot-preview"><%= image_tag photo, alt: "Foto #{index + 1} da campanha", loading: "lazy", decoding: "async" %></div></div>
+        <div class="ui-slot-box"><div class="ui-slot-preview"><%= image_tag rails_blob_path(photo), alt: "Foto #{index + 1} da campanha", loading: "lazy", decoding: "async" %></div></div>
         <figcaption class="ui-slot-cap<%= " ui-slot-tag" if index.zero? %>"><%= index.zero? ? "Abre o vídeo" : "Foto #{index + 1}" %></figcaption>
         <%= hidden_field_tag "photo_sequence[]", "saved:#{photo.id}", id: nil %>
       </figure>

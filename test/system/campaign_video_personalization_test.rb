@@ -111,6 +111,34 @@ class CampaignVideoPersonalizationSystemTest < ApplicationSystemTestCase
     assert_empty errors, errors.map(&:message).join("\n")
   end
 
+  # P6: o poll de creation-status guardava a versão da página carregada; depois de um envio que já trocou o painel,
+  # o poll seguinte via versão "nova" e trocava o painel de novo, deixando elementos velhos (StaleElementReferenceError).
+  test "polling after a save does not replace the panel the save already rendered" do
+    order = orders(:b2b_preview_ready)
+    campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
+    campaign.update!(selected_music_asset: order_assets(:music_variant_a))
+    login_as users(:customer_b2b), scope: :user
+    visit order_chat_path(order_id: order.id)
+    assert_selector "h1", text: "Monte o seu vídeo."
+    attach_file "Fotos do vídeo", Rails.root.join("public/icon.png"), make_visible: true
+    within("#video-photos") do
+      assert_selector "figure.ui-slot", count: 1
+      click_button "Salvar fotos do vídeo"
+    end
+    assert_selector '#video-photos input[name="video_revision"][value="1"]', visible: :all
+    page.execute_script("document.getElementById('chat-lyrics-panel').dataset.sameNode = 'yes'")
+    page.evaluate_async_script(<<~JS)
+      const done = arguments[arguments.length - 1]
+      // Conta o pedido de status: sem ele o teste passaria à toa (refresh sai cedo com a aba oculta ou alteração pendente).
+      const fetch = window.fetch
+      window.__statusRequests = 0
+      window.fetch = (url, options) => { if (String(url).includes("/status")) window.__statusRequests++; return fetch(url, options) }
+      Stimulus.getControllerForElementAndIdentifier(document.querySelector(".estudio"), "creation-status").refresh().then(done)
+    JS
+    assert_equal 1, page.evaluate_script("window.__statusRequests"), "o poll precisa ter consultado o status"
+    refute page.has_css?("#chat-lyrics-panel:not([data-same-node])", wait: 1), "o poll trocou de novo o painel que o envio já tinha trocado"
+  end
+
   private
 
   def open_change(id)
