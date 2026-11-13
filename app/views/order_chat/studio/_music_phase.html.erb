@@ -1,0 +1,83 @@
+<%# locals: (order:, draft:, busy:) %>
+<%# Fase 2 · Músicas. Os rádios dos cartões (form="music-pick") escolhem o asset do único botão principal, que posta
+    para order_chat#select_music; funciona sem JS (o creative-editor#pick só troca o rótulo do botão). Rodadas anteriores
+    ficam em details "Rodada N" com os mesmos cartões, no mesmo grupo de rádios. %>
+<% completed = order.completed_music_rounds %>
+<% limit = Campaigns::MusicRounds::LIMIT %>
+<% latest_attempt = order.music_generations.order(:iteration).last %>
+<% generations = order.music_generations.completed.includes(:order_assets).order(iteration: :desc).to_a %>
+<% rounds = generations.each_with_index.map { |generation, index| [ completed - index, generation.order_assets.select(&:music_variant?).sort_by(&:variant_index) ] } %>
+<% selectable = busy ? [] : rounds.flat_map(&:last).select(&:audition_ready?) %>
+<% chosen = selectable.find { |asset| asset.id == order.favorite_music_asset_id } || selectable.first %>
+<% version = ->(asset, number) { "Versão #{("A".ord + asset.variant_index).chr}#{" da rodada #{number}" if number < completed}" } %>
+<% sample_seconds = rounds.flat_map(&:last).find(&:audition_ready?)&.campaign_audio&.blob&.metadata&.dig("duration_seconds") %>
+<section class="ui-phase" aria-labelledby="music-phase-title">
+  <p class="ui-eyebrow">Fase <%= Campaigns::StudioPhase.step(:music) %> de 3<%= " · Rodada #{completed}" if completed.positive? %></p>
+  <%# O único h1 da página (R7); tabindex para o creative-editor focar ao trocar de fase. %>
+  <h1 id="music-phase-title" class="ui-phase-title" tabindex="-1">Escolha a sua versão.</h1>
+  <% if sample_seconds %>
+    <p class="ui-lead">Duas versões do mesmo trecho de <%= pluralize(sample_seconds.to_f.round, "segundo", plural: "segundos") %>. Ouça até o fim e confira se a oferta ficou completa.</p>
+  <% end %>
+
+  <% if busy %>
+    <% notes = [] %>
+    <% notes << "O serviço de música está ocupado. Vamos tentar novamente em instantes, com um limite de tentativas." if latest_attempt&.error_code == "rate_limited" %>
+    <% notes << "Sua música já foi solicitada. Estamos recuperando a resposta, sem gerar outra versão." if latest_attempt&.error_code == "status_unavailable" %>
+    <% if order.lyrics_revision_token.present? %>
+      <%= render "order_chat/studio/wait", title: "Reescrevendo sua letra…", detail: "Leva poucos instantes. Sua letra atual continua salva.", notes: notes %>
+    <% else %>
+      <%= render "order_chat/studio/wait", title: completed.positive? ? "Criando duas novas versões…" : "Criando duas versões…",
+            detail: "Costuma levar de 1 a 2 minutos. Você pode sair e voltar pela Biblioteca.#{' Você pode ouvir as anteriores enquanto espera.' if completed.positive?}", notes: notes %>
+    <% end %>
+  <% end %>
+
+  <% if order.music_failed? %>
+    <% checking = %w[generation_delayed status_unavailable].include?(latest_attempt&.error_code) && latest_attempt&.mureka_job_id.present? %>
+    <div class="ui-alert" role="alert">
+      <div>
+        <strong><%= checking ? "Esta música está demorando mais que o esperado." : "Esta tentativa não ficou pronta." %></strong>
+        <p><%= checking ? "Podemos consultar a mesma tentativa sem gastar outra geração." : "Ela não consumiu uma rodada. Suas versões anteriores estão salvas." %></p>
+        <% if latest_attempt&.error_code == "submission_uncertain" %><p>Não conseguimos confirmar a resposta. Não repetimos automaticamente o pedido. Você pode tentar novamente dentro do limite de recuperação da campanha.</p><% end %>
+        <% if %w[quota_exhausted request_rejected technical_limit_reached].include?(latest_attempt&.error_code) || (!checking && order.generation_costs.where(operation: "music").where("estimated_usd > 0").count >= Campaigns::MusicRounds::MAX_PAID_ATTEMPTS) %>
+          <p>A campanha precisa de revisão antes de novas gerações. Você ainda pode escolher uma versão já pronta.</p>
+        <% else %>
+          <%= button_to checking ? "Verificar tentativa" : "Tentar novamente", retry_generation_campaign_path(order.campaign), class: "ui-btn", form_class: "ui-phase-actions" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% rounds.each_with_index do |(number, assets), index| %>
+    <% cards = capture do %>
+      <div class="ui-versions">
+        <% assets.each do |asset| %>
+          <%= render "order_chat/studio/version_card", order: order, asset: asset, version: version.(asset, number),
+                selectable: selectable.include?(asset), checked: asset == chosen %>
+        <% end %>
+      </div>
+    <% end %>
+    <% if index.zero? %>
+      <%= cards %>
+    <% else %>
+      <details id="music-round-<%= number %>" class="ui-more-box"><summary>Rodada <%= number %></summary><%= cards %></details>
+    <% end %>
+  <% end %>
+
+  <% if chosen %>
+    <%= form_with url: order_chat_select_music_path(order_id: order.id), id: "music-pick", class: "ui-phase-actions", data: { turbo_stream: true } do %>
+      <button type="submit" class="ui-btn ui-btn-primary">
+        <span id="music-pick-label">Usar a <%= version.(chosen, rounds.find { |_, assets| assets.include?(chosen) }.first) %> e montar o vídeo</span>
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      </button>
+    <% end %>
+  <% end %>
+
+  <% if draft && order.lyrics_editable? && completed < limit %>
+    <%= render "order_chat/studio/more_versions", order: order, draft: draft, completed: completed %>
+    <a href="#estudio-change" class="ui-link" data-action="creative-editor#reveal">← Voltar à letra</a>
+  <% elsif completed >= limit %>
+    <p class="ui-hint">Você já usou as <%= limit %> rodadas. Escolha qualquer versão, inclusive as das rodadas anteriores.</p>
+  <% elsif draft && busy %>
+    <details id="creation-lyrics" class="ui-more-box"><summary>Ver a letra</summary><pre class="ui-lyrics-text"><%= draft.content %></pre></details>
+  <% end %>
+</section>

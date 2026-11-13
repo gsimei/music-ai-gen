@@ -52,9 +52,9 @@ class CampaignCreativeFlowTest < ActionDispatch::IntegrationTest
     assert_equal 3, @order.completed_music_rounds
     assert_equal 0, @order.music_regen_remaining
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-version", count: 6
+    assert_select ".ui-version", count: 6
     assert_select ".creative-favorite-label", count: 0
-    assert_select 'audio source[type="audio/mp4"]', count: 6
+    assert_select ".ui-version .ui-player audio[src]", count: 6
     assert_select 'audio source[type="audio/mpeg"]', count: 0
     assert_select "form[action=?]", order_chat_regenerate_music_path(order_id: @order.id), count: 0
     assert_no_difference "MusicGeneration.count" do

@@ -1787,10 +1787,35 @@ html:has(.criar) {
 .estudio .ui-more-box > summary {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   min-height: 56px;
   font-size: 17px;
   font-weight: 700;
+  list-style: none;
   cursor: pointer;
+}
+.estudio .ui-more-box > summary::-webkit-details-marker {
+  display: none;
+}
+/* Indicador de aberto/fechado (R8): chevron que só gira. */
+.estudio .ui-more-box > summary::after {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin: -4px 6px 0 0;
+  border-right: 2px solid var(--jp-forest);
+  border-bottom: 2px solid var(--jp-forest);
+  transform: rotate(45deg);
+}
+.estudio .ui-more-box[open] > summary::after {
+  transform: translateY(5px) rotate(-135deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .estudio .ui-more-box > summary::after {
+    transition: transform 0.2s ease;
+  }
 }
 .estudio .ui-more-box > :not(summary) {
   margin-bottom: 20px;
@@ -1810,4 +1835,58 @@ html:has(.criar) {
   .estudio .ui-phase-actions .ui-btn-primary {
     justify-self: stretch;
   }
+}
+
+/* ---------- Estúdio · fase 2 (cartões de versão, pedidos rápidos) ---------- */
+.estudio .ui-versions {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 720px) {
+  .estudio .ui-versions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.estudio .ui-version {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.estudio .ui-version-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.estudio .ui-version-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.estudio .ui-version .ui-player {
+  margin: 0;
+}
+.estudio .ui-version .ui-player-name {
+  font-size: 22px;
+}
+.estudio .ui-version-full {
+  margin-top: 16px;
+  color: var(--jp-on-forest-muted);
+  font-size: 14px;
+}
+.estudio .ui-player .ui-link {
+  color: var(--jp-lime);
+}
+.estudio .ui-player form .ui-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.estudio button.ui-chip {
+  font-family: inherit;
 }

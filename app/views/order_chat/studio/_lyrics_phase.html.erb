@@ -5,8 +5,9 @@
 <% completed = order.completed_music_rounds %>
 <% limit = Campaigns::MusicRounds::LIMIT %>
 <section class="ui-phase" aria-labelledby="lyrics-phase-title">
-  <p class="ui-eyebrow">Fase 1 de 3</p>
-  <h2 id="lyrics-phase-title" class="ui-phase-title">Revise a letra.</h2>
+  <p class="ui-eyebrow">Fase <%= Campaigns::StudioPhase.step(:lyrics) %> de 3</p>
+  <%# O único h1 da página (R7); tabindex para o creative-editor focar ao trocar de fase. %>
+  <h1 id="lyrics-phase-title" class="ui-phase-title" tabindex="-1">Revise a letra.</h1>
   <% if order.lyrics_failed? %>
     <div class="ui-alert" role="alert">
       <div>
@@ -47,24 +48,7 @@
             </div>
           </details>
         <% end %>
-        <% catalog = Campaigns::GenreSamples.catalog %>
-        <%= tag.details id: "creation-sound", class: "ui-more-box",
-              data: { controller: "genre-preview", genre_preview_catalog_value: catalog.to_json, action: "visibilitychange@document->genre-preview#visibilityChanged" } do %>
-          <summary>Mudar o som · <%= order.campaign.sound_summary %></summary>
-          <%# O genre-preview reescreve nome, descrição, duração e src ao trocar de ritmo (connect -> select). %>
-          <% example = render("shared/ui/player", controller: "genre-preview", src: nil, title: "", description: "",
-                eyebrow: "Ouça antes de escolher", note: "Exemplo com voz ilustrativa. Não gasta rodada.", label: "exemplo",
-                error: "Não foi possível tocar o exemplo.", audio_action: "play->creative-editor#play") %>
-          <%= fields_for :campaign, order.campaign do |sound| %>
-            <%= render "shared/ui/sound_fields", f: sound, between: example %>
-            <div class="ui-field">
-              <%= sound.label :music_notes, "Detalhes do som (opcional)", class: "ui-label" %>
-              <%= sound.text_area :music_notes, rows: 2, maxlength: 240, class: "ui-input ui-notes", placeholder: "Ex.: violão em destaque e voz suave." %>
-            </div>
-          <% end %>
-          <p class="ui-hint">Salvar o som não gasta rodada.</p>
-          <button type="submit" name="intent" value="save" class="ui-btn ui-btn-ghost">Salvar som</button>
-        <% end %>
+        <%= render "order_chat/studio/sound_change", order: order %>
       </details>
 
       <div class="ui-phase-actions">

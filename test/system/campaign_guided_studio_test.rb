@@ -22,30 +22,35 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     draft.update!(content: "Café do Bairro, venha experimentar!\nCafé fresquinho por doze reais.")
     order.all_music_assets.each { |asset| prepare_sample(asset) }
     visit order_chat_path(order_id: order.id)
-    assert_text "Ouça e escolha sua música."
+    assert_selector "h1", text: "Escolha a sua versão."
     assert_no_text "Fotos do seu vídeo"
     assert_no_text "Salvar favorita"
     page.save_screenshot(Rails.root.join("tmp/guided-studio-desktop.png"))
-    find("#creation-adjustments summary", text: "Quero ajustar").click
-    fill_in "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    chevron = "getComputedStyle(document.querySelector('#music-changes > summary'), '::after').transform"
+    closed = page.evaluate_script(chevron)
+    click_link "← Voltar à letra"
+    assert_selector "#music-changes[open]"
+    assert_selector "#estudio-change[open]"
+    refute_equal closed, page.evaluate_script(chevron), "o chevron de \"Quero mudar algo\" precisa girar ao abrir (R8)"
+    fill_in "editable-lyrics", with: "Café do Bairro, o seu dia começa aqui!"
     find("#creation-sound summary").click
-    select "Forró · sanfona e alegria", from: "Ritmo"
-    fill_in "O que você quer diferente na música? (opcional)", with: "Mais animada"
-    within "#music-version-#{order_assets(:music_variant_a).id}" do
-      click_button "Usar esta música"
-    end
+    find("#creation-sound label.ui-tile", text: "Forró").click
+    click_button "Mais animada"
+    assert_field "Conte o que você quer diferente", with: "Mais animada"
+    click_button "Usar a Versão A e montar o vídeo"
     assert_text "Salve ou envie a alteração"
-    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
-    click_button "Salvar alterações"
+    assert_field "editable-lyrics", with: "Café do Bairro, o seu dia começa aqui!"
+    click_button "Salvar letra"
     assert_text "Alterações salvas."
-    assert_selector "#creation-adjustments[open]"
-    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
-    assert_field "O que você quer diferente na música? (opcional)", with: "Mais animada"
+    assert_selector "#music-changes[open]"
+    assert_field "editable-lyrics", with: "Café do Bairro, o seu dia começa aqui!"
+    assert_field "Conte o que você quer diferente", with: "Mais animada"
     assert_equal "forro", campaign.reload.musical_genre
     assert_equal 1, order.completed_music_rounds
     assert_includes draft.reload.content, "venha experimentar"
 
-    click_button "Gerar duas novas músicas"
+    assert_text "Isso usa a rodada 2 de #{Campaigns::MusicRounds::LIMIT}."
+    click_button "Criar mais duas versões"
     assert_text "Criando duas novas versões"
     assert_current_path order_chat_path(order_id: order.id)
     generation = order.music_generations.order(:iteration).last
@@ -57,18 +62,20 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
       prepare_sample(asset)
     end
     order.reload.music_ready!
-    assert_selector ".creative-version", count: 2
-    assert_selector "#previous-music"
-    assert_selector "#creation-adjustments:not([open])"
+    assert_selector ".ui-version", count: 2
+    assert_selector "details#music-round-1 summary", text: "Rodada 1"
+    assert_selector "#music-changes:not([open])"
 
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
     page.scroll_to(:top)
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     page.save_screenshot(Rails.root.join("tmp/guided-studio-mobile.png"))
-    within "#music-version-#{generation.order_assets.first.id}" do
-      click_button "Usar esta música"
+    within "#music-version-#{generation.order_assets.order(:variant_index).last.id}" do
+      find("label.ui-chip", text: "Escolher").click
     end
+    click_button "Usar a Versão B e montar o vídeo"
     assert_text "Vamos preparar seu vídeo."
+    assert_equal generation.order_assets.order(:variant_index).last.id, campaign.reload.selected_music_asset_id
     assert_button "Gerar meu vídeo"
     assert_no_selector "#editable-lyrics"
     assert order.reload.preview_ready?
@@ -76,9 +83,9 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     page.save_screenshot(Rails.root.join("tmp/guided-video-mobile.png"))
     click_button "Voltar para letra e músicas"
-    assert_text "Ouça e escolha sua música."
-    find("#creation-adjustments summary", text: "Quero ajustar").click
-    assert_field "Sua letra", with: "Café do Bairro, o seu dia começa aqui!"
+    assert_selector "h1", text: "Escolha a sua versão."
+    click_link "← Voltar à letra"
+    assert_field "editable-lyrics", with: "Café do Bairro, o seu dia começa aqui!"
     assert_equal 2, order.completed_music_rounds
     errors = page.driver.browser.logs.get(:browser).select { |entry| entry.level == "SEVERE" && entry.message.match?(/Uncaught|Error connecting controller|Error invoking action/) }
     assert_empty errors, errors.map(&:message).join("\n")
@@ -90,7 +97,7 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     campaign.sync_briefing!
     order.current_draft.update!(content: "Café do Bairro, venha experimentar!")
     visit order_chat_path(order_id: order.id)
-    assert_selector "h2", text: "Revise a letra."
+    assert_selector "h1", text: "Revise a letra."
     assert_field "editable-lyrics", with: "Café do Bairro, venha experimentar!"
     assert_button "Aprovar letra e ouvir 2 versões"
     assert_text "Isso usa a rodada 1 de #{Campaigns::MusicRounds::LIMIT}."
@@ -123,7 +130,7 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     campaign = Campaign.create!(order: order, business_name: "Café do Bairro", offer: "Café por R$ 12", show_cta: false)
     campaign.sync_briefing!
     visit order_chat_path(order_id: order.id)
-    assert_selector "h2", text: "Revise a letra."
+    assert_selector "h1", text: "Revise a letra."
     # Controle: com o campo limpo, o broadcast chega e troca o painel.
     order.update!(lyrics_regen_used: 1)
     OrderChatBroadcaster.call(order)

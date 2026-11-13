@@ -20,6 +20,16 @@ export default class extends Controller {
     audio.currentTime = Number.isFinite(audio.duration) ? Math.min(value, audio.duration) : value
     this.tick()
   }
+  // "Ouvir completa": troca a amostra pela música completa (também com marca) no mesmo player e toca. É um link
+  // para a mesma rota, então sem JS o navegador abre o áudio.
+  listen(event) {
+    event.preventDefault()
+    const audio = this.playerTarget
+    if (audio.src === event.currentTarget.href) { this.toggle(); return }
+    audio.src = event.currentTarget.href
+    this.durationTarget.textContent = ""
+    audio.play().catch(error => { if (error.name !== "AbortError") this.error() })
+  }
   play() {
     if (this.hasErrorTarget) this.errorTarget.hidden = true
     this.markPlaying(true)

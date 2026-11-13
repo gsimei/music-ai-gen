@@ -20,7 +20,9 @@ class EstudioLyricsPhaseTest < ActionDispatch::IntegrationTest
     assert_response :success
     limit = Campaigns::MusicRounds::LIMIT
     assert_select '#chat-lyrics-panel[data-phase="1"]'
-    assert_select "#chat-lyrics-panel h2", text: "Revise a letra."
+    assert_select "h1", count: 1
+    assert_select "#chat-lyrics-panel h1[tabindex='-1']", text: "Revise a letra."
+    assert_select ".ui-eyebrow", text: "Fase #{Campaigns::StudioPhase.step(:lyrics)} de 3"
     assert_select "#chat-lyrics-panel form[action=?]", order_chat_creation_path(order_id: @order.id) do
       assert_select "textarea#editable-lyrics[name=content]", text: @order.current_draft.content
       assert_select 'button[name=intent][value=save]', text: "Salvar letra"
