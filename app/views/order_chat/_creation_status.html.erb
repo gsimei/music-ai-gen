@@ -1,8 +1,7 @@
-  <% if busy %><p class="creative-working" role="status"><%= order.paid? || order.lyrics_drafting? ? 'Preparando sua letra…' : order.lyrics_revision_token.present? ? 'Reescrevendo sua letra…' : 'Criando duas novas versões…' %><% if completed.positive? %> Você pode ouvir as anteriores enquanto espera.<% end %></p><% end %>
+<%# locals: (order:) %>
+<%# Falhas de letra e de música. Os avisos de espera ficam em order_chat/studio/_wait. %>
   <% if order.lyrics_failed? %><div class="campaign-note"><strong>Não conseguimos preparar a letra.</strong><p>Seus dados estão salvos. Tente novamente.</p><%= button_to "Tentar preparar a letra novamente", retry_generation_campaign_path(order.campaign), class: "studio-button studio-button-green" %></div><% end %>
   <% latest_attempt = order.music_generations.order(:iteration).last %>
-  <% if busy && latest_attempt&.error_code == "rate_limited" %><p class="campaign-note" role="status">O serviço de música está ocupado. Vamos tentar novamente em instantes, com um limite de tentativas.</p><% end %>
-  <% if busy && latest_attempt&.error_code == "status_unavailable" %><p class="campaign-note" role="status">Sua música já foi solicitada. Estamos recuperando a resposta, sem gerar outra versão.</p><% end %>
   <% if order.music_failed? %>
     <% checking = %w[generation_delayed status_unavailable].include?(latest_attempt&.error_code) && latest_attempt&.mureka_job_id.present? %>
     <div class="campaign-note"><strong><%= checking ? "Esta música está demorando mais que o esperado." : "Esta tentativa não ficou pronta." %></strong>

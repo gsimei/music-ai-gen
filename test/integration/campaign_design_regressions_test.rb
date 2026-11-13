@@ -55,7 +55,7 @@ class CampaignDesignRegressionsTest
     draft = order.lyrics_drafts.create!(version: 1, source: "user_edited", content: "Nossa oferta da semana")
     get order_chat_path(order_id: order.id)
     assert_response :success
-    assert_select '.jp-phases [aria-current="step"]', text: /Letra/
+    assert_select '.ui-phases [aria-current="step"]', text: /Letra/
     assert_select "#chat-lyrics-panel", count: 1
     assert_select "textarea#editable-lyrics", text: draft.content
     assert_select ".jp-assistant", count: 0

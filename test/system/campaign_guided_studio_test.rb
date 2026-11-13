@@ -107,7 +107,7 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     assert_field "Sua letra", with: "Bom dia! Café do Bairro, café por doze reais!"
     assert_equal 0, order.completed_music_rounds
     click_button "Gerar duas músicas"
-    assert_text "Criando duas novas versões"
+    assert_text "Criando duas versões"
     assert_current_path order_chat_path(order_id: order.id)
     assert order.reload.lyrics_approved?
     assert_equal "Bom dia! Café do Bairro, café por doze reais!", order.approved_lyrics_draft.content

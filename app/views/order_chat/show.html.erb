@@ -2,14 +2,12 @@
 <% content_for :body_class, "studio-page" %>
 <% if @order.campaign %>
   <%= turbo_stream_from "order_#{@order.id}_chat" %>
-  <div class="studio-home studio-app jp-workspace" data-controller="creation-status" data-creation-status-url-value="<%= order_chat_status_path(order_id: @order.id) %>" data-creation-status-version-value="<%= @order.creation_version %>">
+  <div class="studio-home estudio" data-phase="<%= Campaigns::StudioPhase.step(Campaigns::StudioPhase.for(@order)) %>" data-controller="creation-status" data-creation-status-url-value="<%= order_chat_status_path(order_id: @order.id) %>" data-creation-status-version-value="<%= @order.creation_version %>">
     <%= render "shared/studio_header" %>
-    <main class="jp-workspace-main"><%= render "shared/studio_flash" %>
-      <div class="jp-project"><div><p class="studio-kicker">SUA CAMPANHA</p><strong id="campaign-project-title-<%= @order.campaign.id %>"><%= @order.campaign.title %></strong></div><%= link_to "Ver dados da campanha", campaign_path(@order.campaign), class: "studio-text-link" %></div>
-      <div class="jp-workspace-grid jp-guided-workspace"><div class="jp-task">
-        <%= render "order_chat/campaign_studio", order: @order, draft: @draft %>
-        <details class="creative-campaign-context"><summary>Ver resumo da promoção</summary><%= render "campaigns/summary", campaign: @order.campaign %></details>
-      </div></div>
+    <main class="ui-main"><%= render "shared/studio_flash" %>
+      <div class="ui-project"><div><p class="ui-kicker">Sua campanha</p><strong id="campaign-project-title-<%= @order.campaign.id %>"><%= @order.campaign.title %></strong></div><%= link_to "Ver dados da campanha", campaign_path(@order.campaign), class: "ui-link" %></div>
+      <%= render "order_chat/campaign_studio", order: @order, draft: @draft %>
+      <details class="creative-campaign-context"><summary>Ver resumo da promoção</summary><%= render "campaigns/summary", campaign: @order.campaign %></details>
     </main>
   </div>
 <% else %><%= render "order_chat/legacy_workspace" %><% end %>
