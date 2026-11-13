@@ -1,36 +1,24 @@
-<% completed = order.completed_music_rounds %>
 <% busy = order.paid? || order.lyrics_drafting? || order.music_generating? || order.lyrics_approved? || order.lyrics_revision_token.present? %>
 <% phase = Campaigns::StudioPhase.for(order) %>
-<% selected = order.campaign.selected_music_asset if phase == :video %>
-<% video_step = selected.present? || order.approved? %>
-<%# ponytail: a classe legada sai por fase; as fases 1 e 2 já não dependem de studio_identity.css. %>
-<div id="chat-lyrics-panel" class="<%= "creative-studio" unless phase.nil? || phase.in?(%i[lyrics music]) %>" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>" data-phase="<%= Campaigns::StudioPhase.step(phase) %>">
+<%# ponytail: a classe legada sai por fase; as fases 1, 2 e 3 já não dependem de studio_identity.css. %>
+<div id="chat-lyrics-panel" class="<%= "creative-studio" if phase.in?(%i[rendering failed_video delivered]) %>" data-controller="creative-editor" data-creative-editor-busy-value="<%= busy %>" data-creative-editor-view-value="<%= phase %>" data-phase="<%= Campaigns::StudioPhase.step(phase) %>">
   <%= render "order_chat/studio/head", order: order, phase: phase %>
   <div id="creative-errors" class="creative-errors" role="alert" tabindex="-1"><%= order.lyrics_revision_error %></div>
   <% if @creation_notice.present? %><p class="creative-working" role="status"><%= @creation_notice %></p><% end %>
-  <%# Nas fases 1 e 2 o título da fase é o único h1 (R7); o cabeçalho legado sai com a tarefa 7. %>
-  <% unless phase.nil? || phase.in?(%i[lyrics music]) %>
+  <%# O título de cada fase é o único h1 (R7); o cabeçalho legado fica só no acompanhamento do vídeo (tarefa 8). %>
+  <% if phase.in?(%i[rendering failed_video delivered]) %>
   <header class="creative-progress">
-    <h1 tabindex="-1"><%= if order.approved?
-      order.campaign.video_status == "ready" ? "Seu vídeo está pronto." : "Estamos montando seu vídeo."
-    elsif selected
-      "Vamos preparar seu vídeo."
-    elsif completed.positive?
-      "Ouça e escolha sua música."
-    else
-      "Vamos criar sua música."
-    end %></h1>
-    <p><%= video_step ? "Confira o resultado e ajuste o que quiser." : completed.positive? ? "Ouça as opções. Você pode ajustar a letra e o som antes de escolher." : "Confira o nome, o preço e as informações da sua oferta. Você pode ajustar a letra antes e depois de ouvir." %></p>
+    <h1 tabindex="-1"><%= order.campaign.video_status == "ready" ? "Seu vídeo está pronto." : "Estamos montando seu vídeo." %></h1>
+    <p>Confira o resultado e ajuste o que quiser.</p>
   </header>
   <% end %>
-  <%# ponytail: a fase 3 ainda renderiza o partial atual; a tarefa 7 o troca. %>
   <% case phase %>
   <% when :lyrics %>
     <%= render "order_chat/studio/lyrics_phase", order: order, draft: draft %>
   <% when :rendering, :failed_video, :delivered %>
     <%= render "campaigns/delivery", campaign: order.campaign %>
   <% when :video %>
-    <%= render "order_chat/video_setup", order: order, asset: selected %>
+    <%= render "order_chat/studio/video_phase", order: order, asset: order.campaign.selected_music_asset %>
   <% else %>
     <%= render "order_chat/studio/music_phase", order: order, draft: draft, busy: busy %>
   <% end %>

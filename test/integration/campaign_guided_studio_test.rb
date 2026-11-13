@@ -28,7 +28,7 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name=asset_id]", count: 1
     assert_select "#music-changes:not([open])", count: 1
     assert_select "#editable-lyrics", count: 1
-    assert_select ".creative-video-photos, .creative-video-appearance, .excerpt-editor, .creative-favorite-label, .jp-assistant", count: 0
+    assert_select "#video-photos, #video-appearance, .ui-duration, .creative-favorite-label, .jp-assistant", count: 0
     assert_select ".creative-progress", text: /ajustes disponíveis|rodadas prontas/, count: 0
   end
 
@@ -42,8 +42,8 @@ class CampaignGuidedStudioTest < ActionDispatch::IntegrationTest
     assert_equal "pending", @campaign.video_status
     assert_nil @order.approved_music_generation_id
     get order_chat_path(order_id: @order.id)
-    assert_select ".creative-video-setup", count: 1
-    assert_select ".creative-video-photos, .creative-video-appearance", count: 2
+    assert_select "h1", text: "Monte o seu vídeo."
+    assert_select "form#video-photos, #video-appearance", count: 2
     assert_select "button", text: "Gerar meu vídeo"
     assert_select "#editable-lyrics", count: 0
 

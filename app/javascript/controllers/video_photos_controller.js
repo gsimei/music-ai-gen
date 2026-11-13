@@ -65,47 +65,79 @@ export default class extends Controller {
     this.changed()
   }
 
+  // Espaços ui-slot como no Criar: as fotos e, depois delas, espaços vazios (<label for> do input) até o limite.
   render(focusKey) {
-    this.listTarget.replaceChildren()
     let uploadIndex = 0
-    this.photos.forEach((photo, index) => {
-      const figure = document.createElement("figure")
-      figure.dataset.photoKey = photo.key
-      figure.classList.toggle("is-first", index === 0)
-      const image = document.createElement("img")
-      image.loading = "lazy"
-      image.decoding = "async"
-      image.src = photo.url
-      image.alt = photo.name
-      const caption = document.createElement("figcaption")
-      caption.textContent = index === 0 ? "1 · Abre o vídeo" : `${index + 1} · Foto`
-      const control = (label, text, handler) => {
-        const button = document.createElement("button")
-        button.type = "button"
-        button.setAttribute("aria-label", label)
-        button.textContent = text
-        button.addEventListener("click", handler)
-        return button
-      }
-      const arrows = document.createElement("div")
-      arrows.className = "campaign-photo-arrows"
-      const before = control(`Mover foto ${index + 1} para antes`, "←", () => this.move(index, index - 1))
-      const after = control(`Mover foto ${index + 1} para depois`, "→", () => this.move(index, index + 1))
-      before.disabled = index === 0
-      after.disabled = index === this.photos.length - 1
-      arrows.append(before, after)
-      const remove = control(`Remover foto ${index + 1}`, "Remover", () => this.remove(index))
-      remove.className = "campaign-photo-remove"
-      const position = document.createElement("input")
-      position.type = "hidden"
-      position.name = "photo_sequence[]"
-      position.value = photo.file ? `upload:${uploadIndex++}` : photo.key
-      figure.append(image, caption, arrows, remove, position)
-      this.listTarget.append(figure)
-    })
+    const slots = this.photos.map((photo, index) => this.slot(photo, index, photo.file ? `upload:${uploadIndex++}` : photo.key))
+    for (let index = this.photos.length; index < this.limitValue; index++) slots.push(this.emptySlot(index))
+    this.listTarget.replaceChildren(...slots)
     if (focusKey) {
       const figure = [...this.listTarget.children].find(element => element.dataset.photoKey === focusKey)
       figure?.querySelector("button:not([disabled])")?.focus({ preventScroll: true })
     }
+  }
+
+  icon(path) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    for (const [name, value] of Object.entries({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" })) svg.setAttribute(name, value)
+    svg.setAttribute("class", "ui-icon")
+    const shape = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    shape.setAttribute("d", path)
+    svg.append(shape)
+    return svg
+  }
+
+  emptySlot(index) {
+    const slot = document.createElement("label")
+    slot.className = "ui-slot ui-slot-empty"
+    slot.htmlFor = this.inputTarget.id
+    const box = document.createElement("span")
+    box.className = "ui-slot-box"
+    box.append(this.icon("M12 5v14M5 12h14"))
+    if (index === this.photos.length) { const text = document.createElement("span"); text.textContent = "Adicionar"; box.append(text) }
+    const caption = document.createElement("span")
+    caption.className = index === 0 ? "ui-slot-cap ui-slot-tag" : "ui-slot-cap"
+    if (index === 0) caption.textContent = "Abre o vídeo"
+    slot.append(box, caption)
+    return slot
+  }
+
+  slot(photo, index, sequence) {
+    const figure = document.createElement("figure")
+    figure.className = "ui-slot"
+    figure.dataset.photoKey = photo.key
+    const box = document.createElement("div")
+    box.className = "ui-slot-box"
+    const preview = document.createElement("div")
+    preview.className = "ui-slot-preview"
+    const image = document.createElement("img")
+    image.loading = "lazy"
+    image.decoding = "async"
+    image.src = photo.url
+    image.alt = photo.name
+    preview.append(image)
+    box.append(preview)
+    const control = (label, name, path, handler) => {
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = `ui-slot-btn ui-slot-btn-${name}`
+      button.setAttribute("aria-label", label)
+      button.append(this.icon(path))
+      button.addEventListener("click", handler)
+      box.append(button)
+      return button
+    }
+    control(`Remover foto ${index + 1}`, "remove", "M6 6l12 12M18 6 6 18", () => this.remove(index))
+    control(`Mover foto ${index + 1} para antes`, "before", "M15 6l-6 6 6 6", () => this.move(index, index - 1)).disabled = index === 0
+    control(`Mover foto ${index + 1} para depois`, "after", "M9 6l6 6-6 6", () => this.move(index, index + 1)).disabled = index === this.photos.length - 1
+    const caption = document.createElement("figcaption")
+    caption.className = index === 0 ? "ui-slot-cap ui-slot-tag" : "ui-slot-cap"
+    caption.textContent = index === 0 ? "Abre o vídeo" : `Foto ${index + 1}`
+    const position = document.createElement("input")
+    position.type = "hidden"
+    position.name = "photo_sequence[]"
+    position.value = sequence
+    figure.append(box, caption, position)
+    return figure
   }
 }

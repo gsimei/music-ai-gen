@@ -1,0 +1,15 @@
+<%# locals: (order:) %>
+<%# "Aparência do vídeo": nome, logo e faixa de contato (campaigns/_brand_fields e _cta_fields, com os mesmos nomes de
+    campo). O campaign-form vive na raiz da fase 3, então a prévia 9:16 acompanha estes campos. Não gasta rodada. %>
+<% campaign = order.campaign %>
+<details id="video-appearance" class="ui-more-box">
+  <summary>Aparência do vídeo · <%= campaign.show_cta? ? "com faixa de contato" : "sem faixa" %></summary>
+  <%= form_with model: campaign, url: order_chat_video_appearance_path(order_id: order.id), method: :patch, multipart: true, class: "ui-appearance",
+        data: { turbo_stream: true, action: "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" } do |f| %>
+    <%= hidden_field_tag :video_revision, campaign.video_revision, id: nil %>
+    <%= render "campaigns/brand_fields", f: f %>
+    <%= render "campaigns/cta_fields", f: f %>
+    <button type="submit" class="ui-btn ui-btn-ghost">Salvar aparência do vídeo</button>
+    <p class="ui-hint">Ajusta só o visual. O nome cantado e a letra continuam iguais, sem gastar rodada.</p>
+  <% end %>
+</details>

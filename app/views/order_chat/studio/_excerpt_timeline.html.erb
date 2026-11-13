@@ -1,0 +1,79 @@
+<%# locals: (order:, asset:, queued:, current_start:) %>
+<%# "Mudar onde começa" e "Duração exata", dentro do "Quero mudar algo" da fase 3. Os dois forms vão para
+    order_chat#excerpt_settings. O range é o próprio campo start_seconds (funciona sem JS); o excerpt-timeline anuncia
+    o trecho em m:ss,d, move a janela, faz as setas andarem 1 s e, com a prévia completa pronta, "Ouvir a partir daqui"
+    chama o seek do ui-player dela. A duração exata é um campo mm:ss que o controller converte em segundos no envio. %>
+<% track = asset.track_duration_seconds %>
+<% duration = asset.video_duration_seconds %>
+<% max_start = asset.excerpt_max_start %>
+<% requested = asset.excerpt_duration_seconds&.to_f %>
+<%# Como video_duration_seconds: pedido nulo ou maior que a música (30 s padrão numa faixa curta) vira a música inteira. %>
+<% duration_param = requested.nil? || requested >= track ? "full" : requested %>
+<% full_url = asset.full_playback_url %>
+<% excerpt_label = ->(start) { "#{campaign_seconds_label(start)} a #{campaign_seconds_label([ start + duration, track ].min)}" } %>
+<% feedback = "input->creative-editor#feedbackChanged change->creative-editor#feedbackChanged turbo:submit-end->creative-editor#restoreChanges" %>
+<%= tag.div class: "ui-excerpt", data: { controller: "excerpt-timeline", excerpt_timeline_track_value: track,
+      excerpt_timeline_duration_value: duration, excerpt_timeline_start_value: current_start } do %>
+  <details id="video-start" class="ui-more-box">
+    <summary>Mudar onde começa</summary>
+    <%= form_with url: order_chat_excerpt_settings_path(order_id: order.id), method: :patch, data: { turbo_stream: true, action: feedback } do %>
+      <%= hidden_field_tag :asset_id, asset.id, id: nil %>
+      <%= hidden_field_tag :preview_revision, asset.preview_revision, id: nil %>
+      <%= hidden_field_tag :duration_seconds, duration_param, id: nil %>
+      <fieldset class="ui-fieldset" <%= "disabled" if queued %>>
+        <% if max_start.positive? %>
+          <label for="video-start-range" class="ui-label">Onde o trecho começa</label>
+          <div class="ui-timeline" style="--start: <%= format("%.2f%%", current_start / track * 100) %>; --length: <%= format("%.2f%%", duration / track * 100) %>;" data-excerpt-timeline-target="timeline">
+            <% sections = campaign_excerpt_sections(asset) %>
+            <% if sections.any? %>
+              <ol class="ui-timeline-marks" aria-label="Partes da música">
+                <% sections.each do |section| %>
+                  <li class="ui-timeline-mark" style="--at: <%= section[:at] %>; --span: <%= section[:span] %>;"><%= section[:label] %> <span class="ui-timeline-at"><%= campaign_media_time(section[:start]) %></span></li>
+                <% end %>
+              </ol>
+            <% end %>
+            <div class="ui-timeline-track" aria-hidden="true"><span class="ui-timeline-window"></span></div>
+            <%= range_field_tag :start_seconds, current_start, id: "video-start-range", min: 0, max: max_start, step: 0.01, class: "ui-range",
+                  aria: { valuetext: excerpt_label.(current_start), describedby: "video-start-readout" },
+                  data: { excerpt_timeline_target: "range", action: "input->excerpt-timeline#slide keydown->excerpt-timeline#nudge" } %>
+          </div>
+          <p id="video-start-readout" class="ui-hint" data-excerpt-timeline-target="readout">Trecho de <%= excerpt_label.(current_start) %> · música de <%= campaign_media_time(track) %></p>
+          <% if full_url %>
+            <%= render "shared/ui/player", controller: "ui-player", src: full_url, title: "Música completa",
+                  description: "Com marca sonora. Ouça a partir do ponto escolhido.", label: "música completa",
+                  duration_seconds: track, audio_action: "play->creative-editor#play" %>
+          <% end %>
+          <div class="ui-excerpt-actions">
+            <button type="button" class="ui-btn ui-btn-ghost" data-action="excerpt-timeline#listen" <%= "hidden" unless full_url %>>Ouvir a partir daqui</button>
+            <button type="submit" class="ui-btn">Preparar este trecho</button>
+          </div>
+        <% else %>
+          <p class="ui-hint">Com a música inteira, o vídeo começa do início.</p>
+        <% end %>
+        <button type="submit" name="automatic" value="1" class="ui-link" formnovalidate>Voltar ao trecho sugerido</button>
+        <p class="ui-hint">Mudar o trecho usa a música já criada e não gasta rodada.</p>
+      </fieldset>
+    <% end %>
+  </details>
+
+  <details id="video-exact" class="ui-more-box">
+    <summary>Duração exata</summary>
+    <%= form_with url: order_chat_excerpt_settings_path(order_id: order.id), method: :patch,
+          data: { turbo_stream: true, action: "submit->excerpt-timeline#exact #{feedback}" } do %>
+      <%= hidden_field_tag :asset_id, asset.id, id: nil %>
+      <%= hidden_field_tag :preview_revision, asset.preview_revision, id: nil %>
+      <%= hidden_field_tag :duration_seconds, duration_param, id: nil, data: { excerpt_timeline_target: "exactDuration" } %>
+      <%= hidden_field_tag :start_seconds, current_start, id: nil, data: { excerpt_timeline_target: "exactStart" } %>
+      <fieldset class="ui-fieldset" <%= "disabled" if queued %>>
+        <div class="ui-field">
+          <label for="video-exact-input" class="ui-label">Duração do vídeo (minutos:segundos)</label>
+          <%= text_field_tag nil, campaign_media_time(duration), id: "video-exact-input", class: "ui-input ui-exact", inputmode: "numeric",
+                pattern: '\d{1,2}:\d{2}', maxlength: 5, required: true, autocomplete: "off", aria: { describedby: "video-exact-help" },
+                data: { excerpt_timeline_target: "exact", action: "input->excerpt-timeline#clear" } %>
+          <p id="video-exact-help" class="ui-hint">De 0:01 até <%= campaign_media_time(track.floor) %>. Ex.: 0:45.</p>
+        </div>
+        <button type="submit" class="ui-btn ui-btn-ghost">Preparar com esta duração</button>
+      </fieldset>
+    <% end %>
+  </details>
+<% end %>

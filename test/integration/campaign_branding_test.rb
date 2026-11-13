@@ -117,9 +117,9 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     get order_chat_path(order_id: order.id)
     assert_response :success
-    assert_select '.creative-video-appearance input#campaign_logo[type="file"]'
-    assert_select '.creative-video-appearance [data-campaign-form-target="previewLogo"]'
-    assert_select '.creative-video-appearance [data-campaign-form-target="logoInput"]'
+    assert_select '#video-appearance input#campaign_logo[type="file"]'
+    assert_select '.ui-stage [data-campaign-form-target="previewLogo"]'
+    assert_select '#video-appearance [data-campaign-form-target="logoInput"]'
   end
 
   test "studio rejects invalid logos and other accounts cannot change branding" do

@@ -39,4 +39,35 @@ class CampaignsHelperTest < ActionView::TestCase
     assert_equal generic, campaign_contact_hint("")
     Campaign::CTA_OPTIONS.each { |option| refute_equal generic, campaign_contact_hint(option), option }
   end
+
+  # Fase 3 (tarefa 7): chips de duração só até o tamanho da música, com o efeito nas fotos (E6).
+  test "a 66 second track offers 30 s, 1 min and the whole song with the photo effect" do
+    chips = campaign_duration_chips(track_asset(66))
+    assert_equal [ "30", "60", "full" ], chips.map { |chip| chip[:value] }
+    assert_equal "ideal para Reels e Status", chips.first[:hint]
+    assert_equal "até #{Campaigns::PhotoLimit.for_duration(60)} fotos", chips.second[:hint]
+    assert_equal "Música inteira 1:06", chips.last[:label]
+    assert_equal "até #{Campaigns::PhotoLimit.for_duration(66)} fotos", chips.last[:hint]
+    assert_equal Campaigns::PhotoLimit.for_duration(60), chips.second[:photos]
+  end
+
+  test "a track shorter than 30 s offers only the whole song (RF 4)" do
+    assert_equal [ "full" ], campaign_duration_chips(track_asset(20)).map { |chip| chip[:value] }
+  end
+
+  test "a 90 second chip is labelled 1 min 30" do
+    assert_equal [ "30 s", "1 min", "1 min 30" ], campaign_duration_chips(track_asset(120)).first(3).map { |chip| chip[:label] }
+  end
+
+  test "seconds label rounds to one decimal with a comma (E8)" do
+    assert_equal "0:15,9", campaign_seconds_label(15.870000000000001)
+    assert_equal "1:05,0", campaign_seconds_label(65)
+    assert_equal "0:00,0", campaign_seconds_label(nil)
+  end
+
+  private
+
+  def track_asset(seconds)
+    OrderAsset.new(duration_ms: seconds * 1000)
+  end
 end

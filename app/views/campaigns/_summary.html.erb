@@ -6,6 +6,6 @@
   <% if campaign.show_cta? %><div class="jp-summary-contact"><strong><%= campaign.call_to_action %></strong><p><%= campaign.contact %></p></div><% end %>
   <p class="studio-field-hint"><%= campaign.sound_summary %></p>
   <% asset = approved_music_asset(campaign.order) if campaign.order.approved? %>
-  <p class="studio-field-hint">Vídeo vertical · <%= campaign.product_photos.size %> fotos<%= " · #{campaign_media_time(asset.campaign_audio.blob.metadata['duration_seconds'])}" if asset&.campaign_preview_ready? %></p>
+  <p class="studio-field-hint">Vídeo vertical · <%= pluralize(campaign.product_photos.size, "foto", plural: "fotos") %><%= " · #{campaign_media_time(asset.campaign_audio.blob.metadata['duration_seconds'])}" if asset&.campaign_preview_ready? %></p>
   <% unless campaign.order.approved? %><p class="studio-field-hint">Você pode ajustar as fotos e a duração na preparação do vídeo.</p><% end %>
 </div>

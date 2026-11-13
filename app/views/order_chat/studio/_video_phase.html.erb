@@ -1,0 +1,90 @@
+<%# locals: (order:, asset:) %>
+<%# Fase 3 · Vídeo. Duração em primeira linha (chips que preparam o trecho sem gastar rodada), player do trecho, espaços
+    de foto até o limite da duração e o único botão principal (approve_music). O campaign-form fica na raiz para a
+    prévia 9:16 acompanhar os campos de "Aparência do vídeo". Os ids video-changes, video-start, video-exact e
+    video-appearance são os que o creative-editor reabre depois de um broadcast. %>
+<% campaign = order.campaign %>
+<% queued = asset.campaign_preview_status == "queued" %>
+<% photos = campaign.product_photos %>
+<% fits = Campaigns::PhotoLimit.for_asset(asset) %>
+<% sample = asset.campaign_audio.blob.metadata if asset.campaign_preview_ready? %>
+<% current_start = [ (asset.excerpt_start_seconds || sample&.dig("start_seconds") || 0).to_f, asset.excerpt_max_start ].min %>
+<% reason = if queued
+     "Aguarde o trecho ficar pronto para gerar o vídeo."
+   elsif !asset.audition_ready?
+     "Prepare e ouça o trecho antes de gerar o vídeo."
+   elsif photos.size > fits
+     "Você salvou #{pluralize(photos.size, "foto", plural: "fotos")}. Aumente a duração do vídeo ou deixe até #{pluralize(fits, "foto", plural: "fotos")}."
+   end %>
+<% logo_url = campaign_logo_url(campaign) %>
+<div class="ui-video" data-controller="campaign-form">
+  <section class="ui-phase" aria-labelledby="video-phase-title">
+    <p class="ui-eyebrow">Fase <%= Campaigns::StudioPhase.step(:video) %> de 3</p>
+    <%# O único h1 da página (R7); tabindex para o creative-editor focar ao trocar de fase. %>
+    <h1 id="video-phase-title" class="ui-phase-title" tabindex="-1">Monte o seu vídeo.</h1>
+    <p class="ui-lead">Escolha quanto da música entra no vídeo. Trocar a duração usa a música já criada e não gasta rodada.</p>
+
+    <%= render "order_chat/studio/duration_chips", order: order, asset: asset, queued: queued %>
+
+    <% if asset.audition_ready? %>
+      <%= render "shared/ui/player", controller: "ui-player", src: asset.campaign_playback_url, title: "Trecho do vídeo",
+            description: "Com marca sonora. O vídeo final sai sem a marca.", label: "trecho do vídeo",
+            note: "de #{campaign_media_time(asset.track_duration_seconds)} da música", duration_seconds: sample["duration_seconds"],
+            audio_action: "play->creative-editor#play" %>
+    <% elsif queued %>
+      <p class="ui-hint ui-preparing" role="status">Preparando o trecho…</p>
+    <% else %>
+      <div class="ui-field">
+        <p class="ui-hint">Sua música está salva. Prepare o trecho para ouvir.</p>
+        <%= button_to "Preparar o trecho", order_chat_prepare_audio_path(order_id: order.id), params: { asset_id: asset.id },
+              class: "ui-btn ui-btn-ghost", data: { turbo_stream: true } %>
+      </div>
+    <% end %>
+
+    <%= render "order_chat/studio/photo_slots", order: order %>
+
+    <div class="ui-phase-actions">
+      <%= button_to order_chat_approve_music_path(order_id: order.id), params: { asset_id: asset.id, preview_revision: asset.preview_revision, video_revision: campaign.video_revision },
+            class: "ui-btn ui-btn-primary", disabled: reason.present?, aria: { describedby: [ ("video-finish-reason" if reason), "video-finish-help" ].compact.join(" ") },
+            data: { turbo_stream: true } do %>
+        Gerar meu vídeo
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      <% end %>
+      <% if reason %><p id="video-finish-reason" class="ui-hint ui-reason"><%= reason %></p><% end %>
+      <p id="video-finish-help" class="ui-hint">Vamos juntar suas fotos com este trecho. Você recebe o vídeo e a música para baixar.</p>
+    </div>
+
+    <details id="video-changes" class="ui-more-box">
+      <summary>Quero mudar algo</summary>
+      <%= render "order_chat/studio/excerpt_timeline", order: order, asset: asset, queued: queued, current_start: current_start %>
+      <%= render "order_chat/studio/appearance", order: order %>
+      <% if (lyrics = asset.music_generation&.lyrics_draft&.content) %>
+        <details id="selected-lyrics" class="ui-more-box"><summary>Ver a letra desta música</summary><pre class="ui-lyrics-text"><%= lyrics %></pre></details>
+      <% end %>
+    </details>
+
+    <%= button_to "← Voltar às músicas", order_chat_change_music_path(order_id: order.id), class: "ui-link", form_class: "ui-back", data: { turbo_stream: true } %>
+  </section>
+
+  <aside class="ui-stage" aria-label="Prévia do vídeo">
+    <div class="ui-arc">
+      <p class="ui-stage-tag"><span class="ui-dot" aria-hidden="true"></span>Prévia · 9:16</p>
+      <div class="ui-phone">
+        <div class="ui-phone-art" aria-hidden="true"></div>
+        <% if photos.first %><%= image_tag photos.first, alt: "Primeira foto do vídeo", class: "ui-phone-photo" %><% end %>
+        <div class="ui-phone-body">
+          <div class="ui-phone-top">
+            <img class="ui-phone-logo" alt="Logo da empresa" data-campaign-form-target="previewLogo" <% if logo_url %>src="<%= logo_url %>"<% else %>hidden<% end %>>
+            <span class="ui-phone-name" data-campaign-form-target="previewBusiness" <%= "hidden" if campaign.business_name.blank? %>><%= campaign.business_name %></span>
+          </div>
+          <p class="ui-phone-offer"><%= campaign.display_offer %></p>
+          <div class="ui-phone-cta" data-campaign-form-target="previewCtaPanel" style="--campaign-cta-color: <%= campaign.cta_background_color %>; --campaign-cta-text-color: <%= campaign.cta_text_color %>;" <%= "hidden" unless campaign.show_cta? %>>
+            <small data-campaign-form-target="previewCta"><%= campaign.call_to_action %></small>
+            <b data-campaign-form-target="previewContact"><%= campaign.contact.presence || "Seu contato aqui" %></b>
+          </div>
+        </div>
+      </div>
+      <p class="ui-stage-cap">Imagem de abertura · <%= pluralize(photos.size, "foto", plural: "fotos") %> no vídeo</p>
+    </div>
+  </aside>
+</div>

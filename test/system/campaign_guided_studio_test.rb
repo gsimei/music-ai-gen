@@ -74,7 +74,7 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
       find("label.ui-chip", text: "Escolher").click
     end
     click_button "Usar a Versão B e montar o vídeo"
-    assert_text "Vamos preparar seu vídeo."
+    assert_selector "h1", text: "Monte o seu vídeo."
     assert_equal generation.order_assets.order(:variant_index).last.id, campaign.reload.selected_music_asset_id
     assert_button "Gerar meu vídeo"
     assert_no_selector "#editable-lyrics"
@@ -82,7 +82,7 @@ class CampaignGuidedStudioSystemTest < ApplicationSystemTestCase
     assert_equal "pending", campaign.reload.video_status
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     page.save_screenshot(Rails.root.join("tmp/guided-video-mobile.png"))
-    click_button "Voltar para letra e músicas"
+    click_button "← Voltar às músicas"
     assert_selector "h1", text: "Escolha a sua versão."
     click_link "← Voltar à letra"
     assert_field "editable-lyrics", with: "Café do Bairro, o seu dia começa aqui!"

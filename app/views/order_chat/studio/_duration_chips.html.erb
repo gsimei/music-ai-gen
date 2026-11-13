@@ -1,0 +1,37 @@
+<%# locals: (order:, asset:, queued:) %>
+<%# Duração em primeira linha (E6). Cada chip é o submit de um form próprio para order_chat#excerpt_settings, com o
+    início sugerido para aquela duração num hidden; o chip atual é type=button e não envia. Funciona sem JS. Enquanto o
+    trecho prepara, todos ficam desabilitados (RF 2; o ExcerptSettings também recusa com :preview_busy). %>
+<% track = asset.track_duration_seconds %>
+<% chips = campaign_duration_chips(asset) %>
+<% current = asset.excerpt_duration_seconds&.to_f %>
+<% pressed = chips.find { |chip| chip[:value] != "full" && chip[:value].to_f == current } || (chips.last if current.nil? || current >= track) %>
+<div class="ui-field ui-duration">
+  <p id="video-duration-label" class="ui-label">Duração do vídeo</p>
+  <div class="ui-chips" role="group" aria-labelledby="video-duration-label">
+    <% chips.each do |chip| %>
+      <% seconds = chip[:value].to_f unless chip[:value] == "full" %>
+      <% if chip == pressed %>
+        <%# O chip atual não envia nada: reenviá-lo prepararia o mesmo trecho de novo (início automático é nil). %>
+        <%= tag.button type: "button", value: chip[:value], class: "ui-chip ui-chip-duration", disabled: queued, aria: { pressed: "true" } do %>
+          <span class="ui-chip-name"><%= chip[:label] %></span>
+          <span class="ui-chip-hint"><%= chip[:hint] %></span>
+        <% end %>
+      <% else %>
+        <% start = seconds ? [ Campaigns::AudioExcerpt.start_seconds(lyrics_sync: asset.lyrics_sync, track_duration: track, duration_seconds: seconds),
+                               asset.excerpt_max_start(duration_seconds: seconds) ].min.round(2) : 0 %>
+        <%= form_with url: order_chat_excerpt_settings_path(order_id: order.id), method: :patch, data: { turbo_stream: true } do %>
+          <%= hidden_field_tag :asset_id, asset.id, id: nil %>
+          <%= hidden_field_tag :preview_revision, asset.preview_revision, id: nil %>
+          <%= hidden_field_tag :start_seconds, start, id: nil %>
+          <%= tag.button type: "submit", name: "duration_seconds", value: chip[:value], class: "ui-chip ui-chip-duration",
+                disabled: queued, aria: { pressed: "false" } do %>
+            <span class="ui-chip-name"><%= chip[:label] %></span>
+            <span class="ui-chip-hint"><%= chip[:hint] %></span>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+  <p class="ui-hint">Mais tempo de música libera mais fotos, até <%= Campaigns::PhotoLimit::MAX %>.</p>
+</div>

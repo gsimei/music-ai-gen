@@ -21,16 +21,47 @@ module CampaignsHelper
     format("%d:%02d", total / 60, total % 60)
   end
 
-  def campaign_duration_options(asset)
-    options = [ [ "30 segundos", "30" ], [ "1 minuto", "60" ], [ "1 minuto e meio", "90" ] ]
-      .select { |_, value| value.to_f <= asset.track_duration_seconds }
-    options + [ [ "Música inteira (#{campaign_media_time(asset.track_duration_seconds)})", "full" ], [ "Personalizar duração", "custom" ] ]
+  # "0:15,9": uma casa decimal com vírgula, para o valor anunciado da linha do tempo do trecho (E8).
+  def campaign_seconds_label(seconds)
+    tenths = (seconds.to_f * 10).round
+    format("%d:%04.1f", tenths / 600, (tenths % 600) / 10.0).tr(".", ",")
   end
 
-  def campaign_duration_selection(asset)
-    duration = asset.excerpt_duration_seconds
-    return "full" if duration.nil? || duration > asset.track_duration_seconds
-    [ 30, 60, 90 ].include?(duration.to_f) ? duration.to_i.to_s : "custom"
+  DURATION_CHIPS = [ 30, 60, 90 ].freeze
+
+  # Chips de duração da fase 3 (E6): só os que cabem na música, mais a música inteira, cada um com o efeito nas fotos.
+  def campaign_duration_chips(asset)
+    track = asset.track_duration_seconds
+    chips = DURATION_CHIPS.select { |seconds| seconds <= track }.map do |seconds|
+      minutes, rest = seconds.divmod(60)
+      label = minutes.zero? ? "#{rest} s" : [ "#{minutes} min", (rest if rest.positive?) ].compact.join(" ")
+      hint = seconds == Campaigns::AudioPreview::DEFAULT_DURATION ? "ideal para Reels e Status" : "até #{Campaigns::PhotoLimit.for_duration(seconds)} fotos"
+      { value: seconds.to_s, label: label, hint: hint, photos: Campaigns::PhotoLimit.for_duration(seconds) }
+    end
+    chips << { value: "full", label: "Música inteira #{campaign_media_time(track)}", hint: "até #{Campaigns::PhotoLimit.for_duration(track)} fotos",
+      photos: Campaigns::PhotoLimit.for_duration(track) }
+  end
+
+  SECTION_LABELS = { "intro" => "Introdução", "verse" => "Verso", "pre-chorus" => "Pré-refrão", "chorus" => "Refrão",
+    "bridge" => "Ponte", "outro" => "Final" }.freeze
+
+  # Seções de asset.lyrics_sync (ms da Mureka) para marcar a linha do tempo do trecho: início em segundos e posição e
+  # largura em % da música. Sem lyrics_sync, ou com tempos inválidos, devolve [].
+  def campaign_excerpt_sections(asset)
+    track = asset.track_duration_seconds
+    sync = asset.lyrics_sync
+    return [] unless track.positive? && sync.is_a?(Hash)
+    Array(sync["sections"]).filter_map do |section|
+      next unless section.is_a?(Hash)
+      lines = Array(section["lines"]).select { |line| line.is_a?(Hash) }
+      from = Float(section["start"] || lines.map { |line| Float(line["start"], exception: false) }.compact.min, exception: false)
+      to = Float(section["end"] || lines.map { |line| Float(line["end"], exception: false) }.compact.max, exception: false)
+      next unless from&.finite? && to&.finite? && from >= 0 && to > from
+      from, to = from / 1000, [ to / 1000, track ].min
+      next if from >= track
+      { label: SECTION_LABELS.fetch(section["section_type"].to_s, "Trecho"), start: from,
+        at: format("%.1f%%", from / track * 100), span: format("%.1f%%", (to - from) / track * 100) }
+    end
   end
 
   def campaign_status_label(order)

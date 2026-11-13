@@ -1,16 +1,18 @@
-<div class="studio-field">
-  <%= f.label :business_name, "Nome do seu negócio (opcional)" %>
-  <%= f.text_field :business_name, placeholder: "Ex.: Pizzaria da Vila", maxlength: 60, autocomplete: "organization", data: { campaign_form_target: "business", action: "input->campaign-form#preview" } %>
-  <p class="studio-field-hint">Deixe vazio para não exibir um nome. Você também pode usar só a logo ou combinar os dois.</p>
+<%# locals: f. Nome e logo do vídeo no estúdio ("Aparência do vídeo"), com os alvos do campaign-form para a prévia 9:16. %>
+<div class="ui-field">
+  <%= f.label :business_name, "Nome do seu negócio (opcional)", class: "ui-label" %>
+  <%= f.text_field :business_name, class: "ui-input", placeholder: "Ex.: Pizzaria da Vila", maxlength: 60, autocomplete: "organization",
+        aria: { describedby: "#{f.field_id(:business_name)}-help" }, data: { campaign_form_target: "business", action: "input->campaign-form#preview" } %>
+  <p id="<%= f.field_id(:business_name) %>-help" class="ui-hint">Deixe vazio para não exibir um nome. Você também pode usar só a logo ou combinar os dois.</p>
 </div>
-<div class="studio-field campaign-logo-upload">
-  <%= f.label :logo, "Logo da empresa (opcional)" %>
-  <div class="campaign-photo-choose"><span aria-hidden="true">Selecionar logo +</span><%= f.file_field :logo, accept: Campaign::LOGO_CONTENT_TYPES.join(","),
-    data: { campaign_form_target: "logoInput", saved_logo_url: campaign_logo_url(f.object), action: "change->campaign-form#logo" },
-    aria: { describedby: "#{f.field_id(:logo)}-help #{f.field_id(:logo)}-status" } %></div>
-  <p class="studio-field-hint" id="<%= f.field_id(:logo) %>-help">PNG, JPG ou WebP, até 5 MB. Prefira PNG com fundo transparente. A logo aparece no topo e não conta no limite de fotos.</p>
-  <p class="studio-field-hint" id="<%= f.field_id(:logo) %>-status" role="status" data-campaign-form-target="logoStatus"><%= campaign_logo_url(f.object) ? "Sua logo está salva. Selecione outra para substituir." : "Sem logo? O vídeo usa o nome, se preenchido." %></p>
+<div class="ui-field">
+  <%= f.label :logo, "Logo da empresa (opcional)", class: "ui-label" %>
+  <%= f.file_field :logo, accept: Campaign::LOGO_CONTENT_TYPES.join(","), class: "ui-file",
+        aria: { describedby: "#{f.field_id(:logo)}-help #{f.field_id(:logo)}-status" },
+        data: { campaign_form_target: "logoInput", saved_logo_url: campaign_logo_url(f.object), action: "change->campaign-form#logo" } %>
+  <p id="<%= f.field_id(:logo) %>-help" class="ui-hint">PNG, JPG ou WebP, até 5 MB. Prefira PNG com fundo transparente. A logo aparece no topo e não conta no limite de fotos.</p>
+  <p id="<%= f.field_id(:logo) %>-status" class="ui-hint" role="status" data-campaign-form-target="logoStatus"><%= campaign_logo_url(f.object) ? "Sua logo está salva. Selecione outra para substituir." : "Sem logo? O vídeo usa o nome, se preenchido." %></p>
   <div data-campaign-form-target="logoRemoval" <%= "hidden" unless campaign_logo_url(f.object) || f.object.remove_logo %>>
-    <label class="campaign-cta-toggle"><%= f.check_box :remove_logo, data: { campaign_form_target: "removeLogo", action: "change->campaign-form#logo" } %><span>Remover logo do vídeo</span></label>
+    <label class="ui-check"><%= f.check_box :remove_logo, data: { campaign_form_target: "removeLogo", action: "change->campaign-form#logo" } %><span>Remover logo do vídeo</span></label>
   </div>
 </div>

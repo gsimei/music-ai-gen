@@ -49,8 +49,10 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     @campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     get order_chat_path(order_id: @order.id)
     assert_select 'form[action=?] input[name="video_revision"][value="0"]', order_chat_video_appearance_path(order_id: @order.id)
-    assert_select '.creative-video-appearance input#campaign_show_cta[checked]'
-    assert_select '.creative-video-appearance input#campaign_cta_color[value="#6b21a8"]'
+    assert_select "#video-appearance input[name='campaign[show_cta]'][value='1']"
+    assert_select "#video-appearance input[type=radio][name='campaign[call_to_action]'][value='Peça agora'][checked]", count: 0
+    assert_select "#video-appearance input[type=radio][name='campaign[call_to_action]'][value='Saiba mais no Instagram'][checked]"
+    assert_select '#video-appearance input#campaign_cta_color[value="#6b21a8"]'
     assert_no_difference [ "MusicGeneration.count", "GenerationCost.count" ] do
       assert_no_enqueued_jobs do
         save_appearance(cta_color: "#101010", contact: "@novo")
@@ -67,9 +69,10 @@ class CampaignVideoAppearanceTest < ActionDispatch::IntegrationTest
     assert_equal 2, @campaign.video_revision
     get order_chat_path(order_id: @order.id)
     assert_select ".jp-summary-contact", count: 0
-    assert_select '.creative-video-appearance input#campaign_show_cta:not([checked])'
-    assert_select '.creative-video-appearance input#campaign_cta_color[value="#101010"]'
-    assert_select '.creative-video-appearance [data-campaign-form-target="previewCtaPanel"][hidden]'
+    assert_select "#video-appearance input[name='campaign[show_cta]'][value='0']"
+    assert_select "#video-appearance input[type=radio][name='campaign[call_to_action]'][value=''][checked]"
+    assert_select '#video-appearance input#campaign_cta_color[value="#101010"]'
+    assert_select '.ui-stage [data-campaign-form-target="previewCtaPanel"][hidden]'
   end
 
   test "invalid settings and stale tabs cannot change the saved composition" do

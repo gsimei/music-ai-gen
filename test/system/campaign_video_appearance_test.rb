@@ -90,27 +90,27 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     campaign = Campaign.create!(order: order, business_name: "Landel", offer: "Casa com 03 quartos", show_cta: false)
     campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     visit order_chat_path(order_id: order.id)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
     fill_in "Nome do seu negócio (opcional)", with: ""
     attach_file "Logo da empresa (opcional)", Rails.root.join("public/brand/musical/virajingle-logo-white.png"), make_visible: true
-    assert_selector '.creative-video-appearance [data-campaign-form-target="previewLogo"][src^="blob:"]'
-    assert_no_selector '.creative-video-appearance [data-campaign-form-target="previewBusiness"]'
-    within ".creative-video-appearance" do
+    assert_selector '.ui-stage [data-campaign-form-target="previewLogo"][src^="blob:"]'
+    assert_no_selector '.ui-stage [data-campaign-form-target="previewBusiness"]'
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="1"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="1"]', visible: :all
     assert_selector "#campaign-project-title-#{campaign.id}", text: "Campanha #{order.reference}"
     assert_equal "", campaign.reload.business_name
     assert campaign.logo.attached?
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
     fill_in "Nome do seu negócio (opcional)", with: "Landel Imóveis"
     check "Remover logo do vídeo"
-    assert_no_selector '.creative-video-appearance [data-campaign-form-target="previewLogo"]'
-    assert_selector '.creative-video-appearance [data-campaign-form-target="previewBusiness"]', text: "Landel Imóveis"
-    within ".creative-video-appearance" do
+    assert_no_selector '.ui-stage [data-campaign-form-target="previewLogo"]'
+    assert_selector '.ui-stage [data-campaign-form-target="previewBusiness"]', text: "Landel Imóveis"
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="2"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="2"]', visible: :all
     assert_selector "#campaign-project-title-#{campaign.id}", text: "Landel Imóveis"
     assert_equal "Landel Imóveis", campaign.reload.business_name
     refute campaign.logo.attached?
@@ -175,37 +175,35 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     asset.update!(campaign_preview_status: "ready")
     campaign.update!(selected_music_asset: order_assets(:music_variant_a))
     visit order_chat_path(order_id: order.id)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
+    open_appearance
     set_color "#6b21a8"
-    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor", within: ".creative-video-appearance")
-    assert_equal "rgb(255, 255, 255)", cta_style("color", within: ".creative-video-appearance")
-    assert_equal "rgb(255, 255, 255)", page.evaluate_script('getComputedStyle(document.querySelector(".creative-video-appearance [data-campaign-form-target=previewContact]")).color')
+    assert_equal "rgb(107, 33, 168)", cta_style("backgroundColor", within: ".ui-stage")
+    assert_equal "rgb(255, 255, 255)", cta_style("color", within: ".ui-stage")
+    assert_equal "rgb(255, 255, 255)", page.evaluate_script('getComputedStyle(document.querySelector(".ui-stage [data-campaign-form-target=previewContact]")).color')
     set_color "#ffffff"
-    assert_equal "rgb(23, 62, 50)", cta_style("color", within: ".creative-video-appearance")
-    within ".creative-video-setup" do
-      click_button "Gerar meu vídeo"
-    end
+    assert_equal "rgb(23, 62, 50)", cta_style("color", within: ".ui-stage")
+    click_button "Gerar meu vídeo"
     assert_text "Salve ou envie a alteração"
-    within ".creative-video-appearance" do
+    within "#video-appearance" do
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector '.creative-video-appearance input[name="video_revision"][value="1"]', visible: :all
+    assert_selector '#video-appearance input[name="video_revision"][value="1"]', visible: :all
     assert_equal "#ffffff", campaign.reload.cta_color
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
-    uncheck "Incluir faixa de contato no vídeo"
-    within ".creative-video-appearance" do
+    open_appearance
+    within "#video-appearance" do
+      choose_chip("Sem faixa de contato")
       click_button "Salvar aparência do vídeo"
     end
-    assert_selector ".creative-video-appearance summary", text: "Ajustar nome, logo e faixa · sem faixa"
+    assert_selector "#video-appearance summary", text: "Aparência do vídeo · sem faixa"
     assert_no_selector ".jp-summary-contact"
     refute campaign.reload.show_cta?
     assert_equal 2, campaign.video_revision
     assert_equal 1, order.completed_music_rounds
     assert_equal 0, order.generation_costs.count
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 390, height: 844, deviceScaleFactor: 1, mobile: true)
-    find(".creative-video-appearance summary").click unless find(".creative-video-appearance summary").find(:xpath, "..").matches_css?("details[open]")
-    check "Incluir faixa de contato no vídeo"
-    page.scroll_to(find(".creative-video-appearance"), align: :top)
+    open_appearance
+    within("#video-appearance") { choose_chip("Peça pelo WhatsApp") }
+    page.scroll_to(find("#video-appearance"), align: :top)
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
     page.save_screenshot("/tmp/virajingle-appearance-studio-mobile.png")
     assert_no_javascript_errors
@@ -235,6 +233,11 @@ class CampaignVideoAppearanceSystemTest < ApplicationSystemTestCase
     chip = find("label", text: text)
     page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", chip)
     chip.click
+  end
+
+  def open_appearance
+    find("#video-changes > summary").click unless page.has_css?("#video-changes[open]", wait: 0)
+    find("#video-appearance > summary").click unless page.has_css?("#video-appearance[open]", wait: 0)
   end
 
   def set_color(color)
