@@ -21,6 +21,22 @@ class SoundtrackInputTest < ActiveSupport::TestCase
     assert build_valid.valid?
   end
 
+  test "actual blob size overrides forged file size metadata" do
+    input = build_valid(file_size_bytes: 1)
+    input.file.attach(io: StringIO.new("video"), filename: "video.mp4", content_type: "video/mp4")
+    input.file.blob.byte_size = SoundtrackInput::MAX_FILE_SIZE
+    assert input.valid?
+    input.file.blob.byte_size = SoundtrackInput::MAX_FILE_SIZE + 1
+    assert_not input.valid?
+    assert_not input.processable_file?
+  end
+
+  test "blob media type must match supported input type" do
+    input = build_valid(input_type: "image")
+    input.file.attach(io: StringIO.new("video"), filename: "video.mp4", content_type: "video/mp4")
+    assert_not input.valid?
+  end
+
   test "invalid without input_type" do
     assert_not build_valid(input_type: nil).valid?
   end

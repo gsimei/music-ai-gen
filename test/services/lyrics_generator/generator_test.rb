@@ -275,6 +275,17 @@ class LyricsGenerator::GeneratorTest < ActiveSupport::TestCase
     assert result.success?, "Expected success but got: #{result.errors.inspect}"
   end
 
+  test "failed regeneration preserves the current draft and remaining allowance" do
+    stub_mureka_failure
+    order = orders(:b2b_lyrics_ready)
+    parent = order.current_draft
+    assert_no_difference [ "LyricsDraft.count", -> { order.reload.lyrics_regen_used } ] do
+      result = LyricsGenerator::Generator.call(order: order, mode: :regen, parent_draft_id: parent.id)
+      assert result.failure?
+    end
+    assert_equal parent.id, order.reload.current_draft.id
+  end
+
   test "mode :regen creates a new LyricsDraft" do
     stub_mureka_success
     order        = orders(:b2b_lyrics_ready)

@@ -104,7 +104,7 @@ class CriarPromotionStepSystemTest < ApplicationSystemTestCase
     assert_no_javascript_errors
   end
 
-  test "submitting with a contact chip saves the option, the contact and the photo" do
+  test "submitting keeps the photo in the browser while saving the text" do
     visit new_campaign_path
     fill_in "Qual é a oferta ou novidade?", with: "Café com pão por R$ 12 nesta terça."
     choose_chip "Venha nos visitar"
@@ -115,7 +115,8 @@ class CriarPromotionStepSystemTest < ApplicationSystemTestCase
     assert campaign.show_cta?
     assert_equal "Venha nos visitar", campaign.call_to_action
     assert_equal "Rua das Flores, 120", campaign.contact
-    assert_equal 1, campaign.product_photos.size
+    assert_empty campaign.product_photos
+    assert campaign.media_pending?
     assert_no_javascript_errors
   end
 
@@ -165,7 +166,13 @@ class CriarPromotionStepSystemTest < ApplicationSystemTestCase
     assert_includes page.find(".ui-slots .ui-slot", match: :first).text, "Abre o vídeo"
 
     pay
-    assert_equal %w[c.jpg b.jpg a.jpg], Campaign.last.product_photos.map { |photo| photo.filename.to_s }
+    campaign = Campaign.last
+    assert_empty campaign.product_photos
+    assert_selector '[data-summary="photos"] img', count: 3
+    campaign.order.update!(status: "paid")
+    visit campaign_path(campaign, payment: "processing")
+    assert_text "Preparando sua letra…"
+    assert_equal %w[c.jpg b.jpg a.jpg], campaign.reload.product_photos.map { |photo| photo.filename.to_s }
     assert_no_javascript_errors
   end
 

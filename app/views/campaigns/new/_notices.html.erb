@@ -1,7 +1,7 @@
 <%# Avisos no topo: pagamento não concluído e erros de validação. Ícone SVG decorativo, texto em role="alert". %>
 <% alert_icon = tag.svg(tag.path(d: "M12 4 2.8 20h18.4L12 4Zm0 6v5m0 3h.01"), class: "ui-icon", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false") %>
 <% if @campaign.order&.payment_failed? %>
-  <div class="ui-alert" role="alert"><%= alert_icon %><div><strong>O pagamento não foi concluído.</strong><p>Sua promoção e suas fotos estão salvas. Confira o cartão ou tente outro meio de pagamento para continuar.</p></div></div>
+  <div class="ui-alert" role="alert"><%= alert_icon %><div><strong>O pagamento não foi concluído.</strong><p>Sua promoção está salva. As imagens selecionadas ficam neste navegador até a confirmação. Confira o cartão ou tente outro meio de pagamento para continuar.</p></div></div>
 <% end %>
 <% if @campaign.errors.any? %>
   <div class="ui-alert" role="alert"><%= alert_icon %><div><strong>Confira os campos abaixo:</strong><ul><% @campaign.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul><% if @campaign.product_photos.any? %><p>Selecione as fotos novamente antes de continuar.</p><% end %></div></div>

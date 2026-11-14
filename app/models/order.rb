@@ -183,7 +183,15 @@ class Order < ApplicationRecord
   end
 
   def soundtrack_order?
-    tier_config&.dig(:includes_soundtrack) && soundtrack_input.present?
+    soundtrack_enabled? && soundtrack_input.present?
+  end
+
+  def soundtrack_enabled?
+    !campaign && tier_config&.dig(:includes_soundtrack)
+  end
+
+  def soundtrack_upload_allowed?
+    soundtrack_enabled? && %w[pending payment_failed paid].include?(status)
   end
 
   private
@@ -213,7 +221,7 @@ class Order < ApplicationRecord
 
   def enqueue_post_payment_generation
     if soundtrack_order?
-      UploadSoundtrackInputToMurekaJob.perform_later(id)
+      UploadSoundtrackInputToMurekaJob.perform_later(id, soundtrack_input.id)
     else
       GenerateLyricsJob.perform_later(id)
     end

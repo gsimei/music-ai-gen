@@ -13,6 +13,7 @@ Rails.application.routes.draw do
 
   root "pages#home"
   resources :campaigns, only: %i[new create show update] do
+    post :upload_media, on: :member
     get :status, on: :member
     post :render_video, on: :member
     post :retry_generation, on: :member

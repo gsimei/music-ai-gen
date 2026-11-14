@@ -1,0 +1,19 @@
+<% content_for :title, "Enviar imagens · #{brand_name}" %>
+<% content_for :body_class, "studio-page" %>
+<div class="studio-home studio-app campaign-app">
+  <%= render "shared/studio_header" %>
+  <main class="campaign-main" data-controller="campaign-media" data-campaign-media-owner-value="<%= current_user.id %>" data-campaign-media-token-value="<%= @campaign.media_upload_token %>">
+    <div class="campaign-note">
+      <h1>Pagamento confirmado</h1>
+      <p role="status" data-campaign-media-target="status"><%= @media_error || "Vamos enviar as imagens que você escolheu neste navegador." %></p>
+      <%= form_with url: upload_media_campaign_path(@campaign), multipart: true, data: { turbo: false, campaign_media_target: "form", action: "submit->campaign-media#submit" } do %>
+        <%= hidden_field_tag :media_upload_token, @campaign.media_upload_token %>
+        <p>Se voltou em outro dispositivo ou as imagens não estiverem disponíveis, selecione novamente. Seu pagamento já está confirmado.</p>
+        <p><%= label_tag :photos, "Fotos da campanha (até 5)" %><%= file_field_tag "photos[]", id: "photos", multiple: true, accept: "image/jpeg,image/png,image/webp" %></p>
+        <p><%= label_tag :logo, "Logo (opcional)" %><%= file_field_tag :logo, accept: "image/jpeg,image/png,image/webp" %></p>
+        <button type="submit" class="ui-btn ui-btn-primary">Enviar imagens e continuar</button>
+        <button type="submit" name="skip" value="1" class="ui-btn ui-btn-ghost">Continuar sem imagens</button>
+      <% end %>
+    </div>
+  </main>
+</div>

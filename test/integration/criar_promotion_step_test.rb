@@ -252,8 +252,9 @@ class CriarPromotionStepTest < ActionDispatch::IntegrationTest
   end
 
   test "saved photos fill the first slots in photo_order, keep their hidden order fields and leave the rest empty" do
-    post campaigns_path, params: { campaign: @attributes.merge(photos: %w[first second third].map { |name| photo_upload(name) }) }
+    post campaigns_path, params: { campaign: @attributes }
     campaign = Campaign.last
+    campaign.photos.attach(%w[first second third].map { |name| photo_upload(name) })
     ids = campaign.product_photos.map(&:id)
     chosen = [ ids[2], ids[0], ids[1] ]
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen.map(&:to_s)) }

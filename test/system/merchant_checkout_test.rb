@@ -45,6 +45,8 @@ class MerchantCheckoutTest < ApplicationSystemTestCase
     checkout_params = nil
     checkout = ->(**args) do
       checkout_params = args
+      assert_empty Campaign.last.product_photos, "checkout must not persist browser images before payment"
+      refute Campaign.last.logo.attached?
       Stripe::Checkout::Session.construct_from(id: "cs_browser", url: args.fetch(:success_url))
     end
     payment = Stripe::Checkout::Session.construct_from(id: "cs_browser", payment_status: "paid",

@@ -7,9 +7,12 @@
       <i style="animation-delay:.36s"></i>
       <i style="animation-delay:.48s"></i>
     </div>
-    <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">
-      Caricamento in corso&hellip;
-    </h3>
-    <p style="color:rgba(245,241,231,.6)">Il tuo file è in fase di elaborazione. Attendi qualche istante.</p>
+    <% if order.pending? || order.payment_failed? %>
+      <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">File salvato</h3>
+      <p style="color:rgba(245,241,231,.6)">L'elaborazione inizierà dopo il pagamento.</p>
+    <% else %>
+      <h3 class="lyrics-ink" style="font-style:normal;" aria-live="polite">Caricamento in corso&hellip;</h3>
+      <p style="color:rgba(245,241,231,.6)">Il tuo file è in fase di elaborazione. Attendi qualche istante.</p>
+    <% end %>
   </div>
 </div>

@@ -50,24 +50,16 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     assert_select 'input[value="Pizzaria da Vila"]'
   end
 
-  test "merchant uploads multiple photos in order and can replace them before checkout" do
-    uploads = %w[first second third].map { |name| photo_upload(name) }
-    post campaigns_path, params: { campaign: @attributes.merge(photos: uploads) }
+  test "merchant uploads the selected photo order only after payment" do
+    token = SecureRandom.uuid
+    post campaigns_path, params: { campaign: @attributes.merge(media_upload_token: token) }
     campaign = Campaign.last
     assert_redirected_to campaign_path(campaign)
-    assert_equal %w[first.jpg second.jpg third.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
-    get campaign_path(campaign)
-    assert_select '.ui-slots[data-campaign-form-target="photoList"] figure.ui-slot[data-photo-id] img', count: 3
-    assert_response :success
-    assert_select 'input[type=file][multiple][name="campaign[photos][]"]'
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ "" ]) }
-    assert_equal 3, campaign.reload.product_photos.size
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: 6.times.map { |index| photo_upload("excess#{index}") }) }
-    assert_response :unprocessable_entity
-    assert_select "[role=alert]", text: /no máximo 5/
-    assert_equal 3, campaign.reload.product_photos.size
-    patch campaign_path(campaign), params: { campaign: @attributes.merge(photos: [ photo_upload("replacement") ]) }
-    assert_equal [ "replacement.jpg" ], campaign.reload.product_photos.map { |photo| photo.filename.to_s }
+    assert_empty campaign.product_photos
+    campaign.order.update!(status: "paid")
+    post upload_media_campaign_path(campaign), params: { media_upload_token: token, photos: %w[first second third].map { |name| photo_upload(name) } }
+    assert_redirected_to order_chat_path(campaign.order)
+    assert_equal %w[first.jpg second.jpg third.jpg], campaign.reload.product_photos.map { |photo| photo.filename.to_s }
   end
 
   test "server rejects more than five photos or unsupported uploads without creating orders" do
@@ -75,13 +67,13 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
       post campaigns_path, params: { campaign: @attributes.merge(photos: 6.times.map { |index| photo_upload("photo#{index}") }) }
     end
     assert_response :unprocessable_entity
-    assert_select "[role=alert]", text: /no máximo 5/
+    assert_select "[role=alert]", text: /após o pagamento/
     bad_file = Rack::Test::UploadedFile.new(StringIO.new("not an image"), "text/plain", original_filename: "notes.txt")
     assert_no_difference "Order.count" do
       post campaigns_path, params: { campaign: @attributes.merge(photos: [ bad_file ]) }
     end
     assert_response :unprocessable_entity
-    assert_select "[role=alert]", text: /JPG, PNG ou WebP/
+    assert_select "[role=alert]", text: /após o pagamento/
   end
 
   test "server validates the size of each photo" do
@@ -93,8 +85,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "saved photos can be reordered and the chosen opener survives edit and replacement" do
-    post campaigns_path, params: { campaign: @attributes.merge(photos: %w[first second third].map { |name| photo_upload(name) }) }
-    campaign = Campaign.last
+    campaign = legacy_campaign(%w[first second third])
     ids = campaign.product_photos.map(&:id)
     chosen_order = [ ids[2], ids[0], ids[1] ]
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen_order.map(&:to_s)) }
@@ -110,14 +101,13 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     patch campaign_path(campaign), params: { campaign: @attributes.merge(offer: "Oferta atualizada") }
     assert_equal chosen_order, campaign.reload.product_photos.map(&:id)
     patch campaign_path(campaign), params: { campaign: @attributes.merge(photo_order: chosen_order, photos: [ photo_upload("new-opener"), photo_upload("new-second") ]) }
-    assert_redirected_to campaign_path(campaign)
-    assert_equal [], campaign.reload.photo_order
-    assert_equal %w[new-opener.jpg new-second.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
+    assert_response :unprocessable_entity
+    assert_equal chosen_order, campaign.reload.photo_order
+    assert_equal %w[third.jpg first.jpg second.jpg], campaign.product_photos.map { |photo| photo.filename.to_s }
   end
 
   test "reordering only accepts a complete permutation of this campaigns photos before checkout" do
-    post campaigns_path, params: { campaign: @attributes.merge(photos: [ photo_upload("first"), photo_upload("second") ]) }
-    campaign = Campaign.last
+    campaign = legacy_campaign(%w[first second])
     ids = campaign.product_photos.map(&:id)
     other = Campaign.create!(@attributes.merge(order: orders(:b2b_pending)))
     other.photos.attach(io: StringIO.new(File.binread(Rails.root.join("public/demos/cafe-aurora.jpg"))), filename: "other.jpg", content_type: "image/jpeg")
@@ -165,12 +155,13 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "checkout failure returns to the same form and retries the saved campaign without another order" do
-    post campaigns_path, params: { campaign: @attributes.merge(photos: [ photo_upload("opener") ]) }
+    token = SecureRandom.uuid
+    post campaigns_path, params: { campaign: @attributes.merge(media_upload_token: token) }
     campaign = Campaign.last
     follow_redirect!
     assert_select 'form.ui-form[action=?][data-campaign-form-initial-step-value="2"]', campaign_path(campaign)
     assert_select '[role="alert"]', text: /Sua campanha está salva/
-    assert_select '.ui-slots[data-campaign-form-target="photoList"] figure.ui-slot[data-photo-id] img', count: 1
+    assert_select 'input[name="campaign[media_upload_token]"][value=?]', token
     assert_select "textarea#campaign_offer", text: @attributes[:offer]
     assert_select ".campaign-checkout", count: 0
 
@@ -182,7 +173,8 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to session.url
     assert_equal "Oferta corrigida", campaign.reload.offer
-    assert_equal [ "opener.jpg" ], campaign.product_photos.map { |photo| photo.filename.to_s }
+    assert_empty campaign.product_photos
+    assert_equal token, campaign.media_upload_token
   end
 
   test "cancelled checkout returns to the first screen and reuses the existing payment session" do
@@ -285,6 +277,14 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  # Compatibility fixture for images persisted by the former pre-payment flow.
+  def legacy_campaign(names)
+    post campaigns_path, params: { campaign: @attributes }
+    campaign = Campaign.last
+    campaign.photos.attach(names.map { |name| photo_upload(name) })
+    campaign
+  end
 
   def photo_upload(name)
     Rack::Test::UploadedFile.new(StringIO.new(File.binread(Rails.root.join("public/demos/cafe-aurora.jpg"))), "image/jpeg", original_filename: "#{name}.jpg")

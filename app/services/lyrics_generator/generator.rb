@@ -8,6 +8,16 @@ module LyricsGenerator
     attribute :user_feedback, :string
 
     def call
+      # Reload the counter under the same lock used for draft version allocation.
+      # Keep failed attempts uncharged, while serializing every regeneration caller.
+      return order.with_lock { generate } if mode.to_sym == :regen
+
+      generate
+    end
+
+    private
+
+    def generate
       mode_sym = mode.to_sym
       briefing = order.briefing
       return failure_result(:no_briefing) unless briefing
@@ -59,8 +69,6 @@ module LyricsGenerator
 
       success_result(draft)
     end
-
-    private
 
     def regen_limit_reached?
       order.lyrics_regen_used >= order.lyrics_regen_limit

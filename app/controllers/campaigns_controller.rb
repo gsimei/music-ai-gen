@@ -12,6 +12,7 @@ class CampaignsController < ApplicationController
 
   def create
     @campaign = Campaign.new(campaign_params)
+    return reject_early_media if incoming_media?
     config = BRANDS_CONFIG.fetch(:b2b)
     tier = config.fetch(:tiers).fetch(config.fetch(:campaign_tier).to_sym)
     @campaign.order = current_user.orders.build(
@@ -32,7 +33,11 @@ class CampaignsController < ApplicationController
       result = Stripe::PaymentReconciler.call(order: @campaign.order)
       @payment_check_unavailable = result.errors == "payment_check_unavailable" if result.failure?
     end
-    if params[:payment] == "processing" && %w[paid lyrics_drafting lyrics_ready lyrics_approved music_generating preview_ready].include?(@campaign.order.reload.status)
+    @campaign.order.reload
+    if @campaign.payment_confirmed? && @campaign.media_pending?
+      return render :upload_media
+    end
+    if params[:payment] == "processing" && @campaign.payment_confirmed?
       return redirect_to order_chat_path(order_id: @campaign.order_id), notice: "Pagamento confirmado! Vamos criar sua campanha."
     end
     if @campaign.order.pending? || @campaign.order.payment_failed?
@@ -51,11 +56,29 @@ class CampaignsController < ApplicationController
 
   def update
     return head :conflict unless (@campaign.order.pending? || @campaign.order.payment_failed?) && @campaign.order.stripe_session_id.blank?
+    return reject_early_media if incoming_media?
     if @campaign.update(campaign_params)
       @campaign.sync_briefing!
       start_checkout
     else
       render :new, status: :unprocessable_entity
+    end
+  end
+
+  def upload_media
+    result = Campaigns::UploadMedia.call(campaign: @campaign, token: params[:media_upload_token],
+      photos: params[:photos], logo: params[:logo], skip: params[:skip] == "1")
+    if result.success?
+      respond_to do |format|
+        format.json { render json: { redirect_url: order_chat_path(order_id: @campaign.order_id) } }
+        format.html { redirect_to order_chat_path(order_id: @campaign.order_id), status: :see_other }
+      end
+    else
+      @media_error = result.errors.to_s
+      respond_to do |format|
+        format.json { render json: { error: @media_error }, status: :unprocessable_entity }
+        format.html { render :upload_media, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -107,6 +130,16 @@ class CampaignsController < ApplicationController
 
   private
 
+  def incoming_media?
+    source = params[:campaign] || {}
+    source[:photo].present? || source[:logo].present? || Array(source[:photos]).any?(&:present?)
+  end
+
+  def reject_early_media
+    @campaign.errors.add(:base, "As imagens só são enviadas após o pagamento. Atualize a página e selecione suas fotos novamente.")
+    render :new, status: :unprocessable_entity
+  end
+
   def start_checkout
     result = Stripe::CheckoutBuilder.call(order: @campaign.order, host: request.host_with_port)
     if result.success?
@@ -121,15 +154,7 @@ class CampaignsController < ApplicationController
   end
 
   def campaign_params
-    attributes = params.require(:campaign).permit(:business_name, :logo, :remove_logo, :offer, :contact, :call_to_action, :show_cta, :cta_color, :style, :musical_genre, :vocal_gender, :music_notes, :photo, photos: [], photo_order: [])
-    attributes.delete(:logo) if attributes[:logo].blank?
-    if attributes[:logo] && !attributes[:logo].is_a?(ActionDispatch::Http::UploadedFile)
-      raise ActionController::BadRequest, "Envie a logo como um arquivo PNG, JPG ou WebP"
-    end
-    # An empty file picker on edit keeps the campaign's saved photos.
-    attributes.delete(:photos) if attributes[:photos]&.all?(&:blank?)
-    # New files already arrive in the chosen order; saved attachment IDs no longer apply.
-    attributes[:photo_order] = [] if attributes[:photos].present?
-    attributes
+    params.require(:campaign).permit(:business_name, :offer, :contact, :call_to_action, :show_cta, :cta_color,
+      :style, :musical_genre, :vocal_gender, :music_notes, :media_upload_token, :remove_logo, photo_order: [])
   end
 end

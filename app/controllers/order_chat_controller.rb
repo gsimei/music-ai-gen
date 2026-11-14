@@ -9,6 +9,7 @@ class OrderChatController < ApplicationController
   rate_limit to: AUDIO_RATE_LIMIT, within: 1.minute, only: %i[prepare_audio excerpt_settings], by: -> { current_user.id }, with: -> { head :too_many_requests }
 
   def show
+    return redirect_to campaign_path(@order.campaign) if @order.campaign&.media_pending?
     @messages = @order.briefing_messages
     @draft    = @order.current_draft
     @assets   = @order.music_variant_assets
@@ -259,22 +260,11 @@ class OrderChatController < ApplicationController
   end
 
   def handle_soundtrack_upload(file, message)
-    input_type = file.content_type.start_with?("image/") ? "image" : "video"
-
-    soundtrack_input = @order.build_soundtrack_input(
-      input_type:      input_type,
-      storage_key:     file.original_filename,
-      file_size_bytes: file.size,
-      mime_type:       file.content_type
-    )
-    soundtrack_input.file.attach(file)
-
-    if soundtrack_input.save
+    result = Orders::SoundtrackUpload.call(order: @order, file: file)
+    if result.success?
       if message.present?
         @order.briefing_messages.create!(role: "user", content: message)
       end
-
-      UploadSoundtrackInputToMurekaJob.perform_later(@order.id)
 
       render turbo_stream: [
         turbo_stream.append("chat-transcript",
@@ -289,7 +279,7 @@ class OrderChatController < ApplicationController
     else
       render turbo_stream: turbo_stream.append("chat-transcript",
         partial: "order_chat/message",
-        locals:  { role: "assistant", content: t("order_chat.error_message") })
+        locals:  { role: "assistant", content: t("order_chat.error_message") }), status: :unprocessable_entity
     end
   end
 end

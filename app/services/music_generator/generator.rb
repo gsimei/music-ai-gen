@@ -6,6 +6,7 @@ module MusicGenerator
     attribute :melody_hint, :string
 
     def call
+      return failure_result(:invalid_state) if order.campaign
       return failure_result(:invalid_state) unless order.music_generating?
 
       if order.soundtrack_order?
@@ -30,29 +31,33 @@ module MusicGenerator
     private
 
     def call_soundtrack
-      briefing         = order.briefing
-      soundtrack_input = order.soundtrack_input
-      return failure_result(:no_soundtrack_input) unless soundtrack_input&.ready?
+      music_gen = nil
+      soundtrack_input = nil
+      order.with_lock do
+        return failure_result(:invalid_state) unless order.music_generating? && order.soundtrack_enabled?
+        return failure_result(:busy) if order.music_generations.where(status: %w[pending processing]).exists?
+        return failure_result(:busy) if order.music_generations.count > order.music_regen_used
+        soundtrack_input = order.soundtrack_input
+        return failure_result(:no_soundtrack_input) unless soundtrack_input&.ready?
+        # Persist the claim before contacting the provider, including for legacy job replays.
+        music_gen = MusicGeneration.create!(order: order, provider: "mureka", model: "auto",
+          status: "pending", iteration: next_iteration, music_style: order.briefing&.music_style || "auto",
+          generation_type: "soundtrack")
+      end
 
-      prompt = build_prompt(briefing, instrumental: true)
+      prompt = build_prompt(order.briefing, instrumental: true)
       result = MurekaSoundtrackClient.call(
         file_id:    soundtrack_input.mureka_file_id,
         input_type: soundtrack_input.input_type,
         prompt:     prompt,
         n:          2
       )
-      return failure_result(result.errors) unless result.success?
+      unless result.success?
+        music_gen.update!(status: "failed")
+        return failure_result(result.errors)
+      end
 
-      music_gen = MusicGeneration.create!(
-        order:           order,
-        provider:        "mureka",
-        model:           "auto",
-        mureka_job_id:   result.value[:job_id],
-        status:          "pending",
-        iteration:       next_iteration,
-        music_style:     briefing&.music_style || "auto",
-        generation_type: "soundtrack"
-      )
+      music_gen.update!(mureka_job_id: result.value[:job_id])
       PollMurekaStatusJob.perform_later(music_gen.id)
       success_result(music_gen)
     end

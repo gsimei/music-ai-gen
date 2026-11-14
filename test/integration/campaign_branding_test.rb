@@ -11,10 +11,11 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     @headers = { "ACCEPT" => "text/vnd.turbo-stream.html" }
   end
 
-  test "a logo can replace the name and survive editing an empty file picker" do
-    post campaigns_path, params: { campaign: @attributes.merge(logo: logo_upload) }
+  test "a legacy saved logo survives editing an empty file picker" do
+    post campaigns_path, params: { campaign: @attributes }
     campaign = Campaign.last
     assert_redirected_to campaign_path(campaign)
+    campaign.logo.attach(logo_upload)
     assert campaign.logo.attached?
     assert_equal "", campaign.business_name
     assert_empty campaign.product_photos
@@ -62,7 +63,7 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
       post campaigns_path, params: { campaign: @attributes.merge(logo: bad.call) }
     end
     assert_response :unprocessable_entity
-    assert_select '[role="alert"]', text: /PNG, JPG ou WebP/
+    assert_select '[role="alert"]', text: /após o pagamento/
     patch campaign_path(campaign), params: { campaign: { logo: bad.call } }
     assert_response :unprocessable_entity
     assert_equal original, campaign.reload.logo.blob.id
@@ -70,7 +71,7 @@ class CampaignBrandingTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal original, campaign.reload.logo.blob.id
     patch campaign_path(campaign), params: { campaign: { logo: campaign.logo.blob.signed_id } }
-    assert_response :bad_request
+    assert_response :unprocessable_entity
     assert_equal original, campaign.reload.logo.blob.id
   end
 

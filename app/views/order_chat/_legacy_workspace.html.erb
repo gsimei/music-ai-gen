@@ -71,7 +71,7 @@
         <input type="file"
                id="soundtrack-file-input"
                name="file"
-               accept="video/mp4,video/quicktime,image/jpeg,image/png"
+               accept="<%= SoundtrackInput::CONTENT_TYPES.join(',') %>"
                data-chat-mode-target="fileInput"
                data-action="change->chat-mode#fileSelected"
                class="sr-only"

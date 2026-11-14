@@ -1,6 +1,7 @@
 # Pin npm packages by running ./bin/importmap
 
 pin "application"
+pin "campaign_media_store"
 pin "jp_waveform", to: "jp_waveform.js"
 pin "jp_motion", to: "jp_motion.js"
 pin "@hotwired/turbo-rails", to: "turbo.min.js"

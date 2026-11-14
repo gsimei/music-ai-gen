@@ -57,6 +57,15 @@ class Campaign < ApplicationRecord
   validate :supported_photo
   validate :valid_photo_order
   validate :supported_logo
+  validates :media_upload_token, format: { with: /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i }, allow_blank: true
+
+  def media_pending?
+    media_upload_token.present? && media_uploaded_at.nil?
+  end
+
+  def payment_confirmed?
+    %w[paid lyrics_drafting lyrics_ready lyrics_failed lyrics_approved music_generating preview_ready music_failed approved].include?(order.status)
+  end
 
   def photo_order=(ids)
     self[:photo_order] = Array(ids).map { |id| Integer(id, exception: false) || id }

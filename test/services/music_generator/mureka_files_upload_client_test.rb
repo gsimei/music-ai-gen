@@ -37,6 +37,31 @@ class MusicGenerator::MurekaFilesUploadClientTest < ActiveSupport::TestCase
     stub_request(:post, UPLOAD_URL).to_raise(SocketError)
   end
 
+  test "oversized file is rejected before any HTTP request" do
+    with_temp_file do |path|
+      File.truncate(path, SoundtrackInput::MAX_FILE_SIZE + 1)
+      result = MusicGenerator::MurekaFilesUploadClient.call(file_path: path)
+      assert_equal :invalid_file_size, result.errors
+    end
+    assert_not_requested(:post, UPLOAD_URL)
+  end
+
+  test "multipart upload uses an IO stream instead of a full request body string" do
+    http = Net::HTTP.new("api.mureka.ai", 443)
+    http.stub(:request, ->(request) {
+      assert_nil request.body
+      assert_respond_to request.body_stream, :read
+      body = request.body_stream.read
+      assert_includes body, "binary video data"
+      assert_includes body, 'filename="soundtrack.mp4"'
+      Struct.new(:code, :body).new("200", SUCCESS_BODY)
+    }) do
+      Net::HTTP.stub(:new, http) do
+        with_temp_file { |path| assert MusicGenerator::MurekaFilesUploadClient.call(file_path: path).success? }
+      end
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Happy path
   # ---------------------------------------------------------------------------

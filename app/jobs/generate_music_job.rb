@@ -28,6 +28,7 @@ class GenerateMusicJob < ApplicationJob
 
     OrderChatBroadcaster.call(order)
     result = MusicGenerator::Generator.call(order: order, melody_hint: melody_hint)
+    return if result.failure? && result.errors == :busy
 
     unless result.success?
       Rails.logger.error "[GenerateMusicJob] Generator failed for Order##{order_id}: #{result.errors.inspect}"

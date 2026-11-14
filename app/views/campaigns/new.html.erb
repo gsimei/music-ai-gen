@@ -14,9 +14,11 @@
     <h1 class="ui-sr-only">Sua próxima campanha.</h1>
     <%= render "campaigns/new/saved_sound" %>
     <%= render "campaigns/new/notices" %>
-    <%= form_with model: @campaign, **checkout_options, class: "ui-form", data: { turbo: false, controller: "campaign-form", campaign_form_initial_step_value: initial_step, campaign_form_photo_limit_value: Campaigns::PhotoLimit::INITIAL, action: "submit->campaign-form#validate pageshow@window->campaign-form#resetSubmission pageshow@window->campaign-form#syncStage" } do |f| %>
+    <%= form_with model: @campaign, **checkout_options, class: "ui-form", data: { turbo: false, controller: "campaign-form", media_owner: current_user.id, campaign_form_initial_step_value: initial_step, campaign_form_photo_limit_value: Campaigns::PhotoLimit::INITIAL, action: "submit->campaign-form#validate pageshow@window->campaign-form#resetSubmission pageshow@window->campaign-form#syncStage" } do |f| %>
+      <%= f.hidden_field :media_upload_token %>
       <div class="ui-head"><%= render "campaigns/new/steps_bar", current: initial_step %></div>
       <div class="ui-col">
+        <p class="ui-hint" role="alert" data-local-media-error hidden></p>
         <% unless checkout_started %>
           <%= render "campaigns/new/promotion", f: f, saved_photos: saved_photos, contact_strip: contact_strip %>
           <%= render "campaigns/new/sound", f: f %>

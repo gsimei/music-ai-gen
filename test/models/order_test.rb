@@ -788,7 +788,7 @@ class OrderAasmTest < ActiveSupport::TestCase
       storage_key: "test.mp4"
     )
 
-    assert_enqueued_with(job: UploadSoundtrackInputToMurekaJob, args: [ order.id ]) do
+    assert_enqueued_with(job: UploadSoundtrackInputToMurekaJob, args: [ order.id, order.soundtrack_input.id ]) do
       order.mark_paid!
     end
   end

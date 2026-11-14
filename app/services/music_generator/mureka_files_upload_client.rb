@@ -11,6 +11,7 @@ module MusicGenerator
     attribute :purpose,   :string, default: -> { "soundtrack" }
 
     def call
+      return failure_result(:invalid_file_size) unless File.size(file_path).between?(1, SoundtrackInput::MAX_FILE_SIZE)
       response = post_to_mureka
       return failure_result(:api_error) unless response.code.to_i == 200
 
@@ -35,30 +36,22 @@ module MusicGenerator
       http.read_timeout = 120
       http.open_timeout = 10
 
-      boundary = "RubyFormBoundary#{SecureRandom.hex(8)}"
-
       req = Net::HTTP::Post.new(uri.path)
       req["Authorization"] = "Bearer #{ENV.fetch('MUREKA_API_KEY', '')}"
-      req["Content-Type"]  = "multipart/form-data; boundary=#{boundary}"
-      req.body             = build_multipart_body(boundary)
-
-      http.request(req)
-    end
-
-    def build_multipart_body(boundary)
-      file_content = File.binread(file_path)
-      filename     = File.basename(file_path)
-
-      body = String.new(encoding: "ASCII-8BIT")
-      body << "--#{boundary}\r\n"
-      body << "Content-Disposition: form-data; name=\"purpose\"\r\n\r\n"
-      body << "#{purpose}\r\n"
-      body << "--#{boundary}\r\n"
-      body << "Content-Disposition: form-data; name=\"file\"; filename=\"#{filename}\"\r\n"
-      body << "Content-Type: application/octet-stream\r\n\r\n"
-      body << file_content
-      body << "\r\n--#{boundary}--\r\n"
-      body
+      boundary = "RubyFormBoundary#{SecureRandom.hex(8)}"
+      extension = File.extname(file_path)
+      filename = "soundtrack#{SoundtrackInput::EXTENSIONS.value?(extension) ? extension : '.bin'}"
+      Tempfile.create([ "mureka-upload", ".multipart" ], binmode: true) do |body|
+        body.write("--#{boundary}\r\nContent-Disposition: form-data; name=\"purpose\"\r\n\r\n#{purpose}\r\n")
+        body.write("--#{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{filename}\"\r\nContent-Type: application/octet-stream\r\n\r\n")
+        File.open(file_path, "rb") { |file| IO.copy_stream(file, body) }
+        body.write("\r\n--#{boundary}--\r\n")
+        body.rewind
+        req["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
+        req.content_length = body.size
+        req.body_stream = body
+        http.request(req)
+      end
     end
   end
 end

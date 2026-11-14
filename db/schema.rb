@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -98,6 +98,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_12_100000) do
     t.datetime "created_at", null: false
     t.string "cta_color", limit: 7, default: "#d6f36b", null: false
     t.string "music_notes", default: "", null: false
+    t.string "media_upload_token"
+    t.datetime "media_uploaded_at"
     t.string "musical_genre", default: "auto", null: false
     t.string "offer", null: false
     t.bigint "order_id", null: false

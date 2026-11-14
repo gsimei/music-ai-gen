@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { loadMedia, saveMedia, removeMedia, mediaToken } from "campaign_media_store"
 
 export default class extends Controller {
   static values = { photoLimit: { type: Number, default: 5 }, initialStep: { type: Number, default: 0 } }
@@ -21,6 +22,7 @@ export default class extends Controller {
     }
     this.preview()
     this.logo()
+    this.mediaReady = this.restoreMedia()
   }
   disconnect() {
     this.releasePhotos()
@@ -142,8 +144,11 @@ export default class extends Controller {
     this.summaryPhotosTarget.replaceChildren(thumbs, caption)
   }
   offerText(value) { return value.replace(/\r\n?/g, "\n").replace(/R\$[^\S\r\n]*(?=\d)/g, "R$\u00a0") }
-  validate(event) {
+  async validate(event) {
+    event.preventDefault()
     if (this.submitting) { event.preventDefault(); return }
+    await this.mediaReady
+    if (this.submitting) return
     if (this.hasStepTarget) {
       if (this.index < this.stepTargets.length - 1) { event.preventDefault(); this.next(); return }
       this.stepTargets.forEach(step => step.querySelectorAll("input,textarea,select").forEach(input => { input.disabled = false }))
@@ -153,6 +158,58 @@ export default class extends Controller {
     this.submitting = true
     this.submitTarget.disabled = true
     this.submitText = "Abrindo pagamento…"
+    try {
+      const token = this.element.querySelector('[name="campaign[media_upload_token]"]')
+      if (token && (this.hasPhotoInputTarget || this.hasLogoInputTarget)) {
+        const photos = (this.photos || []).filter(photo => photo.file).map(photo => photo.file)
+        const logo = this.hasLogoInputTarget ? this.logoInputTarget.files[0] : null
+        if (photos.length || logo) {
+          token.value ||= mediaToken()
+          await saveMedia(this.element.dataset.mediaOwner, token.value, { photos, logo })
+        } else if (token.value) {
+          try { await removeMedia(this.element.dataset.mediaOwner, token.value) } catch (_) { /* No files will be sent. */ }
+          token.value = ""
+        }
+      }
+      // Only text goes to checkout. Files stay in IndexedDB through the Stripe redirect.
+      this.element.querySelectorAll('input[type="file"]').forEach(input => { input.disabled = true })
+      HTMLFormElement.prototype.submit.call(this.element)
+    } catch (_) {
+      this.resetSubmission()
+      this.mediaError("Não foi possível guardar as imagens neste navegador. Libere espaço e tente novamente, ou remova as imagens para continuar.")
+    }
+  }
+
+  async restoreMedia() {
+    const token = this.element.querySelector('[name="campaign[media_upload_token]"]')?.value
+    if (!token) return
+    try {
+      const media = await loadMedia(this.element.dataset.mediaOwner, token)
+      if (!media) return
+      if (!this.hasPhotoInputTarget || !this.photoInputTarget.files.length) {
+        this.releasePhotos()
+        this.photos = (media.photos || []).map(file => ({ key: `upload-${this.uploadSeq++}`, file, url: URL.createObjectURL(file), name: file.name }))
+        if (this.hasPhotoInputTarget) { this.syncPhotoFiles(); this.renderPhotos() }
+        this.fillSummaryPhotos()
+      }
+      if (media.logo && this.hasLogoInputTarget && !this.logoInputTarget.files.length) {
+        const selection = new DataTransfer()
+        selection.items.add(media.logo)
+        this.logoInputTarget.files = selection.files
+        this.logo()
+      } else if (media.logo && this.hasPreviewLogoTarget) {
+        this.logoUrl = URL.createObjectURL(media.logo)
+        this.previewLogoTarget.src = this.logoUrl
+        this.previewLogoTarget.hidden = false
+      }
+    } catch (_) {
+      this.mediaError("As imagens locais não estão disponíveis. Você poderá selecioná-las novamente depois do pagamento.")
+    }
+  }
+
+  mediaError(message) {
+    const notice = this.element.querySelector('[data-local-media-error]')
+    if (notice) { notice.hidden = false; notice.textContent = message }
   }
   // O envio do Criar é um <button> com o rótulo num alvo; um input[type=submit] guarda o rótulo em value.
   get submitText() { return this.hasSubmitLabelTarget ? this.submitLabelTarget.textContent : this.submitTarget.value }
