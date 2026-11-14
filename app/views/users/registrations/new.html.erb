@@ -2,7 +2,11 @@
 <%= render layout: "users/shared/studio_auth" do %>
   <p class="studio-kicker">SUA PRIMEIRA CAMPANHA COMEÇA AQUI</p>
   <h1>Criar sua conta</h1>
-  <p class="studio-form-intro">Crie sua conta para salvar e acompanhar a campanha.</p>
+  <% if campaign_draft_resume_path %>
+    <p class="studio-form-intro" data-guest-campaign-notice>Sua campanha está guardada neste navegador. Crie sua conta para continuar para o pagamento, com os dados e fotos que você já escolheu.</p>
+  <% else %>
+    <p class="studio-form-intro">Crie sua conta para salvar e acompanhar a campanha.</p>
+  <% end %>
   <%= render "users/shared/error_messages", resource: resource %>
   <%= form_for resource, as: resource_name, url: registration_path(resource_name) do |f| %>
     <div class="studio-field"><%= f.label :email, "Email" %><%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "voce@seunegocio.com.br", required: true %></div>

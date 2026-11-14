@@ -12,14 +12,11 @@ class OrdersController < ApplicationController
   before_action :set_order, only: %i[show approve_lyrics regenerate_lyrics approve_music regenerate_music]
 
   def new
-    unless user_signed_in?
-      store_location_for(:user, new_campaign_path)
-      return redirect_to new_user_registration_path
-    end
     redirect_to new_campaign_path
   end
 
   def show
+    return redirect_to @order.purchased_campaign_pack if @order.purchased_campaign_pack
     return redirect_to order_chat_path(order_id: @order.id) if @order.campaign
     @draft            = @order.current_draft
     @assets           = @order.music_variant_assets
@@ -28,7 +25,7 @@ class OrdersController < ApplicationController
 
   def checkout
     @order = current_user.orders.find(params[:id])
-    destination = @order.campaign || @order
+    destination = @order.campaign || @order.purchased_campaign_pack || @order
     return redirect_to destination unless @order.pending? || @order.payment_failed?
 
     result = ::Stripe::CheckoutBuilder.call(order: @order, host: request.host_with_port)

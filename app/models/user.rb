@@ -17,6 +17,7 @@ class User < ApplicationRecord
 
   # Associations
   has_many :orders, dependent: :nullify
+  has_many :campaign_packs, through: :orders, source: :purchased_campaign_pack
   has_many :business_music_profiles, dependent: :destroy
   has_many :refund_requests, dependent: :destroy
   has_many :resolved_refund_requests,
@@ -45,6 +46,10 @@ class User < ApplicationRecord
 
   def customer?
     role == "customer"
+  end
+
+  def available_campaign_credits
+    campaign_packs.joins(:order).where(orders: { status: "paid" }).sum(&:remaining_credits)
   end
 
   private

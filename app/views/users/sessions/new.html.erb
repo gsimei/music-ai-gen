@@ -1,7 +1,11 @@
 <% content_for :title, "#{brand_name} · Entrar" %>
 <%= render layout: "users/shared/studio_auth" do %>
   <h1>Entrar na sua conta</h1>
-  <p class="studio-form-intro">Acompanhe suas campanhas e baixe os vídeos.</p>
+  <% if campaign_draft_resume_path %>
+    <p class="studio-form-intro" data-guest-campaign-notice>Sua campanha está guardada neste navegador. Entre para continuar com os dados e fotos que você já escolheu.</p>
+  <% else %>
+    <p class="studio-form-intro">Acompanhe suas campanhas e baixe os vídeos.</p>
+  <% end %>
   <%= render "users/shared/error_messages", resource: resource %>
   <%= form_for resource, as: resource_name, url: session_path(resource_name) do |f| %>
     <div class="studio-field">

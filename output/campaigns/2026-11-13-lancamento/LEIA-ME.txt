@@ -14,6 +14,7 @@ video/virajingle-video-sistema.mp4 — montagem feita pelo renderizador do próp
 posts/ — três posts em PNG, 1080 × 1350, e seus arquivos SVG.
 stories/ — três Stories em PNG, 1080 × 1920, e em MP4 com música, além dos arquivos SVG.
 LEGENDAS.txt — textos do Reel e dos três posts, textos alternativos e orientação para os Stories.
+CALENDARIO-PUBLICACAO.txt — datas, horários em Brasília e na Itália e ordem de publicação de cada peça.
 
 SEGMENTOS REPRESENTADOS
 
@@ -38,10 +39,11 @@ Prompts, fontes com licenças, cenas, registros e arquivos de produção ficam e
 
 ORDEM SUGERIDA DE PUBLICAÇÃO
 
-Dia 1: vídeo de apresentação e os três Stories em sequência.
-Dia 2: post de loja de roupas.
-Dia 4: post de calçados e acessórios.
-Dia 6: post de lojas, salões e serviços.
+16/11, segunda: Reel às 12h30 de Brasília e três Stories em sequência às 12h45.
+17/11, terça: post de loja de roupas às 18h30 de Brasília.
+19/11, quinta: post de calçados e acessórios às 18h30 de Brasília.
+21/11, sábado: post de lojas, salões e serviços às 10h de Brasília.
+Calendário completo e horários equivalentes na Itália em CALENDARIO-PUBLICACAO.txt.
 
 Use as legendas de LEGENDAS.txt e o endereço real do ViraJingle no link da bio. Para Stories com adesivo de link, posicione o adesivo junto à chamada inferior, sem cobrir o preço.
 

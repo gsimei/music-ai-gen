@@ -1,10 +1,13 @@
 class CampaignsController < ApplicationController
+  skip_before_action :authenticate_user!, only: %i[new create]
   before_action :set_campaign, except: %i[new create]
 
   def new
     @campaign = Campaign.new(style: "animado", musical_genre: "pop", call_to_action: "Peça pelo WhatsApp")
-    @music_profiles = current_user.business_music_profiles.order(:business_name)
-    if params[:music_profile_id].present?
+    @guest_draft = campaign_guest_draft.resume(params[:draft])
+    @creation_token = @guest_draft&.fetch("token")
+    @music_profiles = current_user&.business_music_profiles&.order(:business_name)
+    if user_signed_in? && params[:music_profile_id].present?
       @music_profile = @music_profiles.find(params[:music_profile_id])
       @campaign.assign_attributes(@music_profile.campaign_attributes)
     end
@@ -13,6 +16,7 @@ class CampaignsController < ApplicationController
   def create
     @campaign = Campaign.new(campaign_params)
     return reject_early_media if incoming_media?
+    return request_account_for_draft unless user_signed_in?
     config = BRANDS_CONFIG.fetch(:b2b)
     tier = config.fetch(:tiers).fetch(config.fetch(:campaign_tier).to_sym)
     @campaign.order = current_user.orders.build(
@@ -20,9 +24,16 @@ class CampaignsController < ApplicationController
       delivery_email: current_user.email, tier: config.fetch(:campaign_tier), price_cents: tier.fetch(:price_cents),
       lyrics_regen_limit: tier.fetch(:lyrics_regen_limit), music_regen_limit: tier.fetch(:music_regen_limit), status: "pending"
     )
+    @campaign.order.creation_token = params.dig(:campaign, :creation_token).presence&.first(100)
     if @campaign.valid?
-      Campaign.transaction { @campaign.save!; @campaign.sync_briefing! }
-      start_checkout
+      result = Campaigns::SaveWithCredit.call(campaign: @campaign, user: current_user, credit_required: params[:use_credit] == "1")
+      if result.success?
+        @campaign = result.value
+        campaign_guest_draft.clear(@campaign.order.creation_token)
+        @campaign.payment_confirmed? ? redirect_to(campaign_path(@campaign, payment: "processing")) : start_checkout
+      else
+        render :new, status: :unprocessable_entity
+      end
     else
       render :new, status: :unprocessable_entity
     end
@@ -129,6 +140,22 @@ class CampaignsController < ApplicationController
   end
 
   private
+
+  def request_account_for_draft
+    token = params.dig(:campaign, :creation_token)
+    @creation_token = token if Campaigns::GuestDraft.valid_token?(token)
+    signing_in = params[:auth_intent] == "sign_in"
+    # A transient parent permits the normal campaign validations, with no
+    # guest customer, order, upload or paid generation created on the server.
+    @campaign.order = Order.new
+    @campaign.valid? unless signing_in
+    @campaign.errors.add(:base, "Atualize a página e tente continuar novamente.") unless @creation_token
+    return render(:new, status: :unprocessable_entity) if @campaign.errors.any?
+
+    campaign_guest_draft.capture(@creation_token, checkout_requested: !signing_in)
+    store_location_for(:user, campaign_draft_resume_path)
+    redirect_to(signing_in ? new_user_session_path : new_user_registration_path, status: :see_other)
+  end
 
   def incoming_media?
     source = params[:campaign] || {}

@@ -16,11 +16,20 @@ class ApplicationController < ActionController::Base
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
-  helper_method :current_brand
+  helper_method :current_brand, :campaign_draft_resume_path
 
   attr_reader :current_brand
 
   private
+
+  def campaign_guest_draft
+    @campaign_guest_draft ||= Campaigns::GuestDraft.new(session)
+  end
+
+  def campaign_draft_resume_path
+    draft = campaign_guest_draft.pending
+    new_campaign_path(draft: draft.fetch("token")) if draft
+  end
 
   def set_brand_and_locale
     result = BrandLocaleResolver.call(

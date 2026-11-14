@@ -13,7 +13,7 @@ class CampaignBrowserMediaTest < ApplicationSystemTestCase
 
   test "cancelled checkout retains browser images across reload and uploads only when paid" do
     prepare_campaign
-    checkout = ->(**args) { Stripe::Checkout::Session.construct_from(id: "cs_local_images", url: args.fetch(:cancel_url)) }
+    checkout = ->(args, _options = {}) { Stripe::Checkout::Session.construct_from(id: "cs_local_images", url: args.fetch(:cancel_url)) }
     unpaid = Stripe::Checkout::Session.construct_from(id: "cs_local_images", payment_status: "unpaid")
     Stripe::Checkout::Session.stub(:create, checkout) do
       Stripe::Checkout::Session.stub(:retrieve, unpaid) do

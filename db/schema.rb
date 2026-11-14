@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -89,6 +89,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_010000) do
     t.string "vocal_gender", null: false
     t.index ["user_id", "business_key"], name: "index_business_music_profiles_on_user_id_and_business_key", unique: true
     t.index ["user_id"], name: "index_business_music_profiles_on_user_id"
+  end
+
+  create_table "campaign_packs", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.integer "quantity", null: false
+    t.string "offer_code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_campaign_packs_on_order_id", unique: true
+    t.check_constraint "quantity > 0", name: "campaign_packs_positive_quantity"
   end
 
   create_table "campaigns", force: :cascade do |t|
@@ -339,6 +349,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_010000) do
     t.index ["stripe_payment_intent_id"], name: "index_orders_on_stripe_payment_intent_id"
     t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
+    t.bigint "campaign_pack_id"
+    t.string "creation_token"
+    t.index ["campaign_pack_id"], name: "index_orders_on_campaign_pack_id"
+    t.index ["user_id", "creation_token"], name: "index_orders_on_user_id_and_creation_token", unique: true, where: "(creation_token IS NOT NULL)"
   end
 
   create_table "refund_requests", force: :cascade do |t|
@@ -483,4 +497,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_010000) do
   add_foreign_key "refund_requests", "users", column: "resolved_by_id"
   add_foreign_key "soundtrack_inputs", "orders"
   add_foreign_key "stripe_events", "orders"
+  add_foreign_key "campaign_packs", "orders"
+  add_foreign_key "orders", "campaign_packs"
 end

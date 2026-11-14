@@ -1,0 +1,24 @@
+<% content_for :title, "Black Friday · #{brand_name}" %>
+<% content_for :body_class, "studio-page" %>
+<div class="studio-home studio-app">
+  <%= render "shared/studio_header" %>
+  <main class="pack-main">
+    <%= render "shared/studio_flash" %>
+    <p class="studio-kicker">PROMOÇÃO BLACK FRIDAY</p>
+    <h1>Suas próximas <em>promoções.</em></h1>
+    <section class="pack-summary" aria-labelledby="pack-title">
+      <h2 id="pack-title"><%= Campaigns::PackOffer.quantity %> campanhas completas</h2>
+      <p class="pack-price"><%= campaign_pack_price %></p>
+      <p><strong><%= brl_price(Campaigns::PackOffer.price_cents.to_f / Campaigns::PackOffer.quantity) %> por campanha.</strong> Pagamento único, sem assinatura.</p>
+      <ul>
+        <li>Música personalizada, vídeo vertical, MP3 e legenda em cada campanha.</li>
+        <li>Até <%= Campaigns::MusicRounds::LIMIT %> rodadas de duas versões de música por campanha.</li>
+        <li>Os créditos ficam nesta conta e você usa um por campanha, quando quiser criar.</li>
+        <li>A promoção termina em <%= Campaigns::PackOffer.ends_at.strftime('%d/%m/%Y') %>, no horário de Brasília. Seus créditos continuam disponíveis depois.</li>
+      </ul>
+      <%= button_to "Pagar #{campaign_pack_price} e garantir meu pacote", campaign_packs_path, class: "studio-button studio-button-green", data: { turbo: false } %>
+      <p class="pack-note">Pagamento seguro pela Stripe. Os créditos são liberados após a confirmação.</p>
+    </section>
+    <%= link_to "Voltar para as opções", root_path(anchor: "preco"), class: "studio-text-link" %>
+  </main>
+</div>

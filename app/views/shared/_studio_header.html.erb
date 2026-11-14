@@ -1,8 +1,12 @@
 <header class="studio-app-header">
   <%= render "shared/studio_logo" %>
   <nav aria-label="Sua campanha">
+    <% if user_signed_in? %>
     <%= link_to "Minhas campanhas", songs_path, aria: { current: controller_name == "songs" ? "page" : nil } %>
     <%= link_to "Criar promoção", new_order_path, class: "studio-header-create" %>
     <%= button_to "Sair", destroy_user_session_path, method: :delete, class: "studio-signout" %>
+    <% else %>
+      <button type="submit" form="campaign-creation" name="auth_intent" value="sign_in" formnovalidate class="studio-signout">Entrar</button>
+    <% end %>
   </nav>
 </header>

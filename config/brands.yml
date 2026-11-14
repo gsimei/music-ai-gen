@@ -19,6 +19,12 @@ b2b:
     - de
     - pt
   primary_color: "#c1f66b"
+  campaign_pack:
+    code: "black_friday_2026"
+    quantity: 10
+    price_cents: 19990
+    starts_at: "2026-11-13T00:00:00-03:00"
+    ends_at: "2026-11-27T23:59:59-03:00"
   tiers:
     starter:
       price_cents: 2990

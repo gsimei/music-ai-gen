@@ -17,12 +17,14 @@ module ::Stripe
 
       order.with_lock do
         return failure_result("order_not_pending") unless order.pending? || order.payment_failed?
-        if order.campaign && order.stripe_session_id.present?
+        return failure_result("credit_funded_order") if order.campaign_pack_id.present?
+        return failure_result("promotion_closed") if order.purchased_campaign_pack && !Campaigns::PackOffer.available?
+        if (order.campaign || order.purchased_campaign_pack) && order.stripe_session_id.present?
           previous = ::Stripe::Checkout::Session.retrieve(order.stripe_session_id)
           if previous.payment_status == "paid"
             result = ::Stripe::CheckoutFulfillment.call(order: order, session_data: previous.to_hash.deep_stringify_keys)
             return result if result.failure?
-            return success_result({ url: routes.campaign_url(order.campaign, payment: "processing", host: resolved_host, protocol: url_protocol), id: previous.id })
+            return success_result({ url: success_url, id: previous.id })
           end
           return success_result({ url: previous.url, id: previous.id }) if previous.status == "open"
           return failure_result("payment_processing") unless previous.status == "expired"
@@ -39,7 +41,7 @@ module ::Stripe
     private
 
     def create_stripe_session
-      ::Stripe::Checkout::Session.create(
+      options = {
         mode: "payment",
         payment_method_types: [ "card" ],
         line_items: [ line_item ],
@@ -54,10 +56,19 @@ module ::Stripe
           reference: order.reference,
           brand: order.brand
         }
-      )
+      }
+      if order.purchased_campaign_pack
+        pack = order.purchased_campaign_pack
+        pack_metadata = { campaign_pack_id: pack.id, campaign_credits: pack.quantity, promotion: pack.offer_code }
+        options[:metadata].merge!(pack_metadata)
+        options[:payment_intent_data][:metadata].merge!(pack_metadata)
+      end
+      ::Stripe::Checkout::Session.create(options, { idempotency_key: "checkout-#{order.reference}-#{order.stripe_session_id.presence || 'initial'}" })
     end
 
     def line_item
+      return { price: Stripe::CampaignCatalog.pack_price(order).id, quantity: 1 } if order.purchased_campaign_pack
+
       {
         price_data: {
           currency: order.currency.downcase,
@@ -78,11 +89,13 @@ module ::Stripe
     end
 
     def success_url
+      return routes.campaign_pack_url(order.purchased_campaign_pack, payment: "processing", host: resolved_host, protocol: url_protocol) if order.purchased_campaign_pack
       return routes.campaign_url(order.campaign, payment: "processing", host: resolved_host, protocol: url_protocol) if order.campaign
       routes.order_chat_url(order_id: order.id, host: resolved_host, protocol: url_protocol)
     end
 
     def cancel_url
+      return routes.campaign_pack_url(order.purchased_campaign_pack, host: resolved_host, protocol: url_protocol) if order.purchased_campaign_pack
       return routes.campaign_url(order.campaign, host: resolved_host, protocol: url_protocol) if order.campaign
       routes.order_url(order, host: resolved_host, protocol: url_protocol)
     end

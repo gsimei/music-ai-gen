@@ -39,11 +39,11 @@ prepara automaticamente a CLI oficial Node da mesma versão em
 `TAILWINDCSS_INSTALL_DIR` são preservadas. O build Linux de produção continua
 usando o compilador nativo.
 
-O layout carrega, em todas as páginas, todo CSS de `app/assets/` (`stylesheet_link_tag :app`):
-os estilos escritos à mão em `app/assets/stylesheets/` (`landing.css`, `studio.css`,
-`studio_app.css`, `studio_identity.css`, servidos pelo Propshaft sem compilação) e o
-Tailwind compilado em `app/assets/builds/tailwind.css`. Os componentes compartilhados
-ficam em `app/views/shared/`. A fatia 1 do redesign (ver ROADMAP) unifica o CSS.
+O layout lista explicitamente os estilos usados em todas as páginas, incluindo
+`landing.css`, `studio.css`, `studio_app.css`, `studio_identity.css`, `jinglepro.css`,
+`ui.css` e `black_friday.css`, servidos pelo Propshaft, além do Tailwind compilado
+em `app/assets/builds/tailwind.css`. Um CSS novo precisa entrar nessa lista.
+Os componentes compartilhados ficam em `app/views/shared/`.
 
 ## Preparação para produção
 
@@ -188,9 +188,61 @@ foi usado para validar o build local quando o binário macOS encerrou com SIGKIL
 - A suíte Ruby passou com 907 testes e 1.700 assertions após as correções (registro de 08/11/2026; não reexecutado ao revisar a documentação, a confirmar). Pagamentos, soundtrack e regeneração musical não foram exercitados com APIs reais nesta rodada.
 - Home, autenticação, estúdio e biblioteca compartilham o visual de estúdio. O estúdio ainda é a tela `/orders/:id/chat` (herança do chat conversacional, hoje LEGADO); no celular ela alterna entre conversa e painel de texto/música. O redesign JinglePro o reorganiza em 3 fases (letra, músicas, vídeo): ver ROADMAP, fatias 3 e 5.
 
-### Campanhas para o Brasil
+### Pacote Black Friday 2026
+
+Além da campanha avulsa, a landing oferece dez campanhas por R$ 199,90 na promoção
+Black Friday. Quantidade, preço e janela da oferta vêm de `b2b.campaign_pack` em
+`config/brands.yml`; o prazo termina em 27/11/2026 no horário de Brasília.
+`CampaignPack` pertence ao pedido de compra, conserva a quantidade adquirida e
+conta os pedidos financiados por seus créditos. Somente uma compra confirmada
+libera saldo. Cada nova campanha usa um crédito, com os mesmos limites da avulsa,
+sem nova cobrança. Os créditos pagos continuam disponíveis após a promoção;
+reembolso integral da compra bloqueia o saldo restante.
+
+O checkout do pacote usa um Price do catálogo Stripe com lookup key estável,
+preço congelado no pedido e metadados da oferta. Webhook e reconciliação validam
+sessão, valor e moeda e liberam o pacote sem iniciar geração de música/letra.
+A reserva de crédito é transacional, serializada por cliente e protegida contra
+reenvio do mesmo formulário. O saldo aparece em Minhas campanhas e na criação.
+
+Para cadastrar/reutilizar os dois produtos e preços na conta configurada, execute
+`bin/rails runner script/sync_campaign_catalog.rb`. O relatório sem credenciais
+fica em `output/campaigns/2026-11-14-black-friday/fontes/stripe-catalog-test.json`
+ou `stripe-catalog-live.json`, conforme a chave ativa. A opção `--live` reutiliza
+a conexão autenticada da Stripe CLI e exige a mesma conta da integração do app;
+interrompe antes de criar produtos caso a conexão tenha expirado ou a conta difira.
+Nesta entrega, apenas o catálogo de teste foi cadastrado. Produção ficou pendente
+de autenticação; nenhum deploy ou pagamento real foi feito.
+
+### Fluxo de criação
 
 A entrada principal agora oferece uma campanha por R$ 29,90 (valor em `config/brands.yml`), em BRL: briefing guiado com conferência no último passo → Stripe Checkout → letra → escolha musical → MP4 vertical e legenda. Não há uma segunda tela de revisão antes do pagamento. Pedidos antigos conservam sua moeda. `GET /orders/new` não cria nem paga pedidos.
+
+Visitantes começam em `/campaigns/new` sem cadastro. Ao continuar para o pagamento,
+o formulário guarda os campos, as escolhas musicais e as fotos em IndexedDB e pede
+cadastro ou login. A sessão guarda somente identificadores aleatórios do rascunho;
+nenhum pedido ou upload é criado nessa etapa. Após a autenticação, o navegador
+transfere o rascunho para o usuário e continua o checkout com os dados restaurados.
+Se já houver créditos, o último passo mostra o saldo e pede confirmação antes de
+usar um crédito. O botão “Entrar” também preserva uma criação ainda incompleta.
+
+Falhas no cadastro/login preservam o rascunho no mesmo navegador. O botão de voltar
+retoma a etapa e as fotos escolhidas. Falhas de armazenamento impedem o envio para
+autenticação; um rascunho ausente impede a continuação automática para pagamento.
+O prazo de retenção local segue os sete dias do armazenamento de mídia existente.
+Campanhas salvas, pagamentos, créditos e arquivos continuam exigindo o dono da conta.
+
+Verificações isoladas do rascunho: `bundle exec ruby test/standalone/guest_draft_test.rb`
+e `node --test test/javascript/campaign_draft_test.mjs`. Os cenários com banco e
+navegador estão em `guest_campaign_creation_test.rb`, `merchant_checkout_test.rb`
+e `guest_campaign_authentication_test.rb`.
+
+Para executar esses cenários junto à recuperação de fotos após cancelar o checkout,
+use `bundle exec ruby script/test_guest_checkout.rb`. Essa entrada fixa o ambiente
+de teste e o banco local `music_ai_gen_test`, usa chaves fictícias e não lê arquivos
+dotenv. Stripe e geração são simulados pelos testes; PostgreSQL e Chrome precisam
+estar acessíveis ao processo. `Operation not permitted` ao conectar ao socket do
+PostgreSQL indica uma restrição de acesso do processo, antes da autenticação do banco.
 
 Execute `bin/rails db:migrate`. O renderizador precisa de FFmpeg/ffprobe e ImageMagick (`magick` ou `convert`), além de Arial no macOS ou DejaVu Sans no Linux. O Dockerfile instala as dependências Linux. Pode-se definir `IMAGEMAGICK_BIN`. O vídeo usa a música aprovada, foto opcional e os dados da campanha; fica salvo via Active Storage. Produção precisa de armazenamento persistente e workers ativos.
 

@@ -1,0 +1,45 @@
+<section id="preco" class="lp-pricing" aria-labelledby="price-title">
+  <div class="lp-width">
+    <div class="bf-pricing-intro lp-price-copy" data-landing-motion-target="reveal">
+      <p class="lp-eyebrow"><%= Campaigns::PackOffer.available? ? "BLACK FRIDAY VIRAJINGLE" : "MÚSICA + VÍDEO + LEGENDA" %></p>
+      <h2 id="price-title">Sua próxima oferta<br>já tem <em>ritmo.</em></h2>
+      <p class="lp-section-intro">Uma campanha para começar.<% if Campaigns::PackOffer.available? %> Um pacote para suas próximas promoções.<% end %><br>Música, vídeo vertical e legenda. Pagamento único, sem assinatura.</p>
+    </div>
+    <div class="bf-offers <%= 'bf-offers-single' unless Campaigns::PackOffer.available? %>">
+      <article class="bf-card" data-landing-motion-target="reveal">
+        <p class="bf-card-kicker">PARA EXPERIMENTAR</p>
+        <h3>Campanha avulsa</h3>
+        <p class="bf-card-description">Uma oferta do seu negócio pronta para postar.</p>
+        <p class="bf-price studio-price"><%= campaign_price %></p>
+        <p class="bf-unit">por campanha completa</p>
+        <ul>
+          <li>Música cantada com o nome do negócio</li>
+          <li>Até <%= Campaigns::MusicRounds::LIMIT %> rodadas com duas versões por rodada</li>
+          <li>Letra editável e ajustes com IA</li>
+          <li>Vídeo vertical em MP4, áudio em MP3 e legenda</li>
+        </ul>
+        <%= link_to "Criar minha campanha", new_order_path, class: "lp-button bf-buy" %>
+        <p class="bf-card-note">Pagamento único. Você confere os dados antes de pagar.</p>
+      </article>
+      <% if Campaigns::PackOffer.available? %>
+        <article class="bf-card bf-card-featured" data-landing-motion-target="reveal">
+          <p class="bf-card-kicker"><span class="bf-badge">PROMOÇÃO BLACK FRIDAY</span></p>
+          <h3><%= Campaigns::PackOffer.quantity %> campanhas completas</h3>
+          <p class="bf-card-description">Garanta agora. Crie suas promoções aos poucos.</p>
+          <p class="bf-previous-price">De <s><%= brl_price(Campaigns::PackOffer.price_cents + Campaigns::PackOffer.savings_cents) %></s> por</p>
+          <p class="bf-price"><%= campaign_pack_price %></p>
+          <p class="bf-unit"><strong><%= brl_price(Campaigns::PackOffer.price_cents.to_f / Campaigns::PackOffer.quantity) %></strong> por campanha</p>
+          <p class="bf-saving">Economize <%= brl_price(Campaigns::PackOffer.savings_cents) %> em relação a <%= Campaigns::PackOffer.quantity %> compras avulsas.</p>
+          <ul>
+            <li>Todos os recursos da campanha avulsa, em cada crédito</li>
+            <li><%= Campaigns::PackOffer.quantity %> créditos na sua conta após o pagamento</li>
+            <li>Uma campanha completa por crédito</li>
+            <li>Use também no Natal e nas próximas promoções</li>
+          </ul>
+          <%= link_to "Garantir meu pacote Black Friday", new_campaign_pack_path, class: "lp-button lp-button-lime bf-buy" %>
+          <p class="bf-card-note">Oferta até <%= Campaigns::PackOffer.ends_at.strftime('%d/%m/%Y') %>, horário de Brasília.<br>Pagamento único. Sem assinatura ou renovação automática.</p>
+        </article>
+      <% end %>
+    </div>
+  </div>
+</section>

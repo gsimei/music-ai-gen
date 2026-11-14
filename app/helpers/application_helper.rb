@@ -10,6 +10,26 @@ module ApplicationHelper
     number_to_currency(cents / 100.0, unit: order && order.currency == "EUR" ? "€" : "R$ ", separator: ",", delimiter: ".", precision: cents % 100 == 0 ? 0 : 2, format: "%u%n")
   end
 
+  def brl_price(cents)
+    number_to_currency(cents / 100.0, unit: "R$ ", separator: ",", delimiter: ".", precision: 2, format: "%u%n")
+  end
+
+  def campaign_pack_price(pack = nil)
+    brl_price(pack ? pack.order.price_cents : Campaigns::PackOffer.price_cents)
+  end
+
+  def campaign_uses_credit?
+    @campaign.order&.campaign_pack_id.present? || (!@campaign.persisted? && available_campaign_credits.positive?)
+  end
+
+  def available_campaign_credits
+    @available_campaign_credits ||= current_user&.available_campaign_credits || 0
+  end
+
+  def campaign_media_owner
+    user_signed_in? ? current_user.id : Campaigns::GuestDraft.new(session).owner
+  end
+
   def approved_music_asset(order)
     index = { "a" => 0, "b" => 1 }[order.approved_variant]
     return if index.nil?

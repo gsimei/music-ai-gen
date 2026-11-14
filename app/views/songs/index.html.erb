@@ -4,6 +4,13 @@
   <%= render "shared/studio_header" %>
   <main class="studio-library-main">
     <%= render "shared/studio_flash" %>
+    <% credits = available_campaign_credits %>
+    <% if credits.positive? %>
+      <section class="pack-balance" aria-label="Saldo do pacote">
+        <div><strong><%= credits %> <%= credits == 1 ? "crédito disponível" : "créditos disponíveis" %></strong><p>Uma campanha completa por crédito. Sem nova cobrança.</p></div>
+        <%= link_to "Usar meu saldo", new_campaign_path, class: "studio-button studio-button-green" %>
+      </section>
+    <% end %>
     <div class="studio-library-heading">
       <div><p class="studio-kicker">SUAS CRIAÇÕES / <%= @orders.size.to_s.rjust(2, "0") %> <%= @orders.size == 1 ? "campanha" : "campanhas" %></p><h1>Minhas <em>campanhas</em></h1><p>Retome uma criação ou baixe sua campanha pronta para postar.</p></div>
       <%= link_to "Criar uma promoção", new_order_path, class: "studio-button studio-button-green" %>

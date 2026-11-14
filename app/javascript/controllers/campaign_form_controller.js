@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
-import { loadMedia, saveMedia, removeMedia, mediaToken } from "campaign_media_store"
+import { loadMedia, saveMedia, removeMedia, mediaToken, draftFields, restoreDraftFields, claimDraft } from "campaign_media_store"
 
 export default class extends Controller {
-  static values = { photoLimit: { type: Number, default: 5 }, initialStep: { type: Number, default: 0 } }
+  static values = { photoLimit: { type: Number, default: 5 }, initialStep: { type: Number, default: 0 }, guest: Boolean, draftOwner: String, draftToken: String, resumeCheckout: Boolean }
   static targets = ["step", "indicator", "back", "next", "submit", "business", "offer", "logoInput", "removeLogo", "logoRemoval", "logoStatus", "previewLogo", "brandSample", "cta", "contact", "showCta", "ctaColor", "ctaFields", "previewCtaPanel", "previewBusiness", "previewOffer", "previewCta", "previewContact", "previewPhoto", "previewPhotoTitle", "previewThumb", "offerCount", "ctaChoice", "ctaFlag", "stage", "photoInput", "photoList", "photoStatus", "caption", "soundSummary", "stepLabel", "submitLabel", "direction", "summaryBusiness", "summaryOffer", "summaryContact", "summaryPhotos"]
   connect() {
     this.index = this.initialStepValue
@@ -22,7 +22,10 @@ export default class extends Controller {
     }
     this.preview()
     this.logo()
-    this.mediaReady = this.restoreMedia()
+    this.mediaReady = this.restoreDraft()
+    this.mediaReady.then(restored => {
+      if (restored && this.resumeCheckoutValue && !this.guestValue && this.element.isConnected) this.element.requestSubmit(this.submitTarget)
+    })
   }
   disconnect() {
     this.releasePhotos()
@@ -149,26 +152,32 @@ export default class extends Controller {
     if (this.submitting) { event.preventDefault(); return }
     await this.mediaReady
     if (this.submitting) return
+    const signingIn = this.guestValue && event.submitter?.name === "auth_intent" && event.submitter.value === "sign_in"
+    const authIntent = this.element.querySelector('[name="auth_intent"]')
+    if (authIntent) authIntent.value = signingIn ? "sign_in" : ""
     if (this.hasStepTarget) {
-      if (this.index < this.stepTargets.length - 1) { event.preventDefault(); this.next(); return }
+      if (!signingIn && this.index < this.stepTargets.length - 1) { event.preventDefault(); this.next(); return }
       this.stepTargets.forEach(step => step.querySelectorAll("input,textarea,select").forEach(input => { input.disabled = false }))
       const invalidIndex = this.stepTargets.findIndex(step => Array.from(step.querySelectorAll("input,textarea,select")).some(input => !input.checkValidity()))
-      if (invalidIndex >= 0) { event.preventDefault(); this.index = invalidIndex; this.show(); this.valid(); return }
+      if (!signingIn && invalidIndex >= 0) { event.preventDefault(); this.index = invalidIndex; this.show(); this.valid(); return }
     }
     this.submitting = true
     this.submitTarget.disabled = true
-    this.submitText = "Abrindo pagamento…"
+    this.submitText = this.guestValue ? "Guardando sua campanha…" : "Continuando sua campanha…"
     try {
       const token = this.element.querySelector('[name="campaign[media_upload_token]"]')
-      if (token && (this.hasPhotoInputTarget || this.hasLogoInputTarget)) {
+      if (token && (this.hasPhotoInputTarget || this.hasLogoInputTarget || this.guestValue || this.hasDraftTokenValue)) {
         const photos = (this.photos || []).filter(photo => photo.file).map(photo => photo.file)
         const logo = this.hasLogoInputTarget ? this.logoInputTarget.files[0] : null
-        if (photos.length || logo) {
-          token.value ||= mediaToken()
-          await saveMedia(this.element.dataset.mediaOwner, token.value, { photos, logo })
-        } else if (token.value) {
+        const creation = this.element.querySelector('[name="campaign[creation_token]"]')
+        if (photos.length || logo) token.value ||= creation?.value || mediaToken()
+        else if (token.value) {
           try { await removeMedia(this.element.dataset.mediaOwner, token.value) } catch (_) { /* No files will be sent. */ }
           token.value = ""
+        }
+        if (this.guestValue || this.hasDraftTokenValue || photos.length || logo) {
+          await saveMedia(this.element.dataset.mediaOwner, token.value || creation.value,
+            { photos, logo, fields: draftFields(this.element), step: this.index })
         }
       }
       // Only text goes to checkout. Files stay in IndexedDB through the Stripe redirect.
@@ -180,11 +189,36 @@ export default class extends Controller {
     }
   }
 
-  async restoreMedia() {
-    const token = this.element.querySelector('[name="campaign[media_upload_token]"]')?.value
-    if (!token) return
+  async restoreDraft() {
+    if (!this.hasDraftOwnerValue || !this.hasDraftTokenValue) { await this.restoreMedia(); return false }
+    this.restoringDraft = true
+    this.submitTarget.disabled = true
     try {
-      const media = await loadMedia(this.element.dataset.mediaOwner, token)
+      const draft = await claimDraft(this.draftOwnerValue, this.draftTokenValue, this.element.dataset.mediaOwner)
+      restoreDraftFields(this.element, draft.fields)
+      this.index = Math.max(0, Math.min(Number(draft.step) || 0, this.stepTargets.length - 1))
+      if (this.hasCtaChoiceTarget) this.chooseCta()
+      this.element.querySelector('input[data-sound-setting="genre"]:checked')?.dispatchEvent(new Event("change", { bubbles: true }))
+      await this.restoreMedia(draft)
+      this.preview()
+      this.show()
+      return true
+    } catch (_) {
+      this.index = 0
+      this.show()
+      this.mediaError("Não conseguimos retomar o rascunho neste navegador. Confira os campos e selecione as fotos antes de continuar; nenhum pagamento foi iniciado.")
+      return false
+    } finally {
+      this.restoringDraft = false
+      this.resetSubmission()
+    }
+  }
+
+  async restoreMedia(cachedMedia = null) {
+    const token = this.element.querySelector('[name="campaign[media_upload_token]"]')?.value
+    if (!token && !cachedMedia) return
+    try {
+      const media = cachedMedia || await loadMedia(this.element.dataset.mediaOwner, token)
       if (!media) return
       if (!this.hasPhotoInputTarget || !this.photoInputTarget.files.length) {
         this.releasePhotos()
@@ -215,6 +249,7 @@ export default class extends Controller {
   get submitText() { return this.hasSubmitLabelTarget ? this.submitLabelTarget.textContent : this.submitTarget.value }
   set submitText(text) { if (this.hasSubmitLabelTarget) this.submitLabelTarget.textContent = text; else this.submitTarget.value = text }
   resetSubmission() {
+    if (this.restoringDraft) return
     this.submitting = false
     if (this.hasSubmitTarget) {
       this.submitTarget.dataset.label ||= this.submitText

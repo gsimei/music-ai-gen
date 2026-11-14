@@ -3,7 +3,7 @@
 <% saved_photos = @campaign.persisted? ? @campaign.product_photos.select { |image| image.blob.persisted? } : [] %>
 <% checkout_started = @campaign.persisted? && @campaign.order.stripe_session_id.present? %>
 <%# Checkout iniciado ou campanha salva abre no último passo (conferir). Erro de validação volta ao primeiro. %>
-<% initial_step = @campaign.persisted? && @campaign.errors.empty? ? 2 : 0 %>
+<% initial_step = (@campaign.persisted? && @campaign.errors.empty?) || @guest_draft&.fetch("checkout_requested") ? 2 : 0 %>
 <%# Faixa de contato ligada: show_cta com uma opção escolhida. Alimenta o chip marcado, o hidden show_cta e a prévia. %>
 <% contact_strip = @campaign.show_cta? && @campaign.call_to_action.present? %>
 <% checkout_options = checkout_started ? { url: checkout_order_path(@campaign.order), method: :post } : {} %>
@@ -14,8 +14,11 @@
     <h1 class="ui-sr-only">Sua próxima campanha.</h1>
     <%= render "campaigns/new/saved_sound" %>
     <%= render "campaigns/new/notices" %>
-    <%= form_with model: @campaign, **checkout_options, class: "ui-form", data: { turbo: false, controller: "campaign-form", media_owner: current_user.id, campaign_form_initial_step_value: initial_step, campaign_form_photo_limit_value: Campaigns::PhotoLimit::INITIAL, action: "submit->campaign-form#validate pageshow@window->campaign-form#resetSubmission pageshow@window->campaign-form#syncStage" } do |f| %>
+    <%= form_with model: @campaign, **checkout_options, id: "campaign-creation", class: "ui-form", data: { turbo: false, controller: "campaign-form", media_owner: campaign_media_owner, campaign_form_guest_value: !user_signed_in?, campaign_form_draft_owner_value: @guest_draft&.fetch("owner"), campaign_form_draft_token_value: @guest_draft&.fetch("token"), campaign_form_resume_checkout_value: user_signed_in? && @guest_draft&.fetch("checkout_requested") && available_campaign_credits.zero?, campaign_form_initial_step_value: initial_step, campaign_form_photo_limit_value: Campaigns::PhotoLimit::INITIAL, action: "submit->campaign-form#validate pageshow@window->campaign-form#resetSubmission pageshow@window->campaign-form#syncStage" } do |f| %>
       <%= f.hidden_field :media_upload_token %>
+      <%= hidden_field_tag "campaign[creation_token]", @creation_token || @campaign.order&.creation_token.presence || SecureRandom.uuid %>
+      <%= hidden_field_tag :auth_intent, "" %>
+      <%= hidden_field_tag :use_credit, "1" if campaign_uses_credit? %>
       <div class="ui-head"><%= render "campaigns/new/steps_bar", current: initial_step %></div>
       <div class="ui-col">
         <p class="ui-hint" role="alert" data-local-media-error hidden></p>

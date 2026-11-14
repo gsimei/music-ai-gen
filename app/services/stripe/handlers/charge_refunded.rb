@@ -81,10 +81,12 @@ module ::Stripe
       end
 
       def cancel_and_refund(order)
-        return unless CANCELLABLE_STATES.include?(order.status)
+        order.with_lock do
+          return unless CANCELLABLE_STATES.include?(order.status)
 
-        order.cancel!
-        order.refund!
+          order.cancel!
+          order.refund!
+        end
       end
     end
   end

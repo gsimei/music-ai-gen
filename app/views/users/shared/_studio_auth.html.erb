@@ -10,7 +10,7 @@
     <p class="studio-auth-caption">Uma boa oferta merece ser ouvida.</p>
   </aside>
   <main class="studio-auth-main">
-    <%= link_to "Voltar ao início", root_path, class: "studio-auth-back" %>
+    <%= link_to(campaign_draft_resume_path ? "Voltar à minha campanha" : "Voltar ao início", campaign_draft_resume_path || root_path, class: "studio-auth-back") %>
     <div class="studio-auth-form"><%= render "shared/studio_flash" %><%= yield %></div>
     <p class="studio-auth-foot">Feito para o comércio de verdade.</p>
   </main>

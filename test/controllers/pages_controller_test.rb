@@ -13,8 +13,8 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "main h1", count: 1
     assert_select ".studio-price", text: /R\$ 29,90/
-    assert_select ".studio-plan", count: 1
-    assert_select ".studio-plan li", text: /Vídeo vertical/
+    assert_select "#preco .bf-card", count: Campaigns::PackOffer.available? ? 2 : 1
+    assert_select "#preco .bf-card li", text: /Vídeo vertical/
     assert_select "a[href=?]", new_user_session_path
   end
 
@@ -27,9 +27,12 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_user_session_path, count: 0
   end
 
-  test "creation call to action requires authentication" do
+  test "creation call to action lets a visitor start without authentication" do
     get new_order_path
-    assert_redirected_to new_user_registration_path
+    assert_redirected_to new_campaign_path
+    follow_redirect!
+    assert_response :success
+    assert_select "form.ui-form"
   end
 
   test "signed in customer can open a new project chat" do

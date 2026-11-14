@@ -137,7 +137,7 @@ class CampaignFlowTest < ActionDispatch::IntegrationTest
 
   test "submission opens checkout directly with BRL and cannot mark an order paid on its own" do
     captured = nil
-    Stripe::Checkout::Session.stub(:create, ->(**args) { captured = args; Struct.new(:id, :url).new("cs_campaign_test", "https://checkout.stripe.com/test") }) do
+    Stripe::Checkout::Session.stub(:create, ->(args, _options = {}) { captured = args; Struct.new(:id, :url).new("cs_campaign_test", "https://checkout.stripe.com/test") }) do
       assert_no_enqueued_jobs only: GenerateLyricsJob do
         post campaigns_path, params: { campaign: @attributes }
       end

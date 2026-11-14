@@ -41,3 +41,7 @@ Security baseline established in Section 1 Setup Base review (2026-05-25).
 - sign_in_after_reset_password = true (default) — account takeover risk on shared device
 
 **How to apply:** Use this list to check whether gaps have been addressed before signing off on future sections. Each feature section (auth flows, payments, storage) should revisit these.
+
+## Campaign audio controls (verified 2026-11-13, estudio-caminho-b review)
+- All OrderAsset audio goes through CampaignAudioController (owner + status gate + asset scoped to order); ProtectedOrderAudio (included in ActiveStorage::BaseController via initializer) 404s stock storage routes for order audio by attachment name or `private_order_audio` metadata. New audio attachments must be added to its name list.
+- Weak point: preview watermark wav sounds ~1.06 s per 8 s loop, fixed gain/phase; file sits in lib/assets (Propshaft-served). Audio render jobs have no dedupe/rate limit on shared default queue.

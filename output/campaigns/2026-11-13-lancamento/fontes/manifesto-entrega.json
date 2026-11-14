@@ -1,8 +1,8 @@
 [
   {
     "arquivo": "LEIA-ME.txt",
-    "bytes": 2997,
-    "sha256": "7498b5f59972834bcbb4845fc4a368f495cbcced592cc0e311e5a75a7f4bee2b"
+    "bytes": 3307,
+    "sha256": "1e86daa68fab3adccd75e54999c1ed1f48eed71408b7042f2dc2f1ea230c4482"
   },
   {
     "arquivo": "LEGENDAS.txt",
@@ -173,5 +173,10 @@
     "arquivo": "PREVIA-VIDEO.png",
     "bytes": 1494550,
     "sha256": "10eb2b6e7c70fc32923d14e618c4cc17610d3c8526182c5c000140617aee9e0f"
+  },
+  {
+    "arquivo": "CALENDARIO-PUBLICACAO.txt",
+    "bytes": 2823,
+    "sha256": "fcbc4739f35ecfccaa22ae6d03f489c489080986c1d10bbdd6f7684ed2d9e3fb"
   }
 ]

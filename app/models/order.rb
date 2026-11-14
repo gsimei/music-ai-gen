@@ -111,6 +111,8 @@ class Order < ApplicationRecord
   belongs_to :user, optional: true
   has_one    :briefing,                dependent: :destroy
   has_one    :campaign,                dependent: :destroy
+  has_one    :purchased_campaign_pack, class_name: "CampaignPack", inverse_of: :order, dependent: :destroy
+  belongs_to :campaign_pack, optional: true
   has_one    :soundtrack_input,        dependent: :destroy
   has_many   :briefing_messages,       -> { chronological }, dependent: :destroy
   has_many   :lyrics_drafts,           dependent: :destroy
@@ -220,6 +222,8 @@ class Order < ApplicationRecord
   end
 
   def enqueue_post_payment_generation
+    return if purchased_campaign_pack
+
     if soundtrack_order?
       UploadSoundtrackInputToMurekaJob.perform_later(id, soundtrack_input.id)
     else

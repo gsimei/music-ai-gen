@@ -1,6 +1,37 @@
 const DATABASE = "virajingle-campaign-media"
 const STORE = "drafts"
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000
+const DRAFT_FIELDS = new Set(["business_name", "offer", "contact", "call_to_action", "show_cta", "cta_color", "style", "musical_genre", "vocal_gender", "music_notes", "remove_logo", "creation_token", "media_upload_token"].map(name => `campaign[${name}]`))
+
+export function draftFields(form) {
+  return Array.from(form.elements)
+    .filter(input => DRAFT_FIELDS.has(input.name) && !["file", "submit"].includes(input.type))
+    .filter(input => !["radio", "checkbox"].includes(input.type) || input.checked)
+    .map(input => [input.name, input.value])
+}
+
+export function restoreDraftFields(form, fields) {
+  for (const [name, value] of fields) {
+    if (!DRAFT_FIELDS.has(name) || typeof value !== "string") continue
+    for (const input of Array.from(form.elements).filter(input => input.name === name && input.type !== "file")) {
+      if (["radio", "checkbox"].includes(input.type)) input.checked = input.value === value
+      else input.value = value
+    }
+  }
+}
+
+export async function claimDraft(owner, token, destinationOwner) {
+  const saved = await loadMedia(destinationOwner, token) || await loadMedia(owner, token)
+  if (!saved || !Array.isArray(saved.fields) || !saved.fields.some(([name, value]) => name === "campaign[creation_token]" && value === token)) {
+    throw new Error("Rascunho indisponível")
+  }
+  if (String(owner) !== String(destinationOwner)) {
+    // Keep the original if quota/storage failures prevent the new copy.
+    await saveMedia(destinationOwner, token, saved)
+    await removeMedia(owner, token)
+  }
+  return saved
+}
 
 export function mediaToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(16))

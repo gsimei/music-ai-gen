@@ -236,6 +236,7 @@ class OrderChatController < ApplicationController
 
   def set_order
     @order = current_user.orders.find(params[:order_id])
+    return redirect_to @order.purchased_campaign_pack if @order.purchased_campaign_pack
     redirect_to(@order.campaign || order_path(@order)) unless paid_or_later?
   end
 

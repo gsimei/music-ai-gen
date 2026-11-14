@@ -5,7 +5,7 @@
 <%= tag.section class: "ui-step", data: { campaign_form_target: ("step" unless checkout_started) } do %>
   <p class="ui-eyebrow">Tudo certo?</p>
   <h2>Confira e <em>comece.</em></h2>
-  <p class="ui-lead">Depois do pagamento você revisa a letra e ouve duas versões de música.</p>
+  <p class="ui-lead"><%= campaign_uses_credit? ? "Use um crédito do seu pacote para revisar a letra e ouvir duas versões de música." : "Depois do pagamento você revisa a letra e ouve duas versões de música." %></p>
 
   <div class="ui-summary">
     <div class="ui-sum" data-summary="promotion">

@@ -1,0 +1,29 @@
+<% content_for :title, "Meu pacote · #{brand_name}" %>
+<% content_for :body_class, "studio-page" %>
+<div class="studio-home studio-app">
+  <%= render "shared/studio_header" %>
+  <main class="pack-main">
+    <%= render "shared/studio_flash" %>
+    <p class="studio-kicker">BLACK FRIDAY · <%= @pack.order.reference %></p>
+    <h1>Seu pacote de <em>campanhas.</em></h1>
+    <section class="pack-summary">
+      <h2><%= @pack.quantity %> campanhas por <%= campaign_pack_price(@pack) %></h2>
+      <% if @pack.order.paid? %>
+        <p class="pack-price"><%= @pack.remaining_credits %> <small>créditos disponíveis</small></p>
+        <p>Use um crédito por campanha completa. Sem nova cobrança.</p>
+        <%= link_to "Criar uma campanha com meu saldo", new_campaign_path, class: "studio-button studio-button-green" if @pack.remaining_credits.positive? %>
+        <%= link_to "Ver minhas campanhas", songs_path, class: "studio-text-link" %>
+      <% elsif @pack.order.pending? || @pack.order.payment_failed? %>
+        <% if params[:payment] == "processing" %>
+          <p role="status">Aguardando a confirmação do pagamento. Se você já pagou, aguarde; não precisa pagar novamente.</p>
+          <%= link_to "Verificar confirmação", campaign_pack_path(@pack, payment: "processing"), class: "studio-button studio-button-green" %>
+        <% else %>
+          <p>Seu pedido está salvo. Os créditos serão liberados após o pagamento.</p>
+          <%= button_to "Continuar pagamento de #{campaign_pack_price(@pack)}", checkout_order_path(@pack.order), class: "studio-button studio-button-green", data: { turbo: false } if Campaigns::PackOffer.available? %>
+        <% end %>
+      <% else %>
+        <p>Este pacote foi cancelado ou reembolsado e não tem créditos disponíveis.</p>
+      <% end %>
+    </section>
+  </main>
+</div>

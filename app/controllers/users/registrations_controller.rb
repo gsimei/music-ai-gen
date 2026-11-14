@@ -33,6 +33,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   def after_sign_up_path_for(_resource)
-    stored_location_for(:user) || new_order_path
+    destination = stored_location_for(:user)
+    campaign_draft_resume_path || destination || new_order_path
   end
 end
